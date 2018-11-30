@@ -1,0 +1,35 @@
+<!DOCTYPE web SYSTEM "web.dtd">
+<web>
+    <servlet>
+        <servlet-name>login</servlet-name>
+        <servlet-class>pers.pandora.servlet.LoginServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>test</servlet-name>
+        <servlet-class>pers.pandora.servlet.TestServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>test</servlet-name>
+        <url-patterns>/test</url-patterns>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>test</servlet-name>
+        <url-patterns>/</url-patterns>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>login</servlet-name>
+        <url-patterns>/login</url-patterns>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>login</servlet-name>
+        <url-patterns>/reg</url-patterns>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>mvc</servlet-name>
+        <servlet-class>pers.pandora.mvc.RequestMappingHandler</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>mvc</servlet-name>
+        <url-patterns>/*.do</url-patterns>
+    </servlet-mapping>
+</web>

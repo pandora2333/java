@@ -1,0 +1,17 @@
+<MyMapper namespace="pers.pandora.test.mapper.UserMapper">
+	<!--可以使用lt,gt,le,ge表示大小关系，配合返回值为List使用-->
+	<!--如gt #{id} and deptno lt #{no}-->
+	<!--注意:mapper中定义参数若为实体类，则#{no}对应参数实体类中属性名,否则随意取名-->
+	<select id="queryForOne" resultType="pers.pandora.test.User">
+		select * from user where id = #{id}
+  	</select>
+	<insert id="insert">
+		insert into user value(null,#{userName},#{stars},#{forbid},#{msg},#{address},#{pd},#{img},#{cdate},#{follow},#{collect},#{active},#{sex})
+	</insert>
+	<delete id="deleteById">
+		delete from user where id in (#{id1})
+	</delete>
+	<update id="update">
+		update user set userName=#{userName},stars=#{stars},forbid=#{forbid},msg=#{msg},address=#{address},pd=#{pd},img=#{img},cdate=#{cdate},follow=#{follow},collect=#{collect},active=#{active},sex=#{sex} where id = #{id}
+	</update>
+</MyMapper>

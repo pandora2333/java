@@ -1,0 +1,17 @@
+<MyMapper namespace="pers.pandora.test.mapper.ArticleMapper">
+	<!--可以使用lt,gt,le,ge表示大小关系，配合返回值为List使用-->
+	<!--如gt #{id} and deptno lt #{no}-->
+	<!--注意:mapper中定义参数若为实体类，则#{no}对应参数实体类中属性名,否则随意取名-->
+	<select id="queryForOne" resultType="pers.pandora.test.Article">
+		select * from article where id = #{id}
+  	</select>
+	<insert id="insert">
+		insert into article value(null,#{pid},#{rootid},#{title},#{cont},#{pdate},#{isleaf},#{counter},#{reply},#{img},#{register},#{userName},#{unread},#{spec},#{locker},#{question},#{answer})
+	</insert>
+	<delete id="deleteById">
+		delete from article where id in (#{id1})
+	</delete>
+	<update id="update">
+		update article set pid=#{pid},rootid=#{rootid},title=#{title},cont=#{cont},pdate=#{pdate},isleaf=#{isleaf},counter=#{counter},reply=#{reply},img=#{img},register=#{register},userName=#{userName},unread=#{unread},spec=#{spec},locker=#{locker},question=#{question},answer=#{answer} where id = #{id}
+	</update>
+</MyMapper>

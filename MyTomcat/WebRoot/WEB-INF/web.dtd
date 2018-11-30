@@ -1,0 +1,6 @@
+<!ELEMENT web (servlet, servlet-mapping)>
+<!ELEMENT servlet (servlet-name,servlet-class)>
+        <!ELEMENT servlet-mapping (servlet-name,url-patterns)>
+        <!ELEMENT servlet-class (#PCDATA)>
+        <!ELEMENT url-patterns (#PCDATA)>
+        <!ELEMENT servlet-name (#PCDATA)>

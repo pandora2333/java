@@ -1,0 +1,12 @@
+
+<mbg>
+    <poPackage>pers.pandora.test</poPackage>
+    <mapperPackage>pers.pandora.test.mapper</mapperPackage>
+    <xmlPackage>test.mapper</xmlPackage>
+    <!--
+    table的way属性是取值all或singeton，all表示生成指定一个table映射类，all表示生成所有table映射类
+    若取值为all，则标签体中可以不指定table名
+    若取值为singleton，则标签体中必须写上table名
+    -->
+    <table way="all">user</table>
+</mbg>
