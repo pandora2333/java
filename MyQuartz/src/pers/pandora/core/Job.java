@@ -1,16 +1,12 @@
 package pers.pandora.core;
 
-import pers.pandora.task.Task;
-
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 /**
  * job定时任务
  */
-public class Job extends Task implements Runnable {
+public class Job implements Runnable {
     private int second;
     private int min;
     private int hour;
@@ -102,7 +98,7 @@ public class Job extends Task implements Runnable {
 
 
     @Override
-    public void task() {
+    public void run() {
             vailFlag();
             while (true) {
                 try {
@@ -150,7 +146,6 @@ public class Job extends Task implements Runnable {
                         setDay(getDay() + step[3]);
                         if ((getHour() == current.getHour()) || getHour() == Integer.MAX_VALUE || (current.getHour() - getHour()) == step[2]) {//h
                             setHour(getHour() + step[2]);
-    System.out.println(current.getMinute());
                             if ((getMin() == current.getMinute()) || getMin() == Integer.MAX_VALUE || (current.getMinute() - getMin()) == step[1]) {//m
                                 setMin(getMin() + step[1]);
                                 if (getSecond() == Integer.MAX_VALUE ||getSecond()==current.getSecond()) {//s;

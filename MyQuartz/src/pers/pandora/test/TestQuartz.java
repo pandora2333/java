@@ -2,7 +2,6 @@ package pers.pandora.test;
 
 
 import pers.pandora.core.TaskScheduler;
-import pers.pandora.impl.MyThreadPoolImpl;
 
 import java.util.concurrent.Executors;
 
