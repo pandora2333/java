@@ -129,14 +129,6 @@ public class BeanUtils {
 			}
 	}
 
-//	private  static  Annotation getAnnotation(Method method) {
-//		for (Annotation annotation : method.getDeclaredAnnotations()) {
-//			if (annotation instanceof Bean) {
-//				return annotation;
-//			}
-//		}
-//		return null;
-//	}
 	//自动注入属性值
 	private static  <T> void injectValue(Class<T> clazz,String beanName){
           scanBean(clazz,null,PropertySource.class,null,beanName);
