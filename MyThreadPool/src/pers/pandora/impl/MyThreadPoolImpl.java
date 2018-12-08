@@ -38,7 +38,7 @@ public class MyThreadPoolImpl implements ThreadPool {
             // e.printStackTrace();
         }
 
-        if ( maxsize < initalSize || initalSize <= 0||idleTime>=0) {
+        if ( maxsize < initalSize || initalSize <= 0||idleTime<=0) {
             throw new RuntimeException("配置文件数值错误!");
         } else {
             workThreads = new WorkThread[initalSize];
@@ -57,14 +57,13 @@ public class MyThreadPoolImpl implements ThreadPool {
     public void execute(Task task) {
         if (task != null) {
             synchronized (queue) {
-                if (cursor>(initalSize<<1)&&initalSize<maxsize) {
+                if ((cursor>(initalSize<<1)&&initalSize<maxsize) && !isAllBuy()) {
                     rePool();
                 }
                 try {
                     queue.put(task);
                     cursor++;
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -72,10 +71,24 @@ public class MyThreadPoolImpl implements ThreadPool {
         }
     }
 
+    /**
+     * 当所有线程都忙碌时，外加任务没触及最大线程数，可以扩容线程池
+     * @return
+     */
+    private boolean isAllBuy() {
+
+        for (WorkThread workThread:workThreads) {
+            if(!workThread.isWork){
+                return  false;
+            }
+        }
+        return  true;
+    }
+
     @Override
     public synchronized void shutdown() {
         for(WorkThread work:workThreads){
-            if(work!=null && work.isAlive()){
+            if(work!=null && work.running){
                 work.close();
             }
         }
@@ -148,7 +161,7 @@ public class MyThreadPoolImpl implements ThreadPool {
 
     static class WorkThread extends Thread {
         private boolean running = true;
-
+        private boolean isWork;//当前线程是否占用
         @Override
         public void run() {
             while (running) {
@@ -157,12 +170,14 @@ public class MyThreadPoolImpl implements ThreadPool {
                         Task task = null;
                         try {
                             queue.wait(idleTime);
-                            task = queue.take();
+                            task = queue.poll(idleTime>>1,TimeUnit.MILLISECONDS);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         if (task != null) {
+                            isWork = true;//标志开始工作
                             task.run();
+                            isWork = false;
                             completedTask++;
                             cursor--;
                         }

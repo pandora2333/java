@@ -25,6 +25,7 @@ public class TestThreadPool {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println("pass");
         myThreadPool.shutdown();
         long end = Instant.now().toEpochMilli();
         System.out.println("spend time:"+(end - start));//256 //3106
