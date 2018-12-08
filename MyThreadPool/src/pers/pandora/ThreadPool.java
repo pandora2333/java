@@ -4,7 +4,7 @@ import pers.pandora.task.Task;
 
 /**
  * author:by pandora
- * version 1.2
+ * version 1.4
  * up date:2018//11/20
  * encoding:utf8
  *
