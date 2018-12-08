@@ -12,13 +12,13 @@ public class MyThreadPoolImpl implements ThreadPool {
     private  static volatile int  completedTask;//完成工作数
     private static volatile WorkThread[] workThreads;//维护线程池
     private volatile static int cursor;//线程池扩容游标,记录总的在线工作数
-    private volatile static BlockingQueue<Task> queue = new LinkedBlockingQueue<>();// 缓冲任务队列
+    private volatile static BlockingQueue<Task> queue;// 缓冲任务队列
     private static  volatile long idleTime;
     public MyThreadPoolImpl() {
-        this("src/threadPool.properties");
+        this("src/threadPool.properties",new LinkedBlockingQueue<>());
     }
 
-    public MyThreadPoolImpl(String file) {
+    public MyThreadPoolImpl(String file,BlockingQueue<Task> queue) {
         try {
             if (!PropertiesUtils.parse("maxsize", file).equals("null")) {
                 maxsize = Integer.valueOf(PropertiesUtils
@@ -41,15 +41,8 @@ public class MyThreadPoolImpl implements ThreadPool {
         if ( maxsize < initalSize || initalSize <= 0||idleTime<=0) {
             throw new RuntimeException("配置文件数值错误!");
         } else {
+            this.queue = queue;
             workThreads = new WorkThread[initalSize];
-            initalThread();
-        }
-    }
-
-    private synchronized void initalThread() {
-        for (int i = 0; i < workThreads.length; i++) {
-            workThreads[i] = new WorkThread();
-            workThreads[i].start();
         }
     }
 
@@ -57,11 +50,14 @@ public class MyThreadPoolImpl implements ThreadPool {
     public void execute(Task task) {
         if (task != null) {
             synchronized (queue) {
-                if ((cursor>(initalSize<<1)&&initalSize<maxsize) && !isAllBuy()) {
+                if ((cursor>(initalSize<<4)&&initalSize<maxsize) && !isAllBuy()) {
                     rePool();
                 }
                 try {
                     queue.put(task);
+                    if (cursor<workThreads.length && workThreads[cursor] == null) {
+                        workThreads[cursor] = initWorker();
+                    }
                     cursor++;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -71,6 +67,14 @@ public class MyThreadPoolImpl implements ThreadPool {
         }
     }
 
+    private WorkThread initWorker(){
+        WorkThread workThread = new WorkThread();
+        workThread.setDaemon(false);
+        workThread.setPriority(Thread.NORM_PRIORITY);
+        workThread.isWork = true;
+        workThread.start();
+        return workThread;
+    }
     /**
      * 当所有线程都忙碌时，外加任务没触及最大线程数，可以扩容线程池
      * @return
@@ -92,6 +96,7 @@ public class MyThreadPoolImpl implements ThreadPool {
                 work.close();
             }
         }
+        System.out.println("pool:"+workThreads.length);
         cursor = 0;
         workThreads = null;
 
@@ -152,8 +157,7 @@ public class MyThreadPoolImpl implements ThreadPool {
                 cursor++;
             }
             for(int i = cursor;i<reThreads.length;i++){
-                reThreads[i] = new WorkThread();
-                reThreads[i].start();
+                reThreads[i] = initWorker();
             }
             workThreads = reThreads;
         }
@@ -165,23 +169,43 @@ public class MyThreadPoolImpl implements ThreadPool {
         @Override
         public void run() {
             while (running) {
+                if (!queue.isEmpty()) {
+                    /**
+                     * 无序并行执行
+                     */
+//                    Task task = null;
+//                    try {
+//                        Thread.sleep(idleTime);
+//                        task = queue.poll(idleTime,TimeUnit.MILLISECONDS);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    if (task != null) {
+//                        isWork = true;//标志开始工作
+//                        task.run();
+//                        isWork = false;
+//                        completedTask++;
+//                        cursor--;
+//                    }
+                    /**
+                     * 有序并行执行
+                     */
                 synchronized (queue) {
-                    if (!queue.isEmpty()) {
-                        Task task = null;
-                        try {
-                            queue.wait(idleTime);
-                            task = queue.poll(idleTime>>1,TimeUnit.MILLISECONDS);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        if (task != null) {
-                            isWork = true;//标志开始工作
-                            task.run();
-                            isWork = false;
-                            completedTask++;
-                            cursor--;
-                        }
+                    Task task = null;
+                    try {
+                        queue.wait(idleTime);
+                        task = queue.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
+                    if (task != null) {
+                        isWork = true;//标志开始工作
+                        task.run();
+                        isWork = false;
+                        completedTask++;
+                        cursor--;
+                    }
+                   }
                 }
             }
 

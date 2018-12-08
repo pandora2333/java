@@ -1,24 +1,42 @@
 package pers.pandora.test;
 
 import org.junit.jupiter.api.Test;
+import pers.pandora.ThreadPool;
 import pers.pandora.impl.MyThreadPoolImpl;
 import pers.pandora.task.TaskActive;
+import pers.pandora.task.TestAsk;
 
 import java.time.Instant;
 import java.util.concurrent.*;
 
 public class TestThreadPool {
+    public static void main(String[] args) {
+        ThreadPool myThreadPool = new MyThreadPoolImpl();
+        long start = Instant.now().toEpochMilli();
+        for(int i=0;i<10;i++){
+            myThreadPool.execute(new TestAsk());
+//            System.out.println(myThreadPool.getCompletedTask());
+//            new Thread(new TaskActive(countDownLatch)).start();
+        }
+
+        System.out.println("pass:"+Thread.currentThread().getName());
+        myThreadPool.shutdown();
+        long end = Instant.now().toEpochMilli();
+        System.out.println("spend time:"+(end - start));//256 //3106
+        System.out.println(myThreadPool.getCompletedTask());
+    }
     @Test
     public void test(){
 //        int [] a = new int[123];
 //        a[0]=1;
 //        System.out.println(a.length);//123
-        MyThreadPoolImpl myThreadPool = new MyThreadPoolImpl();
-        CountDownLatch countDownLatch = new CountDownLatch(10000);
+        ThreadPool myThreadPool = new MyThreadPoolImpl();
+        CountDownLatch countDownLatch = new CountDownLatch(1000);
         long start = Instant.now().toEpochMilli();
-        for(int i=0;i<10000;i++){
+        for(int i=0;i<1000;i++){
             myThreadPool.execute(new TaskActive(countDownLatch));
 //            System.out.println(myThreadPool.getCompletedTask());
+//            new Thread(new TaskActive(countDownLatch)).start();
         }
         try {
             countDownLatch.await();
