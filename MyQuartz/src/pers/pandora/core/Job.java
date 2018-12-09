@@ -1,12 +1,14 @@
 package pers.pandora.core;
 
+import pers.pandora.task.Task;
+
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
 /**
  * job定时任务
  */
-public class Job implements Runnable {
+public class Job extends Task implements Runnable {
     private int second;
     private int min;
     private int hour;
@@ -98,7 +100,7 @@ public class Job implements Runnable {
 
 
     @Override
-    public void run() {
+    public void task() {
             vailFlag();
             while (true) {
                 try {

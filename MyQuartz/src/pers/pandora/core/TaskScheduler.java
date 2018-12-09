@@ -1,47 +1,51 @@
 package pers.pandora.core;
 
+import pers.pandora.ThreadPool;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 
 /**
- * 定时任务调度器
+ * 定时任务调度器,并行
  */
 public class TaskScheduler {
     private int delay;//初始化后延时执行时间
     private static Map<Class<?>, List<String>> jobMap;
     private static Map<String,String> crons;
     private ExecutorService executorService;
+    private ThreadPool threadPool;
     static {
         crons = AnnotationSchedulerDriver.getCrons();
         jobMap = AnnotationSchedulerDriver.getJobMap();
     }
     public synchronized void exectueJob() {
-        for (Map.Entry<Class<?>, List<String>> entry : jobMap.entrySet()) {
-            try {
-                Object obj = entry.getKey().newInstance();
-                for (String method : entry.getValue()) {
-                    if (method != null) {
-                        Job job = new Job(getDelay());
-                        CronParser cronParser = new CronParser();
-                        job.setMethod(entry.getKey().getDeclaredMethod(method));
-                        job.setObject(obj);
-                        cronParser.parseCron(crons.get(method),job);
-                        if (executorService != null) {
-                            executorService.execute(job);
-                        } else {
-                           Thread t = new Thread(job);
-                           t.setDaemon(false);
-                           t.setPriority(Thread.NORM_PRIORITY);
-                           t.start();
-                        }
+        if(executorService != null||threadPool!=null) {
+            for (Map.Entry<Class<?>, List<String>> entry : jobMap.entrySet()) {
+                try {
+                    Object obj = entry.getKey().newInstance();
+                    for (String method : entry.getValue()) {
+                        if (method != null) {
+                            Job job = new Job(getDelay());
+                            CronParser cronParser = new CronParser();
+                            job.setMethod(entry.getKey().getDeclaredMethod(method));
+                            job.setObject(obj);
+                            cronParser.parseCron(crons.get(method), job);
+                            if (executorService != null) {
+                                executorService.execute(job);
+                            } else {
+                                threadPool.execute(job);
+                            }
 
+                        }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        }else {
+            System.out.println("线程池启动失败!");
         }
     }
 
@@ -50,6 +54,9 @@ public class TaskScheduler {
     }
     public  TaskScheduler(){
 
+    }
+    public  TaskScheduler(ThreadPool threadPool){
+        this.threadPool = threadPool;
     }
 
     /**
