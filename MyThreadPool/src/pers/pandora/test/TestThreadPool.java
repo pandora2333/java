@@ -31,10 +31,10 @@ public class TestThreadPool {
 //        int [] a = new int[123];
 //        a[0]=1;
 //        System.out.println(a.length);//123
-        ThreadPool myThreadPool = new MyThreadPoolImpl();
-        CountDownLatch countDownLatch = new CountDownLatch(10000);
+        ThreadPool myThreadPool = new MyThreadPoolImpl(100,200,new LinkedBlockingQueue<>());
+        CountDownLatch countDownLatch = new CountDownLatch(200000);
         long start = Instant.now().toEpochMilli();
-        for(int i=0;i<10000;i++){//14251
+        for(int i=0;i<200000;i++){//2574
             myThreadPool.execute(new TaskActive(countDownLatch));//
 //            System.out.println(myThreadPool.getCompletedTask());
 //            new Thread(new TaskActive(countDownLatch)).start();//22908

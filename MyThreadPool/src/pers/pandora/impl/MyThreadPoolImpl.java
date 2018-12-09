@@ -38,12 +38,22 @@ public class MyThreadPoolImpl implements ThreadPool {
         if ( maxsize < initalSize || initalSize <= 0) {
             throw new RuntimeException("配置文件数值错误!");
         } else {
-            this.queue = queue;
-            workThreads = new WorkThread[initalSize];
-            lock = new ReentrantLock(true);//实现公平锁模式
+            initPool(queue);
         }
     }
-
+    public MyThreadPoolImpl(int initalSize,int maxsize,BlockingQueue<Task> queue){
+        this.initalSize = initalSize;
+        this.maxsize = maxsize;
+        initPool(queue);
+    }
+    private void initPool(BlockingQueue<Task> queue){
+        this.queue = queue;
+        workThreads = new WorkThread[initalSize];
+        for (int i=0;i<workThreads.length;i++){
+            workThreads[i] = initWorker();
+        }
+        lock = new ReentrantLock();
+    }
     @Override
     public void execute(Task task) {
         if (task != null) {
@@ -53,9 +63,9 @@ public class MyThreadPoolImpl implements ThreadPool {
                 }
                 try {
                     queue.put(task);
-                    if (cursor<workThreads.length && workThreads[cursor] == null) {
-                        workThreads[cursor] = initWorker();
-                    }
+//                    if (cursor<workThreads.length && workThreads[cursor] == null) {
+//                        workThreads[cursor] = initWorker();
+//                    }
                     cursor++;
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -95,7 +105,7 @@ public class MyThreadPoolImpl implements ThreadPool {
                 work.close();
             }
         }
-        System.out.println("pool:"+workThreads.length);
+//        System.out.println("pool:"+workThreads.length);
         cursor = 0;
         workThreads = null;
 
