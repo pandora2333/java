@@ -32,10 +32,10 @@ public class TestThreadPool {
 //        a[0]=1;
 //        System.out.println(a.length);//123
         ThreadPool myThreadPool = new MyThreadPoolImpl();
-        CountDownLatch countDownLatch = new CountDownLatch(200000);
+        CountDownLatch countDownLatch = new CountDownLatch(10000);
         long start = Instant.now().toEpochMilli();
-        for(int i=0;i<200000;i++){//14251
-            myThreadPool.execute(new TaskActive(countDownLatch));
+        for(int i=0;i<10000;i++){//14251
+            myThreadPool.execute(new TaskActive(countDownLatch));//
 //            System.out.println(myThreadPool.getCompletedTask());
 //            new Thread(new TaskActive(countDownLatch)).start();//22908
         }
@@ -52,10 +52,10 @@ public class TestThreadPool {
     }
     @Test
     public void test2(){
-        CountDownLatch countDownLatch = new CountDownLatch(20000);
+        CountDownLatch countDownLatch = new CountDownLatch(200000);
         long start = Instant.now().toEpochMilli();
-            ThreadPoolExecutor th = new ThreadPoolExecutor(100,200,1000, TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(100),new ThreadPoolExecutor.DiscardPolicy());
-        for(int i = 0;i<20000;i++){
+            ThreadPoolExecutor th = new ThreadPoolExecutor(100,200,0, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<>(),new ThreadPoolExecutor.DiscardOldestPolicy());
+        for(int i = 0;i<200000;i++){
 //            new Thread(new TaskActive(countDownLatch)).start();
             th.execute(new TaskActive(countDownLatch));
         }

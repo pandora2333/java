@@ -48,7 +48,7 @@ public class MyThreadPoolImpl implements ThreadPool {
     public void execute(Task task) {
         if (task != null) {
             synchronized (queue) {
-                if ((cursor>(initalSize<<4)&&initalSize<maxsize) && !isAllBuy()) {
+                if ((cursor>(initalSize<<1)&&initalSize<maxsize) && !isAllBuy()) {
                     rePool();
                 }
                 try {
@@ -187,10 +187,10 @@ public class MyThreadPoolImpl implements ThreadPool {
 //                        cursor--;
 //                    }
                     /**
-                     * 有序并行执行
+                     * 有序并行执行，乐观锁策略
                      */
                     try {
-                        lock.lockInterruptibly();//获取线程可中断锁
+                        lock.lockInterruptibly();//获取线程可中断锁，如果中断抛出异常，否者获取锁，处理中断优先高于获取锁
                     } catch (InterruptedException e) {
 //                        System.out.println("当前线程已被中断");
                     }
@@ -207,11 +207,14 @@ public class MyThreadPoolImpl implements ThreadPool {
                         completedTask++;
                         cursor--;
                     }
-                    try{
+                    if(((ReentrantLock)lock).isHeldByCurrentThread()){
                         lock.unlock();
-                    }catch (Exception e){
-                        //未获取锁的线程在此unlock会报错
                     }
+//                    try{
+//                        lock.unlock();
+//                    }catch (Exception e){
+//                        //未获取锁的线程在此unlock会报错
+//                    }
                 }
             }
 
