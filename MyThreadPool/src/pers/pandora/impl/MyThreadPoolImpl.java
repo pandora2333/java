@@ -3,17 +3,18 @@ package pers.pandora.impl;
 import pers.pandora.ThreadPool;
 import pers.pandora.task.Task;
 import pers.pandora.util.PropertiesUtils;
-
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MyThreadPoolImpl implements ThreadPool {
     private  int maxsize;// 线程池最大线程数
     private  int initalSize;//线程池初始化线程数
-    private  static volatile int  completedTask;//完成工作数
-    private static volatile WorkThread[] workThreads;//维护线程池
-    private volatile static int cursor;//线程池扩容游标,记录总的在线工作数
-    private volatile static BlockingQueue<Task> queue;// 缓冲任务队列
-    private static  volatile long idleTime;
+    private  int  completedTask;//完成工作数
+    private  WorkThread[] workThreads;//维护线程池
+    private  int cursor;//线程池扩容游标,记录总的在线工作数
+    private  BlockingQueue<Task> queue;// 缓冲任务队列
+    private  Lock lock;//采用lock的线程中断锁,解决线程长时间的占用锁不释放，造成其它线程饥饿问题
     public MyThreadPoolImpl() {
         this("src/threadPool.properties",new LinkedBlockingQueue<>());
     }
@@ -28,21 +29,18 @@ public class MyThreadPoolImpl implements ThreadPool {
                 initalSize = Integer.valueOf(PropertiesUtils.parse(
                         "initalSize", file));
             }
-            if (!PropertiesUtils.parse("idleTime", file).equals("null")) {
-                idleTime = Long.valueOf(PropertiesUtils.parse(
-                        "idleTime", file));
-            }
 
         } catch (Exception e) {
             System.out.println("配置文件非数值!");
             // e.printStackTrace();
         }
 
-        if ( maxsize < initalSize || initalSize <= 0||idleTime<=0) {
+        if ( maxsize < initalSize || initalSize <= 0) {
             throw new RuntimeException("配置文件数值错误!");
         } else {
             this.queue = queue;
             workThreads = new WorkThread[initalSize];
+            lock = new ReentrantLock(true);//实现公平锁模式
         }
     }
 
@@ -73,6 +71,7 @@ public class MyThreadPoolImpl implements ThreadPool {
         workThread.setPriority(Thread.NORM_PRIORITY);
         workThread.isWork = true;
         workThread.start();
+        workThread.interrupt();//发出中断请求
         return workThread;
     }
     /**
@@ -163,7 +162,7 @@ public class MyThreadPoolImpl implements ThreadPool {
         }
     }
 
-    static class WorkThread extends Thread {
+    class WorkThread extends Thread {
         private boolean running = true;
         private boolean isWork;//当前线程是否占用
         @Override
@@ -175,7 +174,7 @@ public class MyThreadPoolImpl implements ThreadPool {
                      */
 //                    Task task = null;
 //                    try {
-//                        Thread.sleep(idleTime);
+////                        Thread.sleep(idleTime);
 //                        task = queue.poll(idleTime,TimeUnit.MILLISECONDS);
 //                    } catch (InterruptedException e) {
 //                        e.printStackTrace();
@@ -190,10 +189,13 @@ public class MyThreadPoolImpl implements ThreadPool {
                     /**
                      * 有序并行执行
                      */
-                synchronized (queue) {
+                    try {
+                        lock.lockInterruptibly();//获取线程可中断锁
+                    } catch (InterruptedException e) {
+//                        System.out.println("当前线程已被中断");
+                    }
                     Task task = null;
                     try {
-                        queue.wait(idleTime);
                         task = queue.take();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -205,7 +207,11 @@ public class MyThreadPoolImpl implements ThreadPool {
                         completedTask++;
                         cursor--;
                     }
-                   }
+                    try{
+                        lock.unlock();
+                    }catch (Exception e){
+                        //未获取锁的线程在此unlock会报错
+                    }
                 }
             }
 

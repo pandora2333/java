@@ -15,7 +15,7 @@ public class TaskActive extends  Task {
             num+=i;
             i++;
         }
-        countDownLatch.countDown();
         System.out.println(Thread.currentThread().getName()+"["+num+"]");
+        countDownLatch.countDown();
     }
 }
