@@ -59,7 +59,7 @@ public class MySkipList<T> {
     /**
      * It just sure that it will remove the root elements in last-level
      * maybe it will remain many skip-level elements,them can't be the root elemenets
-     * so it wasted
+     * so it wasted but it fast without Iterative
      * @param t
      */
 	public void remove(T t){

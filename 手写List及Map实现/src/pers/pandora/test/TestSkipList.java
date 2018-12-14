@@ -19,8 +19,8 @@ public class TestSkipList {
 //        mySkipList.remove(0);
 //        mySkipList.remove(1);
 //        mySkipList.remove(64);
-        IntStream.range(0,51).boxed().map(i -> mySkipList.contains(i)).forEach(System.out::println);
-//        System.out.println("contains:"+mySkipList.contains(55)+",size:"+mySkipList.size());
-//		mySkipList.printAllElments();
+//        IntStream.range(0,51).boxed().map(i -> mySkipList.contains(i)).forEach(System.out::println);
+        System.out.println("contains:"+mySkipList.contains(30)+",size:"+mySkipList.size());
+		mySkipList.printAllElments();
 	}
 }
