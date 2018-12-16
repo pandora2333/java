@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * complete my own skip list
  * {@link ConcurrentSkipListMap}
  * @author pandora
+ * date 2018/12/16
  *
  */
 public class MySkipList<T> {
@@ -21,12 +22,10 @@ public class MySkipList<T> {
 	static class  Node<T>{
 		int dataType;
 		T data;
-		boolean flag;
 		Node<T> up,down,left,right;//the skip list Node
 		Node(int dataType,T data){
 			this.data = data;
 			this.dataType = dataType;
-			flag = true;
 		}
 		boolean lt(T t){
 			return t!=null?this.data.hashCode()-t.hashCode()<=0:true;
@@ -39,6 +38,7 @@ public class MySkipList<T> {
 		head.right = tail;
 		tail.left = head;
 	}
+
 
 	public Node<T> find(T element){
 		Node<T> cursor = head;//index current node location
@@ -59,24 +59,40 @@ public class MySkipList<T> {
     /**
      * It just sure that it will remove the root elements in last-level
      * maybe it will remain many skip-level elements,them can't be the root elemenets
-     * so it wasted but it fast without Iterative
+     * so it wasted but fast without iterative delete action
      * @param t
      */
 	public void remove(T t){
 	    Node<T> node = find(t);
         if(node.dataType!=HEAD_P&&node.data.equals(t)){
-            if(node.left.right.flag&&node.right.flag&&node.right.left.flag&&node.left.flag) {
-                node.left.right = node.right;
-                node.right.left = node.left;
-                node.flag = false;
-                size--;
-            }
+			node.left.right = node.right;
+			node.right.left = node.left;
+			while(node.up!=null){
+				node.down = null;
+				node = node.up;
+				node.down = null;//resolve the problem from head to tail to find it but it should exist
+				if(node.left.dataType==HEAD_P&&node.right.dataType==TAIL_P){//freee the head/tail node
+					Node h = node.left.down;
+					if(h.down!=null){
+						h.up = node.left.up;
+						node.right.down.up = node.right.up;
+						if(node.left.up!=null) {
+							node.left.up.down = h ;
+							node.right.up.down = node.right.down;
+						}
+					}
+					height--;
+				}
+				node.left.right = node.right;
+				node.right.left = node.left;
+			}
+			size--;
         }
 	}
 
 	public boolean contains(T element){
 	    Node<T> node = find(element);
-		return node.data!=null&&node.flag?node.data.equals(element):false;
+		return node.data!=null?node.data.equals(element):false;
 	}
 	
 	public int size(){
@@ -89,10 +105,12 @@ public class MySkipList<T> {
 		int curLevel = height+1;//the first level is 1,so the height same as
 		over:
 		for(;;){
-            System.out.print("total["+(height+1)+"],current["+curLevel-- +"]");
+			if(cursor.right.dataType!=TAIL_P) {
+				System.out.print("total[" + (height + 1) + "],current[" + curLevel-- + "]");
+			}
 			while(cursor.right.dataType!=TAIL_P){
 				cursor = cursor.right;
-                System.out.print(cursor.data + " ");
+				System.out.print(cursor.data + " ");
 			}
 			System.out.println();
 			if(headIndex.down!=null){
@@ -118,37 +136,35 @@ public class MySkipList<T> {
 		current.right.left = newNode;
 		current.right = newNode;
 		size++;
-		Node<T> autoNode = new Node<>(DATA_P,element);
-		while(ThreadLocalRandom.current().nextDouble()<0.25){//auto-spread the capacity of the skip-list
-		    while(current.up == null&&current.dataType!=HEAD_P){
+		int autoLevel = 0;
+		while(ThreadLocalRandom.current().nextDouble()<0.3){//auto-spread the capacity of the skip-list,random method to expand
+
+			if(autoLevel>=height){
+				Node<T> newHead = new Node<>(HEAD_P, null);
+				Node<T> newTail = new Node<>(TAIL_P, null);
+				newHead.down = head;
+				newHead.right = newTail;
+				newTail.left = newHead;
+				head.up = newHead;
+				newTail.down = tail;
+				tail.up = newTail;
+				head = newHead;
+				tail = newTail;
+				height++;
+			}
+		    while(current.up == null){
                 current = current.left;
             }
-            if(current .dataType!=HEAD_P) {
-                current = current.up;
-                autoNode.left = current;
-                autoNode.right = current.right;
-                current.right.left = autoNode;
-                current.right = autoNode;
-                autoNode.down = newNode;
-                newNode.up = autoNode;
-            }else {
-                Node<T> newHead = new Node<>(HEAD_P, null);
-                Node<T> newTail = new Node<>(TAIL_P, null);
-                newHead.down = head;
-                head.up = newHead;
-                newTail.down = tail;
-                tail.up = newTail;
-                newHead.right = autoNode;
-                newTail.left = autoNode;
-                autoNode.left = newHead;
-                autoNode.right = newTail;
-                autoNode.down = newNode;
-                newNode.up = autoNode;
-                head = newHead;
-                tail = newTail;
-                height++;
-                break;
+			Node<T> autoNode = new Node<>(DATA_P,element);
+			current = current.up;
+			autoNode.left = current;
+			autoNode.right = current.right;
+			current.right.left = autoNode;
+			current.right = autoNode;
+			autoNode.down = newNode;
+			newNode.up = autoNode;
+			newNode = autoNode;//sure that the next time,newNode will be the pre node, iterative so on
+			autoLevel++;
             }
 		}
-	}
 }
