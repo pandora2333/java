@@ -1,7 +1,6 @@
 package pers.pandora.utils;
 import org.junit.jupiter.api.Test;
 import pers.pandora.bean.User;
-import pers.pandora.servlet.Servlet;
 
 import javax.tools.*;
 import java.io.*;

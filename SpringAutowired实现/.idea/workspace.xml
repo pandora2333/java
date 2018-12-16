@@ -2,18 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="983d9920-a842-4d4a-b022-30ee45334aef" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/artifacts/MyThreadPool_jar.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../MyThreadPool/src/META-INF/MANIFEST.MF" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Deno.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/MyBatisX.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Demo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -93,9 +95,9 @@
     <session id="-494015295">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
-          <entry key="project.open.time.0" value="1" />
-          <entry key="project.opened" value="1" />
+          <entry key="project.closed" value="2" />
+          <entry key="project.open.time.0" value="2" />
+          <entry key="project.opened" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
@@ -110,28 +112,18 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="java" value="1" />
+          <entry key="java" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="JAVA" value="1" />
+          <entry key="JAVA" value="2" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/pers/pandora/util/BeanUtils.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="546">
-              <caret line="70" column="5" lean-forward="true" selection-start-line="47" selection-start-column="4" selection-end-line="70" selection-end-column="5" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -189,6 +181,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -232,8 +226,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -243,7 +235,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1544233764227" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../MyThreadPool" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../MyTomcat" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="File.Encoding" />
@@ -340,6 +332,7 @@
       <workItem from="1542850130941" duration="960000" />
       <workItem from="1543242316444" duration="63000" />
       <workItem from="1544228456056" duration="1454000" />
+      <workItem from="1544333249171" duration="27000" />
     </task>
     <task id="LOCAL-00001" summary="delete some ...">
       <created>1544228665395</created>
@@ -384,7 +377,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21232000" />
+    <option name="totallyTimeSpent" value="21259000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -397,9 +390,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18900804" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19168901" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -572,8 +564,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/util/BeanUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="546">
-          <caret line="70" column="5" lean-forward="true" selection-start-line="47" selection-start-column="4" selection-end-line="70" selection-end-column="5" />
+        <state relative-caret-position="71">
+          <caret line="51" column="13" lean-forward="true" selection-start-line="51" selection-start-column="13" selection-end-line="51" selection-end-column="13" />
         </state>
       </provider>
     </entry>

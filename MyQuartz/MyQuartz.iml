@@ -7,10 +7,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../手写源码/java/MyThreadPool/MyThreadPool.jar!/" />
+          <root url="jar://$MODULE_DIR$/../MyThreadPool/MyThreadPool.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

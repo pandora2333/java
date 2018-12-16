@@ -1,6 +1,3 @@
----
-typora-copy-images-to: ./
----
 
 # java
  just studying in java simply!

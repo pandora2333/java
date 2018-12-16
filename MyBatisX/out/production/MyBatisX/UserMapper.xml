@@ -1,8 +1,0 @@
-<MyMapper namespace="pers.pandora.mapper.UserMapper">
-    <update id="updateD">
-        update user set userName = #{username} where id = #{id}
-    </update>
-    <select id="queryForUser" resultType="pers.pandora.bean.User">
-        select * from user where id = #{id} and userName= #{username}
-    </select>
-</MyMapper>

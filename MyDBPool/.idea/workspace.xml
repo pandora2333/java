@@ -1,7 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="dc0cd3e5-30e3-4759-8c61-7be8dadd15c9" name="Default Changelist" comment="" />
+    <list default="true" id="dc0cd3e5-30e3-4759-8c61-7be8dadd15c9" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../手写List及Map实现/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Demo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/EntityMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/UserMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/dbpool.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mapper.dtd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mbg.dtd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mbg.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Column.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Id.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Table.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/bean/Entity.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/bean/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/Configuration.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/DBPool.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/DynamicSql.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/MapperProxyClass$MyHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/MapperProxyClass.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/PoolConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/SqlSession.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/SqlSessionFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/Dom4JUtil.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/IgnoreDTDEntityResolver.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/MBGUtils.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/PropUtils.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/TypeConverter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mapper/EntityMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mapper/UserMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/ColumnInfo.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/JavaGetSetter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/TableInfo.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/Article.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/Download.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/ArticleMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/DownloadMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/UserMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/testMyBatisX.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/ArticleMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/DownloadMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/UserMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/JspParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/JspParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../手写List及Map实现/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../手写List及Map实现/.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -45,6 +108,41 @@
         </counts>
       </usages-collector>
     </session>
+    <session id="-733712644">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="3" />
+          <entry key="project.open.time.0" value="3" />
+          <entry key="project.opened" value="3" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="dtd" value="1" />
+          <entry key="java" value="1" />
+          <entry key="properties" value="1" />
+          <entry key="xml" value="6" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="DTD" value="1" />
+          <entry key="JAVA" value="1" />
+          <entry key="Properties" value="1" />
+          <entry key="XML" value="6" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="xml" value="1" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="XML" value="1" />
+        </counts>
+      </usages-collector>
+    </session>
   </component>
   <component name="FileEditorManager">
     <leaf />
@@ -56,6 +154,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -65,9 +166,9 @@
         <option value="$PROJECT_DIR$/src/pers/pandora/utils/PropUtils.java" />
         <option value="$PROJECT_DIR$/src/dbpool.properties" />
         <option value="$PROJECT_DIR$/src/pers/pandora/PoolConnection.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/DBPool.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/test/Test.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/test/DBPoolTest.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/DBPool.java" />
       </list>
     </option>
   </component>
@@ -92,13 +193,12 @@
     <option name="width" value="1350" />
     <option name="height" value="690" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -125,6 +225,8 @@
           <select />
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -133,13 +235,13 @@
     <property name="Repository.Attach.Sources" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1542714671776" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../MyThreadPool" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1544340517404" />
+    <property name="last_opened_file_path" value="E:/bli bli/Java并发课程资料/Java并发课程资料/Concurrency" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="project.structure.last.edited" value="Modules" />
-    <property name="project.structure.proportion" value="0.0" />
-    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="settings.editor.selected.configurable" value="MavenSettings" />
   </component>
@@ -232,6 +334,9 @@
       <workItem from="1542679907772" duration="12903000" />
       <workItem from="1542709643525" duration="5051000" />
       <workItem from="1542771544988" duration="524000" />
+      <workItem from="1544333596681" duration="80000" />
+      <workItem from="1544333868227" duration="7000" />
+      <workItem from="1544334223919" duration="1420000" />
     </task>
     <servers />
   </component>
@@ -268,12 +373,12 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18478000" />
+    <option name="totallyTimeSpent" value="19985000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25670242" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26675603" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -327,18 +432,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/DBPool.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="11" column="14" selection-start-line="11" selection-start-column="14" selection-end-line="11" selection-end-column="14" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#3920#3921#0" expanded="true" />
-            <element signature="e#3946#3947#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/PoolConnection.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="228">
@@ -363,6 +456,38 @@
           <caret line="3" column="13" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/DBPool.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="456">
+          <caret line="24" column="28" selection-start-line="24" selection-start-column="28" selection-end-line="24" selection-end-column="28" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/mapper.dtd">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/EntityMapper.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/mbg.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="171">
+          <caret line="9" column="25" selection-start-line="9" selection-start-column="25" selection-end-line="9" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/UserMapper.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/test/mapper/UserMapper.xml">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../MyBatisX/MyBatisX.jar!/dbpool.properties">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
   <component name="masterDetails">

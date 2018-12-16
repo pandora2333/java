@@ -1,7 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="da19bf94-7506-44c2-a1f1-f55e54f380b4" name="Default Changelist" comment="" />
+    <list default="true" id="da19bf94-7506-44c2-a1f1-f55e54f380b4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/.idea/MyBatisX.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyDBPool/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/Client.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/MySkipList$Node.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/MySkipList.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/threadPool.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyTomcat/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/AtomicLinkedQueue$Node.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/AtomicLinkedQueue.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/MySkipList$Node.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/MySkipList.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/test/TestAtomicLinkedQueue.class" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/production/手写源码/pers/pandora/test/TestSkipList.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Demo.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/EntityMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/UserMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/dbpool.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mapper.dtd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mbg.dtd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/mbg.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Column.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Id.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/annotation/Table.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/bean/Entity.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/bean/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/Configuration.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/DBPool.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/DynamicSql.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/MapperProxyClass$MyHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/MapperProxyClass.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/PoolConnection.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/SqlSession.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/SqlSessionFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/Dom4JUtil.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/IgnoreDTDEntityResolver.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/MBGUtils.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/PropUtils.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/core/utils/TypeConverter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mapper/EntityMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mapper/UserMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/ColumnInfo.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/JavaGetSetter.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/mbg/TableInfo.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/Article.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/Download.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/ArticleMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/DownloadMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/test/mapper/UserMapper.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/pers/pandora/testMyBatisX.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/ArticleMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/DownloadMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/out/production/MyBatisX/test/mapper/UserMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyDBPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyDBPool/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/MyQuartz.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/Job.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/core/TaskScheduler.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyQuartz/out/production/MyQuartz/pers/pandora/test/TestQuartz.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TaskActive.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/task/TestAsk.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/test/TestThreadPool.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/threadPool.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/JspParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/JspParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -112,9 +190,64 @@
         </counts>
       </usages-collector>
     </session>
+    <session id="-768382206">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="6" />
+          <entry key="project.open.time.0" value="2" />
+          <entry key="project.open.time.30" value="1" />
+          <entry key="project.open.time.32" value="1" />
+          <entry key="project.open.time.36" value="1" />
+          <entry key="project.open.time.52" value="1" />
+          <entry key="project.open.time.7" value="1" />
+          <entry key="project.opened" value="7" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="java" value="26" />
+          <entry key="md" value="3" />
+          <entry key="png" value="1" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="Image" value="1" />
+          <entry key="JAVA" value="26" />
+          <entry key="Markdown" value="3" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.edit">
+        <counts>
+          <entry key="java" value="5410" />
+          <entry key="md" value="13" />
+          <entry key="txt" value="99" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.edit">
+        <counts>
+          <entry key="JAVA" value="5410" />
+          <entry key="Markdown" value="13" />
+          <entry key="PLAIN_TEXT" value="99" />
+        </counts>
+      </usages-collector>
+    </session>
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor>
+                <caret lean-forward="true" />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -123,6 +256,9 @@
         <option value="Class" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -140,6 +276,14 @@
         <option value="$PROJECT_DIR$/src/pers/pandora/MyMap.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/impl/MyLinkedListImpl.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/test/TestMyList.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/Client.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/test/Client.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/AtomicQueue.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/AtomicLinkedQueue.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/test/TestAtomicLinkedQueue.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/test/TestSkipList.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/MySkipList.java" />
+        <option value="$PROJECT_DIR$/../README.md" />
       </list>
     </option>
   </component>
@@ -164,12 +308,12 @@
     <option name="width" value="1350" />
     <option name="height" value="690" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -193,20 +337,6 @@
               <item name="手写List及Map实现" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="pandora" type="462c0819:PsiDirectoryNode" />
-              <item name="bean" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="手写List及Map实现" type="b2602c69:ProjectViewProjectNode" />
-              <item name="手写List及Map实现" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="pandora" type="462c0819:PsiDirectoryNode" />
-              <item name="impl" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="手写List及Map实现" type="b2602c69:ProjectViewProjectNode" />
-              <item name="手写List及Map实现" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="pandora" type="462c0819:PsiDirectoryNode" />
               <item name="test" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -214,6 +344,7 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -222,8 +353,8 @@
     <property name="Repository.Attach.Sources" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1542466529039" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1544929455988" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../114.png" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="project.structure.last.edited" value="Modules" />
@@ -250,7 +381,33 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.TestMyList.test2">
+  <component name="RunManager" selected="Application.TestAtomicLinkedQueue">
+    <configuration name="TestAtomicLinkedQueue" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="pers.pandora.test.TestAtomicLinkedQueue" />
+      <module name="手写源码" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="pers.pandora.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="TestSkipList" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="pers.pandora.test.TestSkipList" />
+      <module name="手写源码" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="pers.pandora.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="TestMap.test" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="手写源码" />
       <extension name="coverage">
@@ -303,9 +460,13 @@
       <item itemvalue="JUnit.TestMyList.test" />
       <item itemvalue="JUnit.TestMap.test" />
       <item itemvalue="JUnit.TestMyList.test2" />
+      <item itemvalue="Application.TestSkipList" />
+      <item itemvalue="Application.TestAtomicLinkedQueue" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.TestAtomicLinkedQueue" />
+        <item itemvalue="Application.TestSkipList" />
         <item itemvalue="JUnit.TestMyList.test2" />
         <item itemvalue="JUnit.TestMyList.test" />
         <item itemvalue="JUnit.TestMap.test" />
@@ -329,7 +490,43 @@
       <workItem from="1542340559730" duration="5028000" />
       <workItem from="1542465249992" duration="683000" />
       <workItem from="1542466059536" duration="491000" />
+      <workItem from="1544333521234" duration="74000" />
+      <workItem from="1544799053051" duration="920000" />
+      <workItem from="1544800749519" duration="3629000" />
+      <workItem from="1544832411280" duration="21822000" />
+      <workItem from="1544869692182" duration="2121000" />
+      <workItem from="1544920098127" duration="8369000" />
+      <workItem from="1544929235474" duration="251000" />
     </task>
+    <task id="LOCAL-00001" summary="skiplist test...">
+      <created>1544799208662</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1544799208662</updated>
+    </task>
+    <task id="LOCAL-00002" summary="skiplist test...">
+      <created>1544799955555</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1544799955555</updated>
+    </task>
+    <task id="LOCAL-00003" summary="unlock queue and skiplist  finally fix...">
+      <created>1544927073811</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1544927073811</updated>
+    </task>
+    <task id="LOCAL-00004" summary="up a picture and update the detail...">
+      <created>1544929404846</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1544929404847</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -365,12 +562,13 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="30993000" />
+    <option name="totallyTimeSpent" value="68179000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.27010724" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19638069" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -379,8 +577,8 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3286119" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39943343" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32765958" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39858156" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -406,6 +604,12 @@
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="skiplist test..." />
+    <MESSAGE value="unlock queue and skiplist  finally fix..." />
+    <MESSAGE value="up a picture and update the detail..." />
+    <option name="LAST_COMMIT_MESSAGE" value="up a picture and update the detail..." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/../BBSS2.7/src/per/pandora/bbs/Article.java" />
@@ -447,13 +651,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/impl/MyArrayListImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="722">
-          <caret line="42" column="19" lean-forward="true" selection-start-line="42" selection-start-column="19" selection-end-line="42" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/bean/User.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-180">
@@ -475,23 +672,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/impl/MyHashMap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="2" column="26" selection-start-line="2" selection-start-column="26" selection-end-line="2" selection-end-column="26" />
-          <folding>
-            <element signature="e#3233#3234#0" expanded="true" />
-            <element signature="e#3274#3275#0" expanded="true" />
-            <element signature="e#3889#3890#0" expanded="true" />
-            <element signature="e#3916#3917#0" expanded="true" />
-            <element signature="e#4310#4311#0" expanded="true" />
-            <element signature="e#4345#4346#0" expanded="true" />
-            <element signature="e#4394#4395#0" expanded="true" />
-            <element signature="e#4434#4435#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/LinkedList.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-5273">
@@ -499,17 +679,100 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestMyList.java">
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/impl/MyArrayListImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="447">
-          <caret line="42" column="38" selection-start-line="42" selection-start-column="38" selection-end-line="42" selection-end-column="38" />
+        <state relative-caret-position="722">
+          <caret line="42" column="19" lean-forward="true" selection-start-line="42" selection-start-column="19" selection-end-line="42" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/impl/MyHashMap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2271">
+          <caret line="3" column="13" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/impl/MyLinkedListImpl.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1311">
+        <state relative-caret-position="-181">
           <caret line="72" column="27" selection-start-line="72" selection-start-column="27" selection-end-line="72" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestMyList.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="470">
+          <caret line="42" column="38" selection-start-line="42" selection-start-column="38" selection-end-line="42" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/concurrent/ConcurrentSkipListMap.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-54217">
+          <caret line="605" column="9" lean-forward="true" selection-start-line="605" selection-start-column="9" selection-end-line="605" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/function/Function.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="40" column="17" selection-start-line="40" selection-start-column="17" selection-end-line="40" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/stream/Stream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="183" column="27" lean-forward="true" selection-start-line="183" selection-start-column="27" selection-end-line="183" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/concurrent/Executors.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="214" column="34" selection-start-line="214" selection-start-column="34" selection-end-line="214" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestAtomicLinkedQueue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="209">
+          <caret line="12" column="24" selection-start-line="12" selection-start-column="24" selection-end-line="12" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/AtomicLinkedQueue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="152">
+          <caret line="8" column="3" lean-forward="true" selection-start-line="8" selection-start-column="3" selection-end-line="8" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestSkipList.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="8" column="24" selection-start-line="8" selection-start-column="24" selection-end-line="8" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/MySkipList.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="147">
+          <caret line="9" column="7" selection-start-line="9" selection-start-column="7" selection-end-line="9" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../114.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor>
+            <caret lean-forward="true" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
