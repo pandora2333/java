@@ -20,7 +20,7 @@ public class AtomicLinkedQueue<T> {
 
     private static class Node<T> {
         T data;
-        volatile Node<T> next;
+        Node<T> next;
 
         public T getData() {
             return data;
