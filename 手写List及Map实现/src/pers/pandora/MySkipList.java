@@ -68,9 +68,9 @@ public class MySkipList<T> {
 			node.left.right = node.right;
 			node.right.left = node.left;
 			while(node.up!=null){
-				node.down = null;
+//				node.down = null;
 				node = node.up;
-				node.down = null;//resolve the problem from head to tail to find it but it should exist
+//				node.down = null;//resolve the problem from head to tail to find it but it should not exist
 				if(node.left.dataType==HEAD_P&&node.right.dataType==TAIL_P){//freee the head/tail node
 					Node h = node.left.down;
 					if(h.down!=null){

@@ -60,8 +60,6 @@ public class AtomicLinkedQueue<T> {
         T value = nextNode!=null?nextNode.data:null;
         if(nextNode!=null){
             nextNode.data = null;//as the head node use
-        }
-        if(nextNode!=null) {
             size.decrementAndGet();
         }
         return value;
@@ -70,7 +68,7 @@ public class AtomicLinkedQueue<T> {
         return size.get();
     }
     public T peek(){
-        Node<T> element = first.get();
+        Node<T> element = first.get().getNext();
         return element!=null?element.data:null;
     }
     public boolean isEmpty(){
