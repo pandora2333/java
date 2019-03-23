@@ -5,7 +5,7 @@ import java.util.*;
  * gobang algorithm in core parts
  * @author pandora
  * @date 2019/1/14
- * @FixDate 2019/1/20
+ * @FixDate 2019/3/23
  * @Version 2.1
  */
 public class WuZiChess {
@@ -299,24 +299,31 @@ public class WuZiChess {
                 }
                 else return  returnPos;
     }
-    int ratio = 2;//record the random ratio,it should become big when stack search count increase.Just defending stack boom!
+    int ratio = 2;//record the random ratio,it should become big when stack search count increase.Just defending waiting util time out!
     int counter;//record that what time the ratio will become increase
     SecureRandom secureRandom = new SecureRandom();//the way that (int)Math.random()*ratio is not enough secure for RNG
+
+    /**
+     * @fixDate 2019/3/23
+     * @message refuse to use a deeep stack search by a while
+     * @param defaultPos
+     * @param wuZiChess
+     * @return
+     */
     private  WuZi findRandom(XY defaultPos, WuZiChess wuZiChess){//find a random position
         int x = defaultPos.x+secureRandom.nextInt(ratio)-1;
         int y = defaultPos.y+secureRandom.nextInt(ratio)-1;
-        if(x>0&&y>0&&x<15&&y<15&& wuZiChess.map.get(new XY(x,y))==null) {
-            ratio = 2;//reset
-            counter = 0;//reset
-            return new WuZi(x, y, 0, 0, false);
-        }
-        else {
+        while(!(x>0&&y>0&&x<15&&y<15&& wuZiChess.map.get(new XY(x,y))==null)) {
             if(counter > 5){
                 ratio = ratio+1>15?15:ratio+1;
                 counter = 0;
             }
             counter++;
-                return findRandom(defaultPos, wuZiChess);//deep stack search,be care of stackoverflow
+            x = defaultPos.x+secureRandom.nextInt(ratio)-1;
+            y = defaultPos.y+secureRandom.nextInt(ratio)-1;
         }
+        ratio = 2;//reset
+        counter = 0;//reset
+        return new WuZi(x, y, 0, 0, false);
     }
 }
