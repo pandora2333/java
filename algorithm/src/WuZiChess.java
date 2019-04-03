@@ -5,8 +5,8 @@ import java.util.*;
  * gobang algorithm in core parts
  * @author pandora
  * @date 2019/1/14
- * @FixDate 2019/3/23
- * @Version 2.1
+ * @FixDate 2019/4/3
+ * @Version 2.2
  */
 public class WuZiChess {
     static class WuZi{//core object,abstract chess object
@@ -188,6 +188,7 @@ public class WuZiChess {
         }
         return null;//found failed
     }
+    static boolean location[][] = new boolean[16][16];//mark the location
     /**
      * test by some virtual data
      * model type:ai first,then you
@@ -206,12 +207,14 @@ public class WuZiChess {
             if(wuZiChess.map.get(xy)!=null) throw new RuntimeException("current position has a chess model,can't reset");
             WuZi wuZi = new WuZi(x,y,1,1,true);
             wuZiChess.map.put(xy,wuZi);
+            location[x][y]= true;
             result = wuZiChess.BFS(xy.x,xy.y);
             WuZi ai =  wuZiChess.find(xy, wuZiChess);
             if(ai!=null){
                 XY aiXY = new XY(ai.x,ai.y);
                 wuZiChess.map.put(aiXY,ai);
                 wuZiChess.aiMap.put(aiXY,ai);
+                location[ai.x][ai.y]=true;
                 System.out.println("ai auto model:["+ai.x+","+ai.y+"]");
             }
             if(result == null) result = wuZiChess.BFSForAI(ai.x,ai.y);
@@ -227,77 +230,100 @@ public class WuZiChess {
 
     private WuZi find(XY defaultPos, WuZiChess wuZiChess) {
         WuZi returnPos = wuZiChess.findRandom(defaultPos, wuZiChess);//return predicted position
+        if(returnPos==null) return null;
         if(wuZiChess.map.size()==0|| wuZiChess.path.size()==0){
             return returnPos;//empty? directly return a random position
         }
         List<WuZi> maxLength = null;//search the loggest path
         WuZi predict = null;//search auto suitable location
-        XY xy = null;
+        XY xy = new XY(-1,-1);
         WuZi temp = null;
         for (List<WuZi> obj: wuZiChess.path.values()) if(maxLength==null||obj.size()>maxLength.size()) maxLength = obj;//find the biggest
         for (WuZi danger:maxLength) if(predict==null||danger.warn >= predict.warn) predict = danger;//find the most dangerous location
             for (;;)
-                if(predict!=null)
-                    switch (predict.level){
-                    case 1:// -
-                        if(predict.x-1>=0){
-                            xy = new XY(predict.x-1,predict.y);
-                            temp = wuZiChess.map.get(xy);
-                        }
-                        if(temp!=null||xy == null){
-                            if(predict.x+1<15) {
-                                xy = new XY(predict.x + 1, predict.y);
+                if(predict!=null) {
+                    switch (predict.level) {
+                        case 1:// -
+                            if (predict.x - 1 >= 0) {
+                                xy.x=predict.x - 1;
+                                xy.y=predict.y;
                                 temp = wuZiChess.map.get(xy);
                             }
-                        }
-                        if(temp==null) return new WuZi(xy.x,xy.y,0,0,false);
-                        else predict = predict.next;
-                        break;
-                    case 2:// |
-                        if(predict.y-1>=0) {
-                            xy = new XY(predict.x, predict.y - 1);
-                            temp = wuZiChess.map.get(xy);
-                        }
-                        if(temp!=null||xy==null){
-                            if(predict.y+1<15) {
-                                xy = new XY(predict.x, predict.y + 1);
+                            if (temp != null || xy.x<0) {
+                                if (predict.x + 1 < 15) {
+                                    xy.x = predict.x + 1;
+                                    xy.y = predict.y;
+                                    temp = wuZiChess.map.get(xy);
+                                }
+                            }
+                            if (temp == null) {
+                                returnPos.x = xy.x;
+                                returnPos.y = xy.y;
+                                return returnPos;
+                            } else predict = predict.next;
+                            break;
+                        case 2:// |
+                            if (predict.y - 1 >= 0) {
+                                xy.x = predict.x;
+                                xy.y = predict.y - 1;
                                 temp = wuZiChess.map.get(xy);
                             }
-                        }
-                        if(temp==null) return new WuZi(xy.x,xy.y,0,0,false);
-                        else predict = predict.next;
-                        break;
-                    case 3:// /
-                        if(predict.x-1>=0&&predict.y-1>=0) {
-                            xy = new XY(predict.x - 1, predict.y - 1);
-                            temp = wuZiChess.map.get(xy);
-                        }
-                        if(temp!=null||xy == null){
-                            if(predict.x+1<15||predict.y+1<15) {
-                                xy = new XY(predict.x + 1, predict.y + 1);
+                            if (temp != null ||xy.y<0) {
+                                if (predict.y + 1 < 15) {
+                                    xy.x = predict.x;
+                                    xy.y = predict.y + 1;
+                                    temp = wuZiChess.map.get(xy);
+                                }
+                            }
+                            if (temp == null) {
+                                returnPos.x = xy.x;
+                                returnPos.y = xy.y;
+                                return returnPos;
+                            } else predict = predict.next;
+                            break;
+                        case 3:// /
+                            if (predict.x - 1 >= 0 && predict.y - 1 >= 0) {
+                                xy.x=predict.x - 1;
+                                xy.y=predict.y - 1;
                                 temp = wuZiChess.map.get(xy);
                             }
-                        }
-                        if(temp==null) return new WuZi(xy.x,xy.y,0,0,false);
-                        else predict = predict.next;
-                        break;
-                    case 4:// \
-                        if(predict.x-1>=0||predict.y+1<15) {
-                            xy = new XY(predict.x - 1, predict.y + 1);
-                            temp = wuZiChess.map.get(xy);
-                        }
-                        if(temp!=null||xy == null){
-                            if(predict.x+1<15||predict.y-1>=0) {
-                                xy = new XY(predict.x + 1, predict.y - 1);
+                            if (temp != null || xy.x<0||xy.y<0) {
+                                if (predict.x + 1 < 15 || predict.y + 1 < 15) {
+                                    xy.x=predict.x + 1;
+                                    xy.y=predict.y + 1;
+                                    temp = wuZiChess.map.get(xy);
+                                }
+                            }
+                            if (temp == null) {
+                                returnPos.x = xy.x;
+                                returnPos.y = xy.y;
+                                return returnPos;
+                            } else predict = predict.next;
+                            break;
+                        case 4:// \
+                            if (predict.x - 1 >= 0 || predict.y + 1 < 15) {
+                                xy.x=predict.x - 1;
+                                xy.y=predict.y + 1;
                                 temp = wuZiChess.map.get(xy);
                             }
-                        }
-                        if(temp==null) return new WuZi(xy.x,xy.y,0,0,false);
-                        else predict = predict.next;
-                        break;
-                     default: throw new RuntimeException("parameter is incorrect!");
+                            if (temp != null || xy.x<0) {
+                                if (predict.x + 1 < 15 || predict.y - 1 >= 0) {
+                                    xy.x=predict.x + 1;
+                                    xy.y=predict.y - 1;
+                                    temp = wuZiChess.map.get(xy);
+                                }
+                            }
+                            if (temp == null) {
+                                returnPos.x = xy.x;
+                                returnPos.y = xy.y;
+                                return returnPos;
+                            } else predict = predict.next;
+                            break;
+                        default:
+                            throw new RuntimeException("parameter is incorrect!");
+                    }
                 }
-                else return  returnPos;
+                else return returnPos;
     }
     int ratio = 2;//record the random ratio,it should become big when stack search count increase.Just defending waiting util time out!
     int counter;//record that what time the ratio will become increase
@@ -311,19 +337,30 @@ public class WuZiChess {
      * @return
      */
     private  WuZi findRandom(XY defaultPos, WuZiChess wuZiChess){//find a random position
-        int x = defaultPos.x+secureRandom.nextInt(ratio)-1;
-        int y = defaultPos.y+secureRandom.nextInt(ratio)-1;
-        while(!(x>0&&y>0&&x<15&&y<15&& wuZiChess.map.get(new XY(x,y))==null)) {
-            if(counter > 5){
-                ratio = ratio+1>15?15:ratio+1;
-                counter = 0;
-            }
-            counter++;
-            x = defaultPos.x+secureRandom.nextInt(ratio)-1;
-            y = defaultPos.y+secureRandom.nextInt(ratio)-1;
-        }
-        ratio = 2;//reset
-        counter = 0;//reset
-        return new WuZi(x, y, 0, 0, false);
+//        int x = defaultPos.x+secureRandom.nextInt(ratio)-1;
+//        int y = defaultPos.y+secureRandom.nextInt(ratio)-1;
+//        WuZi temp = wuZiChess.map.get(new XY(x,y));
+//        while(temp!=null||x<0||y<0||x>15||y>15) {
+//            if(counter > 5){
+//                ratio = ratio+1>15?15:ratio+1;
+//                counter = 0;
+//            }
+//            counter++;
+//            x = defaultPos.x+secureRandom.nextInt(ratio)-1;
+//            y = defaultPos.y+secureRandom.nextInt(ratio)-1;
+//        }
+//        ratio = 2;//reset
+//        counter = 0;//reset
+        int x = 0;
+        int y = 0;
+        boolean flag = false;
+        back:
+        for(;x<location.length;x++)
+            for(;y<location[0].length;y++)
+                if (!location[x][y]) {
+                    flag = true;
+                    break back;
+                }
+        return flag?new WuZi(x, y, 0, 0, false):null;
     }
 }
