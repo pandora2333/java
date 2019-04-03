@@ -6,7 +6,7 @@ import java.util.*;
  * @author pandora
  * @date 2019/1/14
  * @FixDate 2019/4/3
- * @Version 2.2
+ * @Version 2.3
  */
 public class WuZiChess {
     static class WuZi{//core object,abstract chess object
@@ -188,7 +188,7 @@ public class WuZiChess {
         }
         return null;//found failed
     }
-    static boolean location[][] = new boolean[16][16];//mark the location
+    static boolean location[][] = new boolean[16][16];//mark the location,16 X 16
     /**
      * test by some virtual data
      * model type:ai first,then you
@@ -198,7 +198,8 @@ public class WuZiChess {
         WuZiChess wuZiChess = new WuZiChess();
         Scanner scanner = new Scanner(System.in);
         WuZi result = null;
-        for(int i=0;i<10;i++) {
+        boolean running =true;
+        while(running) {
             System.out.println("input x：");
             int x=scanner.nextInt();
             System.out.println("input y：");
@@ -209,7 +210,7 @@ public class WuZiChess {
             wuZiChess.map.put(xy,wuZi);
             location[x][y]= true;
             result = wuZiChess.BFS(xy.x,xy.y);
-            WuZi ai =  wuZiChess.find(xy, wuZiChess);
+            WuZi ai =  wuZiChess.find(wuZiChess);
             if(ai!=null){
                 XY aiXY = new XY(ai.x,ai.y);
                 wuZiChess.map.put(aiXY,ai);
@@ -219,6 +220,7 @@ public class WuZiChess {
             }
             if(result == null) result = wuZiChess.BFSForAI(ai.x,ai.y);
             if(result!=null) break;
+            if(wuZiChess.findRandom()==null) running =false;
     }
 //    while(result!=null){
 //            System.out.println(result);
@@ -228,8 +230,8 @@ public class WuZiChess {
         if(result!=null&&!result.self) System.out.println("your loser:"+ wuZiChess.aiPath.values());//every level path,includes one to five for ai
     }
 
-    private WuZi find(XY defaultPos, WuZiChess wuZiChess) {
-        WuZi returnPos = wuZiChess.findRandom(defaultPos, wuZiChess);//return predicted position
+    private WuZi find(WuZiChess wuZiChess) {
+        WuZi returnPos = wuZiChess.findRandom();//return predicted position
         if(returnPos==null) return null;
         if(wuZiChess.map.size()==0|| wuZiChess.path.size()==0){
             return returnPos;//empty? directly return a random position
@@ -325,32 +327,12 @@ public class WuZiChess {
                 }
                 else return returnPos;
     }
-    int ratio = 2;//record the random ratio,it should become big when stack search count increase.Just defending waiting util time out!
-    int counter;//record that what time the ratio will become increase
-    SecureRandom secureRandom = new SecureRandom();//the way that (int)Math.random()*ratio is not enough secure for RNG
 
     /**
-     * @fixDate 2019/3/23
-     * @message refuse to use a deeep stack search by a while
-     * @param defaultPos
-     * @param wuZiChess
+     * @fixDate 2019/4/3
      * @return
      */
-    private  WuZi findRandom(XY defaultPos, WuZiChess wuZiChess){//find a random position
-//        int x = defaultPos.x+secureRandom.nextInt(ratio)-1;
-//        int y = defaultPos.y+secureRandom.nextInt(ratio)-1;
-//        WuZi temp = wuZiChess.map.get(new XY(x,y));
-//        while(temp!=null||x<0||y<0||x>15||y>15) {
-//            if(counter > 5){
-//                ratio = ratio+1>15?15:ratio+1;
-//                counter = 0;
-//            }
-//            counter++;
-//            x = defaultPos.x+secureRandom.nextInt(ratio)-1;
-//            y = defaultPos.y+secureRandom.nextInt(ratio)-1;
-//        }
-//        ratio = 2;//reset
-//        counter = 0;//reset
+    private  WuZi findRandom(){//find a random position
         int x = 0;
         int y = 0;
         boolean flag = false;
