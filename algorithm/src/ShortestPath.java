@@ -8,16 +8,30 @@ import static java.lang.Math.min;
 public class ShortestPath {
     final int MAX_NUM = 0x3f;
     int[] dest = new int[MAX_NUM];
+
+    Edge[] edge = new Edge[MAX_NUM*2];
+    int N, M;  //point N, paths M
+    class Edge implements Comparable<Edge>{
+        int from ,to,cost;
+
+        public Edge(int to, int cost) {
+            this.to = to;
+            this.cost = cost;
+        }
+
+        public Edge() {
+        }
+        @Override
+        public int compareTo(Edge o) {
+            return this.cost - o.cost ;
+        }
+    }
+
     /**
      *  Bellman-Ford O(VE) space O(E)
      */
-    Edge[] edge = new Edge[MAX_NUM*2];
-    int N, M;  //point N, paths M
-    class Edge{
-        int from ,to,cost;
-    }
-
     boolean bellman_ford(int start) {
+        Arrays.fill(dest,Integer.MAX_VALUE);//设置初始距离max
         dest[start] = 0;
         for(int i=0; i<N-1; ++i)
             for(int j=0; j<2*M; ++j) {
@@ -41,7 +55,8 @@ public class ShortestPath {
     int[][] cost = new int[MAX_NUM][MAX_NUM];
     int V, E;
     void dijkstra(int s) {
-        dest[s] = 0;
+        Arrays.fill(dest,Integer.MAX_VALUE);//设置初始距离max
+        dest[s] = 0;//搜索起点
         while(true) {
             int v = -1;
             for(int u = 0; u < V; ++u)
@@ -57,40 +72,27 @@ public class ShortestPath {
      *  Dijkstra O(ElogV)
      */
     Vector<?>[] G = new Vector<?>[MAX_NUM];
-    class P implements Comparable<P>{
-        int dest,point;
-
-        public P(int dest, int point) {
-            this.dest = dest;
-            this.point = point;
-        }
-
-        @Override
-        public int compareTo(P o) {
-            return this.dest - o.dest ;
-        }
-    }
-
     void dijkstra2(int s) {
-        PriorityQueue<P> que = new PriorityQueue<>();
+        PriorityQueue<Edge> que = new PriorityQueue<>();
+        Arrays.fill(dest,Integer.MAX_VALUE);
         dest[s] = 0;
-        que.add(new P(0, s));
+        que.add(new Edge(s, 0));
         while(!que.isEmpty()) {
-            P p = que.poll();
-            int v = p.point;
-            if(dest[v] < p.dest) continue;
+            Edge p = que.poll();
+            int v = p.to;//-1 -> s -> next ...
+            if(dest[v] < p.cost) continue;
             for(int i=0; i<G[v].size(); ++i) {
                 Edge e = (Edge) G[v].get(i);
                 if(dest[e.to] > dest[v] + e.cost) {
                     dest[e.to] = dest[v] + e.cost;
-                    que.add(new P(dest[e.to], e.to));
+                    que.add(new Edge(e.to, dest[e.to]));
                 }
             }
         }
     }
 
     /**
-     * Floyd O(V*V*V) apace:O(V*V)
+     * Floyd O(V*V*V) space:O(V*V)
      * DP
      */
     int[][] d = new int[MAX_NUM][MAX_NUM];
@@ -110,23 +112,23 @@ public class ShortestPath {
     int[] dist = new int[MAX_NUM];//record the distance:source -> i
     int[] path = new int[MAX_NUM];//record the shortest path from source to any point
     int[][] matrix = new int[MAX_NUM][MAX_NUM];//record the distance for each other
-    final int INT_MAX = 0x3f3f3f3f;
+    final int INT_MAX = Integer.MAX_VALUE;
     boolean SPFA(int source)
     {
         for (int i = 0; i < MAX_NUM; i++)
         {
             dist[i] = INT_MAX;
-            path[i] = source;
+            path[i] = source;//记录 source -> dest 路径
         }
 
-        Queue<Integer> Q = new ArrayDeque<>();
-        Q.add(source);
+        Queue<Integer> queue = new ArrayDeque<>();//点 1 - N 的下标
+        queue.add(source);
         dist[source] = 0;
         visited[source] = true;
         enqueue_num[source]++;
-        while (!Q.isEmpty())
+        while (!queue.isEmpty())
         {
-            int u = Q.poll();
+            int u = queue.poll();
             visited[u] = false;
             for (int v = 0; v < MAX_NUM; v++)
             {
@@ -135,10 +137,10 @@ public class ShortestPath {
                     if (dist[u] + matrix[u][v] < dist[v])
                     {
                         dist[v] = dist[u] + matrix[u][v];
-                        path[v] = u;
+                        path[v] = u;//更新前驱点
                         if (!visited[v])
                         {
-                            Q.add(v);
+                            queue.add(v);
                             enqueue_num[v]++;
                             if (enqueue_num[v] >= MAX_NUM)//resovle the circle for all elements; value < 0
                                 return false;
