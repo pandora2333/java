@@ -1,6 +1,8 @@
 package pers.pandora.mvc;
 
 import pers.pandora.annotation.*;
+import pers.pandora.servlet.Request;
+import pers.pandora.servlet.Response;
 import pers.pandora.servlet.Servlet;
 
 import java.io.File;
@@ -16,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 处理url path与controller之间映射关系
+ * 1.处理url path与controller之间映射关系
+ * 2.处理文本格式数据
  */
 public class RequestMappingHandler implements Servlet {
     private static Map<String,String> mappings =  new ConcurrentHashMap<>(16);//url - method
@@ -126,8 +129,7 @@ public class RequestMappingHandler implements Servlet {
                                 }
                             }
 						} catch (Exception e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            return null;
                         }
 
                         if(method!=null&&method.isAnnotationPresent(ResponseBody.class)){
@@ -141,7 +143,7 @@ public class RequestMappingHandler implements Servlet {
                                     modelAndView.getParams(),isJson):null;
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
+							return null;
 						} 
                     }
                 }
@@ -180,7 +182,7 @@ public class RequestMappingHandler implements Servlet {
         }
     }
 
-    private static  <T> void  scanController(Class<T> t) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    private static  <T> void  scanController(Class<T> t) throws IllegalAccessException, InstantiationException {
         if(t.isAnnotationPresent(Controller.class)){
             for(Method method :t.getDeclaredMethods()){
                 if(method.isAnnotationPresent(RequestMapping.class)){
@@ -202,21 +204,22 @@ public class RequestMappingHandler implements Servlet {
         }
     }
 
+    //对文本格式数据处理
     @Override
     public void service() {
 
     }
 
     @Override
-    public String doGet(Map params) {
-        if(params!=null&&params.get("json") instanceof  List){
-           return ""+((List)params.get("json")).get(0);
+    public String doGet(Map params, Request request, Response response) {
+        if(params!=null&&params.get(Response.PLAIN) instanceof  List){
+           return (String)((List)params.get(Response.PLAIN)).get(0);
         }
-        return "";
+        return Response.NULL;
     }
 
     @Override
-    public String doPost(Map params) {
+    public String doPost(Map params,Request request, Response response) {
         return null;
     }
 }

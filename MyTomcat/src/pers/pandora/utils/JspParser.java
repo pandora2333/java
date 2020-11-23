@@ -1,7 +1,5 @@
 package pers.pandora.utils;
-import org.junit.jupiter.api.Test;
-import pers.pandora.bean.User;
-
+import javassist.*;
 import javax.tools.*;
 import java.io.*;
 import java.net.URI;
@@ -15,19 +13,36 @@ import java.util.regex.Pattern;
 public class JspParser {
     private  Stack<Object> valueStack;//引入Struts的值栈，维护一个对象栈
     private  Map<String,MapContent> context;
-    private boolean isGenerator;//是否重复生成文件
+    private long jspNum;
     public  JspParser(Stack<Object> valueStack, Map<String,MapContent> context){//值栈支持mvc使用,使用了#{}表达式
         this.valueStack = valueStack;
         this.context = context;
-        if(valueStack!=null){
-            isGenerator = true;
-        }
+    }
+
+    public void setContext(Map<String, MapContent> context) {
+        this.context = context;
+    }
+
+    public void setValueStack(Stack<Object> valueStack) {
+        this.valueStack = valueStack;
+    }
+
+    public long getJspNum() {
+        return jspNum;
+    }
+
+    public void setJspNum(long jspNum) {
+        this.jspNum = jspNum;
     }
 
     public  void parse(String jspFile){
+        File file = new File(jspFile);
+        if(!file.exists()){
+            return;
+        }
         Reader inFifle = null;
         try {
-            inFifle = new FileReader(new File(jspFile));
+            inFifle = new FileReader(file);
             BufferedReader inputStream = new BufferedReader(inFifle);
             StringBuffer buf = new StringBuffer();
             String temp = null;
@@ -48,11 +63,10 @@ public class JspParser {
             Pattern pattern = Pattern.compile("#\\{.*?\\}");
             Matcher matcher = pattern.matcher(sb.toString());
             StringBuffer sbuf = new StringBuffer();
-            if(valueStack!=null) {
+            if(valueStack!=null && !valueStack.isEmpty()) {
                 Object obj = valueStack.pop();
                 while (matcher.find()) {
                     String el = sb.toString().substring(matcher.start() + 2, matcher.end() - 1);//#{user.submit}
-//                System.out.println(el);
                     String[] params = el.split("\\.");
                     while (obj != null) {
                         if (obj.getClass().getSimpleName().equalsIgnoreCase(params[0])) {
@@ -108,48 +122,68 @@ public class JspParser {
     /**
      * 解析jsp生成Servlet
      */
-    private void servletGenerator(String servletName,String javaCode,String jsp) throws Exception {
-        File diretory = new File("src/jsp/");
-        if(!diretory.exists()){
-            diretory.mkdirs();
-        }
-        File javaSrc = new File("src/jsp/"+servletName+".java");
-        //文件已经编译，无需重复生成的情况,减少额外的流操作，快速响应页面
-        if(javaSrc.exists()&&!isGenerator){
-            return;
-        }
-        OutputStream out = new FileOutputStream(javaSrc);
-        BufferedOutputStream outServlet = new BufferedOutputStream(out);
-        StringBuffer servlet = new StringBuffer();
-        servlet.append("package jsp;\n");
-        servlet.append("import pers.pandora.servlet.Servlet;\n");
-        servlet.append("import java.util.Map;\n");
-        servlet.append("public class "+servletName+" implements  Servlet{\n");
-        servlet.append("\n\t@Override\n" +
-                "\tpublic void service() {");
-        servlet.append("\t\t"+javaCode);
-        servlet.append("\t}\n");
-        servlet.append("\t@Override\n" +
-                "\tpublic String doGet(Map params) {\n");
-        servlet.append("\t\tStringBuffer sb = new StringBuffer(\""+jsp+"\");\n");
-        servlet.append("\t\tservice();\n");
-        servlet.append("\t\treturn sb.toString();\n");
-        servlet.append("\t}\n");
-        servlet.append("\t@Override\n" +
-                "\tpublic String doPost(Map params) {\n" +
-                "\t\treturn doGet(params);\n" +
-                "\t}\n");
-        servlet.append("}");
-        outServlet.write(servlet.toString().getBytes());
-        outServlet.close();
-        out.close();
-        //使用动态编译
+//    private void servletGenerator(String servletName,String javaCode,String jsp) throws Exception {
+//        File diretory = new File("src/jsp/");
+//        if(!diretory.exists()){
+//            diretory.mkdirs();
+//        }
+//        File javaSrc = new File("src/jsp/"+servletName+".java");
+//        //文件已经编译，无需重复生成的情况,减少额外的流操作，快速响应页面
+//        if(javaSrc.exists()&&!isGenerator){
+//            return;
+//        }
+//        OutputStream out = new FileOutputStream(javaSrc);
+//        BufferedOutputStream outServlet = new BufferedOutputStream(out);
+//        StringBuffer servlet = new StringBuffer();
+//        servlet.append("package jsp;\n");
+//        servlet.append("import pers.pandora.servlet.Servlet;\n");
+//        servlet.append("import java.util.Map;\n");
+//        servlet.append("public class "+servletName+" implements  Servlet{\n");
+//        servlet.append("\n\t@Override\n" +
+//                "\tpublic void service() {");
+//        servlet.append("\t\t"+javaCode);
+//        servlet.append("\t}\n");
+//        servlet.append("\t@Override\n" +
+//                "\tpublic String doGet(Map params) {\n");
+//        servlet.append("\t\tStringBuffer sb = new StringBuffer(\""+jsp+"\");\n");
+//        servlet.append("\t\tservice();\n");
+//        servlet.append("\t\treturn sb.toString();\n");
+//        servlet.append("\t}\n");
+//        servlet.append("\t@Override\n" +
+//                "\tpublic String doPost(Map params) {\n" +
+//                "\t\treturn doGet(params);\n" +
+//                "\t}\n");
+//        servlet.append("}");
+//        outServlet.write(servlet.toString().getBytes());
+//        outServlet.close();
+//        out.close();
+//        //使用动态编译
 //        if(dynamicClass(servletName,servlet.toString())){
 //            System.out.println("[DEBUG INFO] "+servletName+".jsp 编译成功!");
 //        }else {
 //            System.out.println("[DEBUG INFO] "+servletName+".jsp 编译失败!");
 //        }
-
+//
+//    }
+    private void servletGenerator(String servletName,String javaCode,String jsp) throws Exception {
+        jspNum = System.currentTimeMillis();
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ct = pool.makeClass("jsp."+servletName+"_"+jspNum);
+        ct.setInterfaces(new CtClass[]{pool.get("pers.pandora.servlet.Servlet")});
+//        CtField ctField = CtField.make(,ct);
+//        ct.addField(ctField);
+        CtMethod ctMethod = CtMethod.make("public void service(){"+javaCode+"}",ct);
+        ct.addMethod(ctMethod);
+        ctMethod = CtMethod.make("public String doGet(java.util.Map params,pers.pandora.servlet.Request request,pers.pandora.servlet.Response response) {StringBuffer sb = new StringBuffer(\""+jsp+"\");service();return sb.toString();}",ct);
+        ct.addMethod(ctMethod);
+        ctMethod = CtMethod.make("public String doPost(java.util.Map params,pers.pandora.servlet.Request request,pers.pandora.servlet.Response response){return doGet(params,request,response);}",ct);
+        ct.addMethod(ctMethod);
+//        CtConstructor ctConstructor = new CtConstructor(new CtClass[]{},ct);
+//        ctConstructor.setBody();
+//        ct.addConstructor(ctConstructor);
+        ct.writeFile("bin/");
+//        ct.defrost();
+        System.out.println("编译结束："+Class.forName("jsp."+servletName+"_"+jspNum));
     }
 
     /**
@@ -173,7 +207,7 @@ public class JspParser {
         //编译成功
         if(task.call()) {
             try {
-                System.out.println(Class.forName(className));
+                System.out.println(Class.forName("jsp."+className,true,Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -201,16 +235,5 @@ public class JspParser {
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
           return content;
       }
-    }
-    @Test
-    public void test(){
-        valueStack = new Stack<>();
-        User u = new User();
-        u.setUsername("tom");
-        u.setPassword("123");
-        Thread th = new Thread();
-        valueStack.push(u);
-        valueStack.push(th);
-        parse("WebRoot/test.jsp");
     }
 }

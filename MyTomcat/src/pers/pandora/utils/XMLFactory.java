@@ -3,6 +3,7 @@ package pers.pandora.utils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 //import org.junit.jupiter.api.Test;
 import org.xml.sax.Attributes;
@@ -46,7 +47,7 @@ public class XMLFactory {
         @Override
         public void startDocument() throws SAXException {
             System.out.println("配置文件解析开始...");
-            context = new HashMap<>(16);
+            context = new ConcurrentHashMap<>(16);
         }
 
         @Override

@@ -3,7 +3,7 @@ package pers.pandora.servlet;
 import java.util.List;
 import java.util.Map;
 
-public class LoginServlet implements  Servlet {
+public class LoginServlet implements Servlet{
     private  String username;
     private  String password;
     private String content;
@@ -22,14 +22,13 @@ public class LoginServlet implements  Servlet {
     }
 
     @Override
-    public String doGet(Map params) {
-        Map te = params;
+    public String doGet(Map params,Request request,Response response) {
         StringBuilder sb = new StringBuilder();
-        if(((List<String>)params.get("username"))!=null&&((List<String>) params.get("password"))!=null) {
+        if(params.get("username")!=null&&params.get("password")!=null) {
             username = ((List<String>)params.get("username")).get(0);
             password = ((List<String>) params.get("password")).get(0);
             service();
-            sb.append("<html><head><title>")
+            sb.append("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>")
                     .append(head)
                     .append("</title></head><body>")
                     .append(content)
@@ -39,8 +38,7 @@ public class LoginServlet implements  Servlet {
     }
 
     @Override
-    public String doPost(Map params) {
-
-        return doGet(params);
+    public String doPost(Map params,Request request,Response response) {
+        return doGet(params,request,response);
     }
 }

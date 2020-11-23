@@ -34,6 +34,15 @@ public class Server {
             start(serverSocket);
         }
     }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
     private void start(ServerSocket server){
         while(running){
             try {

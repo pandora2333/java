@@ -2,135 +2,148 @@ package pers.pandora.servlet;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import pers.pandora.mvc.ModelAndView;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.JspParser;
 import pers.pandora.utils.MapContent;
+import pers.pandora.utils.StringUtils;
 import pers.pandora.utils.XMLFactory;
 
-
 //servlet分发器
-public class Dispatcher implements  Runnable{
-     private BufferedInputStream inputStream;
-     private  BufferedOutputStream outputStream;
-     private Socket client;
-     private static String webConfig = "WebRoot/WEB-INF/web.xml";
-     private  String mvcClass = "pers.pandora.mvc.RequestMappingHandler";
-     private static volatile RequestMappingHandler requestMappingHandler;
-     private static Map<String,MapContent> context;
-     static{
-    	 context = XMLFactory.parse(webConfig);
-     }
-    public Dispatcher(Socket client) {
-        this.client = client;
-        try {
-            this.inputStream = new BufferedInputStream(client.getInputStream());
-            this.outputStream = new BufferedOutputStream(client.getOutputStream());
-        } catch (IOException e) {
-//            e.printStackTrace();
-            System.out.println("Dispatcher初始化出错!");
-            close();
-        }
+public class Dispatcher implements Runnable {
 
+    private Socket client;
+    public static final String ROOTPATH = "./WebRoot/";
+    public static final String ROOTPATH2 = "./WebRoot";
+    private static String webConfig = ROOTPATH + "WEB-INF/web.xml";
+    private static final String mvcClass = "pers.pandora.mvc.RequestMappingHandler";
+    private static volatile RequestMappingHandler requestMappingHandler;
+    private static volatile Map<String, MapContent> context;
+    protected Request request = new Request(null, context, mvcClass, null);
+    protected Response response = new Response(null, null, null);
+
+    static {
+        context = XMLFactory.parse(webConfig);
+        try {
+            requestMappingHandler = (RequestMappingHandler) Class.forName(mvcClass).newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
-   public void close(){
-        if(inputStream!=null){
+
+    public Dispatcher(Socket client) {
+        this.client = client;
+    }
+
+    protected Dispatcher() {
+        //留给扩展server的后门
+    }
+
+    public void close() {
+        if (client != null && !client.isClosed()) {
             try {
-                inputStream.close();
+                if (client.getInputStream() != null) {
+                    client.getInputStream().close();
+                }
+                if (client.getOutputStream() != null) {
+                    client.getOutputStream().close();
+                }
+                client.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-       if(outputStream!=null){
-           try {
-               outputStream.close();
-           } catch (IOException e) {
-               e.printStackTrace();
-           }
-       }
-       if(client!=null&&!client.isClosed()){
-           try {
-               client.close();
-           } catch (IOException e) {
-               e.printStackTrace();
-           }
-       }
-   }
+    }
+
     @Override
     public void run() {
         try {
-            dispatcher(null,null,false);
-            close();
+            int len = client.getInputStream().available();
+            byte[] data = new byte[len];
+            client.getInputStream().read(data);
+            dispatcher(new String(data), null, null);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("分发执行出错!");
+        } finally {
+            close();
         }
     }
+
     //处理请求
-    public void  dispatcher(String mvcUrl, Map<String, List<Object>> params,boolean initalJsp) throws Exception {
-        String reqMsg = "";
-        if(mvcUrl==null) {
-            byte[] data = new byte[inputStream.available()];
-            inputStream.read(data);
-            reqMsg = new String(data);
-        }else {
-        	reqMsg =mvcUrl;
-        }
-        if (reqMsg != null&&!reqMsg.equals("")) {
-            JspParser jsp = null;
-            Request request = null;
-            if(reqMsg.substring(reqMsg.indexOf("/"), reqMsg.indexOf("HTTP")).contains(".jsp")&&!initalJsp){//前置判断是否需要解析jsp
-                jsp = new JspParser(null,context);//此时不支持#{}表达式
-                request = new Request(reqMsg, context, mvcClass, jsp);
-            }else {
-                request = new Request(reqMsg, context, mvcClass, null);
+    public void dispatcher(String reqMsg, Map<String, List<Object>> params, JspParser jsp) throws Exception {
+        if (StringUtils.isNotEmpty(reqMsg)) {
+            //暂不支持test.jsp?username=xx方式
+            request.setMsg(reqMsg);
+            if (reqMsg.contains(Request.JSP) && jsp == null) {
+                jsp = new JspParser(requestMappingHandler.getValueStack(), context);
             }
+            request.setJspParser(jsp);
             String servlet = request.handle();
-            if(params!=null){
+            if (params != null) {
                 request.setParams(params);
             }
-            if(servlet!=null&&servlet.equals(mvcClass)){
-                synchronized (Dispatcher.class) {
-                    if (requestMappingHandler == null) {
-                        requestMappingHandler = (RequestMappingHandler) Class.forName(mvcClass).newInstance();
-                    }
-                }
+            if (servlet != null && servlet.equals(mvcClass)) {
                 //执行mvc操作
-                requestMappingHandler.setModelAndView(new ModelAndView(request.getReqUrl(),request.getParams(),false));
+                requestMappingHandler.setModelAndView(new ModelAndView(request.getReqUrl(), request.getParams(), false));
                 ModelAndView mv = requestMappingHandler.parseUrl(request.getReqUrl());
                 //请求重定向
-                if(mv!=null) {
-                    JspParser jspParser = null;
-                    if(mv.getPage().contains(".jsp")) {
-                        jspParser = new JspParser(requestMappingHandler.getValueStack(), context);
-                    }
+                if (mv != null) {
                     if (mv.isJson()) {
                         List temp = new LinkedList<>();
                         temp.add(mv.getPage());
-                        if(params==null) {
-                        	params = new ConcurrentHashMap<>();
+                        if (params == null) {
+                            params = new ConcurrentHashMap<>();
                         }
-                        params.put("json", temp);
-                        new Response(mvcClass).handle("GET", outputStream, params);
+                        params.put(Response.PLAIN, temp);
+                        response.setServlet(mvcClass);
+                        pushClient(response.handle(Request.GET, params, request), null);
+                        response.clear();
                     } else {
-                        if(jspParser!=null) {
-                            jspParser.parse("WebRoot" + mv.getPage());
-                        }
-                        dispatcher("GET " + mv.getPage() + " HTTP/1.1", mv.getParams(),true);
+                        dispatcher(Request.GET + Request.BLANK + mv.getPage() + Request.BLANK + Request.HTTP1_1, mv.getParams(), jsp);
                     }
                 }
-            }else {
-                new Response(servlet).handle(request.getMethod(), outputStream, request.getParams());
-                if(mvcUrl!=null&&params!=null){
-                    close();
+            } else if (servlet != null) {
+                String ss[] = servlet.split(Request.spliter);
+                String file = ss.length == 2 ? ss[1] : null;
+                if (jsp != null) {
+                    servlet += Request.LINE + jsp.getJspNum();
+                }
+                response.setResource(ss.length == 2 ? ss[1] : null);
+                response.setServlet(servlet);
+                response.setType(ss.length == 2 ? ss[0] : null);
+                String content = response.handle(request.getMethod(), request.getParams(), request);
+                pushClient(content, file);
+                response.clear();
+            }
+        }
+    }
+
+    protected void pushClient(String response, String staticFile) {
+        if (client != null) {
+            if (response != null) {
+                try {
+                    client.getOutputStream().write(response.getBytes(request.getCharset()));
+                    client.getOutputStream().flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (staticFile != null) {
+                try {
+                    client.getOutputStream().write(Files.readAllBytes(Paths.get(ROOTPATH + staticFile)));
+                    client.getOutputStream().flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
+
     }
 }
