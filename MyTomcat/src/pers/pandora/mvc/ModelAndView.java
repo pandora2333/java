@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 封装参数和模型
  * 页面间，请求重定向传参
  */
-public class ModelAndView {
+public final class ModelAndView {
     private String page;
 
     public boolean isJson() {

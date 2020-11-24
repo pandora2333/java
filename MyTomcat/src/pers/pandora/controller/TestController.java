@@ -6,6 +6,7 @@ import pers.pandora.bean.User;
 /**
  * 引入Spring MVC的@Controllert模式
  */
+@Deprecated
 @Controller
 public class TestController {
     @RequestMapping("/loginUser.do")

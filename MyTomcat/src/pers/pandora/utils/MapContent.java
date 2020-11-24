@@ -3,7 +3,7 @@ package pers.pandora.utils;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MapContent {
+public final class MapContent {
     private String className;
     private List<String> urls;
     public MapContent(){

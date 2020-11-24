@@ -1,6 +1,6 @@
 package pers.pandora.utils;
 
-public class ClassUtils {
+public final class ClassUtils {
 
 	public static  <T> T getClass(String name,Class<T> clazz){
 		try {

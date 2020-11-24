@@ -1,5 +1,5 @@
 package pers.pandora.bean;
-
+@Deprecated
 public class User {
     private String username;
     private String password;

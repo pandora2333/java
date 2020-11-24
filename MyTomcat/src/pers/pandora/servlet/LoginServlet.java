@@ -2,7 +2,7 @@ package pers.pandora.servlet;
 
 import java.util.List;
 import java.util.Map;
-
+@Deprecated
 public class LoginServlet implements Servlet{
     private  String username;
     private  String password;
@@ -22,8 +22,9 @@ public class LoginServlet implements Servlet{
     }
 
     @Override
-    public String doGet(Map params,Request request,Response response) {
+    public String doGet(Request request,Response response) {
         StringBuilder sb = new StringBuilder();
+        Map params = request.getParams();
         if(params.get("username")!=null&&params.get("password")!=null) {
             username = ((List<String>)params.get("username")).get(0);
             password = ((List<String>) params.get("password")).get(0);
@@ -38,7 +39,7 @@ public class LoginServlet implements Servlet{
     }
 
     @Override
-    public String doPost(Map params,Request request,Response response) {
-        return doGet(params,request,response);
+    public String doPost(Request request,Response response) {
+        return doGet(request,response);
     }
 }

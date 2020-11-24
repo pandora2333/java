@@ -1,5 +1,7 @@
 package pers.pandora.bean;
 
+import pers.pandora.mvc.RequestMappingHandler;
+
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -9,6 +11,15 @@ public class Attachment {
     private AsynchronousSocketChannel client;
     private boolean isReadMode;
     private ByteBuffer buffer;
+    private RequestMappingHandler requestMappingHandler;
+
+    public RequestMappingHandler getRequestMappingHandler() {
+        return requestMappingHandler;
+    }
+
+    public void setRequestMappingHandler(RequestMappingHandler requestMappingHandler) {
+        this.requestMappingHandler = requestMappingHandler;
+    }
 
     public AsynchronousServerSocketChannel getServer() {
         return server;

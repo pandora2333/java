@@ -10,7 +10,6 @@ import pers.pandora.utils.JspParser;
 import pers.pandora.utils.MapContent;
 
 public final class Request {
-    private String msg;
     private String method;
     private Map<String, MapContent> context;
     private Map<String, List<Object>> params;
@@ -21,40 +20,46 @@ public final class Request {
     private String fileName;
     private String charset = "utf-8";
     private byte[] fileData;
-
+    private String fileVarName;
+    private Map<String,String> heads;
+    private Cookie cookie;
+    public static final String ERROR_PARAM = "ERROR_QUERY_PARAM";
+    public static final String REQUSTSCOPE = "requstScope";
     public static final String FILEMARK = "Content-Type: multipart/form-data; boundary=";
-    public static final String FILENAMEMARK = "Content-Disposition: form-data;";
-    public static final String CONTENTLENGTH = "Content-Length:";
+    public static final String FILEVARNAME = "Content-Disposition: form-data; name=";
     public static final String CONTENTTYPE = "Content-Type:";
     public static final String FILENAME = "filename=";
-    public static final char ZERO = '0';
     public static final char FILENAMETAIL = '\"';
     public static final char CRLF = '\n';
-    public static final String FILEDESCMARK = "--";
     public static final String JSP = ".jsp";
     public static final String GET = "GET";
     public static final String POST = "POST";
     public static final String BLANK = " ";
     public static final String spliter = "\\:";
-    public static final String JSON = "json";
     public static final String HTTP1_1 = "HTTP/1.1";
     public static final String HTTP = "HTTP";
-    public static final String LINE = "_";
 
-    public Request(String msg, Map<String, MapContent> context, String mvcClass, JspParser jspParser) {
-        this.msg = msg;
+    public void setFileVarName(String fileVarName) {
+        this.fileVarName = fileVarName;
+    }
+
+    public String getFileVarName() {
+        return fileVarName;
+    }
+
+    public void setHeads(Map<String, String> heads) {
+        this.heads = heads;
+    }
+
+    public Map<String, String> getHeads() {
+        return heads;
+    }
+
+    public Request(Map<String, MapContent> context, String mvcClass) {
         this.context = context;
         this.mvcClass = mvcClass;
         params = new ConcurrentHashMap<>();
-        this.jspParser = jspParser;
-    }
-
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-
-    public String getMsg() {
-        return msg;
+        jspParser = new JspParser(null,context);
     }
 
     public byte[] getFileData() {
@@ -129,15 +134,11 @@ public final class Request {
         }
     }
 
-    public String handle() {//GET /login HTTP/1.1
+    public String handle(String msg) {//GET /login HTTP/1.1
         String reqToken = msg.substring(msg.indexOf("/"), msg.indexOf(HTTP)).trim();//GET /login HTTP/1.1
         String tempStr = reqToken;
         if (reqToken.contains("?")) {
             tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf("?")), "");
-        }
-        reqUrl = tempStr;//保存请求路径
-        if (jspParser != null) {
-            jspParser.parse(Dispatcher.ROOTPATH2 + reqUrl);
         }
         if (msg.startsWith(GET)) {
             method = GET;
@@ -150,6 +151,10 @@ public final class Request {
             method = POST;
             String param = msg.substring(msg.lastIndexOf(CRLF)).trim();
             parseParams(param, POST);
+        }
+        reqUrl = tempStr;//保存请求路径
+        if (reqUrl.contains(Request.JSP)) {
+            return jspParser.parse(Dispatcher.ROOTPATH2 + reqUrl,params);
         }
         if (!isMVC(msg)) {
             for (MapContent mapContent : context.values()) {
@@ -172,11 +177,11 @@ public final class Request {
     private void parseParams(String reqToken, String method) {
         if (method.equals("GET")) {
             if (reqToken.contains("?")) {
-                msg = reqToken.substring(0, reqToken.indexOf("?")).trim();
+                reqToken.substring(0, reqToken.indexOf("?")).trim();
                 String[] temp = reqToken.substring(reqToken.indexOf("?") + 1).split("&");
                 handleData(temp);
             } else {
-                msg = reqToken.trim();
+                reqToken.trim();
             }
         } else if (method.equals("POST")) {
             String[] temp = reqToken.split("&");
@@ -218,8 +223,7 @@ public final class Request {
         }
     }
 
-    public void clear() {
-        msg = null;
+    void reset() {
         method = null;
         context = null;
         params = null;

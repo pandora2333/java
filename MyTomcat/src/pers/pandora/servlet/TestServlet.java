@@ -1,7 +1,6 @@
 package pers.pandora.servlet;
 
-import java.util.Map;
-
+@Deprecated
 public class TestServlet implements Servlet {
     @Override
     public void service() {
@@ -9,7 +8,7 @@ public class TestServlet implements Servlet {
     }
 
     @Override
-    public String doGet(Map params, Request request, Response response) {
+    public String doGet(Request request, Response response) {
         if (request.getFileData() != null) {
             request.setFilePath("e:/");
             request.setFileName("test.jpg");
@@ -26,7 +25,7 @@ public class TestServlet implements Servlet {
     }
 
     @Override
-    public String doPost(Map params, Request request, Response response) {
-        return doGet(params, request, response);
+    public String doPost(Request request, Response response) {
+        return doGet(request, response);
     }
 }

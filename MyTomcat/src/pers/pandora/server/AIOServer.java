@@ -2,6 +2,7 @@ package pers.pandora.server;
 
 import pers.pandora.bean.Attachment;
 import pers.pandora.handler.AIOServerlHandler;
+import pers.pandora.mvc.RequestMappingHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -14,7 +15,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.*;
 
-public class AIOServer {
+public final class AIOServer {
 
     private boolean running;
 
@@ -80,6 +81,9 @@ public class AIOServer {
             running = true;
             Attachment att = new Attachment();
             att.setServer(asyncServerSocketChannel);
+            RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
+            requestMappingHandler.init();
+            att.setRequestMappingHandler(requestMappingHandler);
             asyncServerSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -96,6 +100,7 @@ public class AIOServer {
                     newAtt.setClient(client);
                     newAtt.setReadMode(true);
                     newAtt.setBuffer(ByteBuffer.allocateDirect(capcity));
+                    newAtt.setRequestMappingHandler(att.getRequestMappingHandler());
                     client.read(newAtt.getBuffer(), newAtt, new AIOServerlHandler());
                 }
 

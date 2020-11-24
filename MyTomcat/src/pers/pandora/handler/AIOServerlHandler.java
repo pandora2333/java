@@ -10,9 +10,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class AIOServerlHandler extends Dispatcher implements CompletionHandler<Integer, Attachment> {
+public final class AIOServerlHandler extends Dispatcher implements CompletionHandler<Integer, Attachment> {
+
     Attachment att;
 
     @Override
@@ -24,21 +27,21 @@ public class AIOServerlHandler extends Dispatcher implements CompletionHandler<I
             byte bytes[] = new byte[buffer.limit()];
             buffer.get(bytes);
             String msg = new String(bytes).trim();
+            setRequestMappingHandler(att.getRequestMappingHandler());
             //firefox对于较大文件会分片发送，即使buffer没满，带宽足够，而chrome会尽可能的一次发送所有数据
             //对于conten-length的长度所指内容是对于文件分隔符之间的所有字段及文件内容值以及其它表单字段所有值以及两者间换行分隔符
-            //对于隐私模式下的chrome，上传文件不发送文件数据,在头部信息中有文件分隔符,而firefox却可以发送
+            //某些时候浏览器不发送文件只发送文件分隔符，推测与服务器环境有关（带宽），对于隐私模式下的chrome，上传文件不发送文件数据,在头部信息中有文件分隔符,而firefox却可以发送
 //            System.out.println("收到来自客户端的数据: " + msg);
             handleUploadFile(msg, bytes);
+            handleHeadInfo(msg);
             try {
-                dispatcher(msg, null, null);
+                dispatcher(msg);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             att.setReadMode(false);
             try {
                 System.out.println(att.getClient().getRemoteAddress() + " closed!");
-                response.clear();
-                request.clear();
                 att.getClient().close();
             } catch (IOException e) {
                 //e.printStackTrace();
@@ -50,6 +53,21 @@ public class AIOServerlHandler extends Dispatcher implements CompletionHandler<I
                 //e.printStackTrace();
             }
         }
+//        request.reset();
+//        response.reset();
+        response = null;
+        request = null;
+    }
+
+    private void handleHeadInfo(String msg) {
+        Map<String, String> heads = new HashMap<>();
+        for (String s : msg.split(String.valueOf(Request.CRLF), -1)) {
+            String[] sp = s.split(Request.spliter + Request.BLANK);
+            if (sp.length == 2) {
+                heads.put(sp[0], sp[1].trim());
+            }
+        }
+        request.setHeads(heads);
     }
 
     //firefox
@@ -72,11 +90,18 @@ public class AIOServerlHandler extends Dispatcher implements CompletionHandler<I
 //            int len = 0;
 //            for(;i < msg.length() && Character.isDigit(msg.charAt(i));i++) len = len*10 + msg.charAt(i)-Request.ZERO;
 //            if(len >  0){
-            int k = msg.indexOf(Request.FILENAME, j);
+            i = msg.indexOf(Request.FILEVARNAME) + Request.FILEVARNAME.length() + 1;
+            jj = i;
+            for (; i < msg.length() && msg.charAt(i) != Request.FILENAMETAIL; i++) ;
+            int k = i + 3;//msg.indexOf(Request.FILENAME, i);
+            request.setFileVarName(msg.substring(jj, i));
             k += Request.FILENAME.length() + 1;
             j = k;
             for (; k < msg.length() && msg.charAt(k) != Request.FILENAMETAIL; k++) ;
             i = msg.indexOf(Request.CONTENTTYPE, j);
+            if (i < 0) {
+                return;
+            }
             for (; i < msg.length() && msg.charAt(i) != Request.CRLF; i++) ;
             int len = data.length - i - 3 - fileDesc.length() - 8;
             byte[] fileData = new byte[len];

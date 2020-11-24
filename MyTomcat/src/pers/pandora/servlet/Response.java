@@ -99,32 +99,32 @@ public final class Response {
                 headInfo.append("not found");
                 break;
             case 500:
-                headInfo.append("server erro");
+                headInfo.append("server error");
                 break;
             default:
-                headInfo.append("erro code");
+                headInfo.append("error code");
         }
         headInfo.append(CRLF);
         //2.响应头
-        headInfo.append("Server:pandora Server/1.0.1").append(CRLF);
-        headInfo.append("Date:").append(new Date()).append(CRLF);
-        headInfo.append("Content-type:" + type + ";charset=utf8").append(CRLF);
+        headInfo.append("Server: Pandora Server/1.0.1").append(CRLF);
+        headInfo.append("Date: ").append(new Date()).append(CRLF);
+        headInfo.append("Content-type: " + type + ";charset=utf8").append(CRLF);
         //正文长度，字节长度
-        headInfo.append("Content-Length:").append(len).append(CRLF);
+        headInfo.append("Content-Length: ").append(len).append(CRLF);
 //        headInfo.append("Transfer-Encoding: ").append(charset).append(CRLF);
         headInfo.append(CRLF);//分隔符
     }
 
-    public String handle(String method, Map params, Request request) {
+    public String handle(String method,Request request) {
         if (content == null) {
             content = new StringBuilder();
         }
         if (StringUtils.isNotEmpty(servlet)) {
             Servlet handler = ClassUtils.getClass(servlet, Servlet.class);
             if (method.equals("GET")) {
-                content.append(handler.doGet(params, request, this));
+                content.append(handler.doGet(request, this));
             } else if (method.equals("POST")) {
-                content.append(handler.doPost(params, request, this));
+                content.append(handler.doPost(request, this));
             }
             len = content.toString().getBytes().length;
             createHeadInfo(200);
@@ -140,7 +140,7 @@ public final class Response {
         return headInfo.append(content).toString();
     }
 
-    public void clear() {
+    void reset() {
         servlet = null;
         type = "text/html";
         charset = "utf-8";
