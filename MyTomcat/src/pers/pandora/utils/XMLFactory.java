@@ -16,11 +16,12 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class XMLFactory {
     private static SAXParser sax;
-    private static Map<String,MapContent> context;
-   
+//    private static Map<String,MapContent> context;
     private static boolean isMap;
     private static  String servletClass;
+    private static Map<String,String> urlMapping;
     static {
+        urlMapping = new ConcurrentHashMap<>();
         try {
             sax = SAXParserFactory.newInstance().newSAXParser();
         } catch (Exception e) {
@@ -29,11 +30,10 @@ public class XMLFactory {
         }
     }
     //节点解析
-    public static Map<String,MapContent> parse(String file){
+    public static Map<String,String> parse(String file){
         try {
             sax.parse(new File(file),new XMLHandler());
-//            System.out.println("context:"+context);
-            return context;
+            return urlMapping;
         } catch (Exception e) {
             System.out.println("文件解析异常!");
             System.out.println(e);
@@ -47,7 +47,7 @@ public class XMLFactory {
         @Override
         public void startDocument() throws SAXException {
             System.out.println("配置文件解析开始...");
-            context = new ConcurrentHashMap<>(16);
+//            context = new ConcurrentHashMap<>(16);
         }
 
         @Override
@@ -87,8 +87,8 @@ public class XMLFactory {
         public void endElement(String uri, String localName, String qName) throws SAXException {
         	if(qName!=null){
         			if(tag!=null&&tag.equals("servlet-class")&&servletClass!=null){
-        			    temp.setClassName(servletClass);
-        				context.put(servletName,temp);
+//        			    temp.setClassName(servletClass);
+//        				context.put(servletName,temp);
              		}
         
         	}
@@ -107,11 +107,12 @@ public class XMLFactory {
 
                 }
                 	if(tag.equals("url-patterns")){
-                	    if(context.get(servletName)!=null) {
-                            context.get(servletName).getUrls().add(meta);
-                        }else{
-                	        temp.getUrls().add(meta);
-                        }
+//                	    if(context.get(servletName)!=null) {
+//                            context.get(servletName).getUrls().add(meta);
+//                        }else{
+//                	        temp.getUrls().add(meta);
+//                        }
+                        urlMapping.put(meta,servletClass);
                     }
                
             }

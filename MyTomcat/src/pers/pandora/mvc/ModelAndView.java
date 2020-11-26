@@ -1,5 +1,9 @@
 package pers.pandora.mvc;
 
+import pers.pandora.servlet.Request;
+import pers.pandora.servlet.Response;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -11,41 +15,44 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ModelAndView {
     private String page;
+    private boolean isJson;
+    private Request request;
+    private Response response;
+
+    public void setResponse(Response response) {
+        this.response = response;
+    }
+
+    public Response getResponse() {
+        return response;
+    }
+
+    public Request getRequest() {
+        return request;
+    }
+
+    public void setRequest(Request request) {
+        this.request = request;
+    }
+
+    public void setJson(boolean json) {
+        isJson = json;
+    }
+
+    public void setPage(String page) {
+        this.page = page;
+    }
 
     public boolean isJson() {
         return isJson;
     }
 
-    private boolean isJson;
     public String getPage() {
         return page;
     }
 
-    public Map<String, List<Object>> getParams() {
-        return params;
-    }
-
-    private Map<String,List<Object>> params = new ConcurrentHashMap<>();
-
-    public ModelAndView(String page,Map<String,List<Object>> params,boolean isJson) {
+    public ModelAndView(String page,boolean isJson) {
         this.page = page;
-        this.params = params;
         this.isJson = isJson;
-    }
-    public void put(String key,Object value){
-        if(params.get(key)!=null){
-            params.get(key).add(value);
-        }else {
-            List<Object> paramList = new LinkedList<>();
-            paramList.add(value);
-            params.put(key,paramList);
-        }
-    }
-
-    public Object get(String key){
-        return  params.get(key)!=null&&params.size()>0?params.get(key).get(0):null;
-    }
-    public int size(){
-        return params.size();
     }
 }

@@ -1,60 +1,46 @@
 package pers.pandora.mvc;
 
+import javassist.Modifier;
+import jdk.internal.org.objectweb.asm.*;
 import pers.pandora.annotation.*;
 import pers.pandora.bean.Pair;
 import pers.pandora.interceptor.Interceptor;
+import pers.pandora.servlet.Dispatcher;
 import pers.pandora.servlet.Request;
 import pers.pandora.servlet.Response;
-import pers.pandora.servlet.Servlet;
+import pers.pandora.utils.ClassUtils;
+import pers.pandora.utils.JspParser;
 
 import java.io.File;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
-
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 1.处理url path与controller之间映射关系
- * 2.处理文本格式数据
- * 3.初始化所有实现Interceptor接口的拦截器
- * 4.赋值mvc方法参数
+ * 2.初始化所有实现Interceptor接口的拦截器
+ * 3.赋值mvc方法参数
  */
-public final class RequestMappingHandler implements Servlet {
-    private static Map<String, String> mappings = new ConcurrentHashMap<>(16);//url - method
-    private static Map<String, Object> controllers = new ConcurrentHashMap<>(16);//method - controller
-    private static Map<String, ModelAndView> modelAndViews = new ConcurrentHashMap<>(16);//封装请求参数
-    private static Map<String, Class> beans = new ConcurrentHashMap<>(16);//封装请求实体参数
+public final class RequestMappingHandler {
+    private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);//url - method
+    private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);//method - controller(singleton instance)
+    private static Map<Method, List<String>> parameters = new ConcurrentHashMap<>(16);//method - parameter list
     private static Set<Pair<Integer, Interceptor>> interceptors;
-    private static final String rootPath = "src/";
+    private static final String ROOTPATH = "src/";
+    private static final String METHOD_SPLITER = "|";
+    private static final char FILE_SPLITER = '.';
+    private static final String FILE_POS_MARK = "java";
+    private static final String CLASS_FILE_POS = "class";
     private static ThreadPoolExecutor executor;
     private static List<Future<Boolean>> result;
 
 //    static {//类加载阶段启用多线程造成死锁：其它类引用到本类的信息，会等待本类加载完毕，但是本类自身加载过程中又等待其他类信息加载，造成死锁
-//        result = new ArrayList<>();
-//        interceptors = Collections.synchronizedSortedSet(new TreeSet<>((p1, p2) -> {
-//            int t = p1.getK() - p2.getK();
-//            return t != 0 ? t : System.identityHashCode(p1.getV().hashCode()) - System.identityHashCode(p2.getV());
-//        }));
-//        interceptors = new TreeSet<>((p1, p2) -> {
-//            int t = p1.getK() - p2.getK();
-//            return t != 0 ? t : System.identityHashCode(p1.getV().hashCode()) - System.identityHashCode(p2.getV());
-//        });
-//        int core = 2 * Runtime.getRuntime().availableProcessors();
-//        executor = new ThreadPoolExecutor(core, core + 5, 50, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-//        scanFile(rootPath);
-//        for (Future future : result) {
-//            try {
-//                future.get();
-//            } catch (InterruptedException | ExecutionException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        executor.shutdown();
-//        executor = null;
-//        System.gc();
+//         init();
 //    }
 
     public Set<Pair<Integer, Interceptor>> getInterceptors() {
@@ -65,126 +51,126 @@ public final class RequestMappingHandler implements Servlet {
         interceptors.addAll(interceptors);
     }
 
-    public synchronized void setModelAndView(ModelAndView modelAndView) {
-        if (modelAndView != null) {
-            modelAndViews.put(modelAndView.getPage(), modelAndView);
-        }
-    }
 
     /**
-     * 执行Controller方法，返回重定向地址
+     * 执行Controller方法，返回请求转发地址
      *
-     * @param url
+     * @param modelAndView
      * @return
      * @throws Exception
      */
-    public Pair<ModelAndView, List<Object>> parseUrl(String url) {
-        List<Object> valueObject = new ArrayList<>();
-        for (String urlMapping : mappings.keySet()) {
-            if (urlMapping != null && urlMapping.equals(url)) {
-                Class controller = controllers.get(mappings.get(urlMapping)).getClass();
-                if (modelAndViews.containsKey(url)) {
-                    ModelAndView modelAndView = modelAndViews.get(url);
-                    Method method = null;
-                    if (modelAndView.size() == 0) {
-                        try {
-                            method = controller.getDeclaredMethod(mappings.get(urlMapping));
-                        } catch (Exception e) {
-//							e.printStackTrace();
-                        }
-                    }
-                    boolean isJson = false;
-                    if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
-                        isJson = true;
-                    }
-                    if (modelAndView.size() == 0 && method != null) {
-                        try {
-                            return new Pair<>(new ModelAndView(String.valueOf(method
-                                    .invoke(controllers.get(mappings.get(urlMapping)))), modelAndView.getParams(), isJson), valueObject);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    } else {//处理方法参数
-                        Class[] beanParam = null;//实体封装
-                        Class<?>[] classParam = new Class<?>[modelAndView.size()];
-                        Object[] objects = new Object[classParam.length];
-                        AtomicInteger cursor = new AtomicInteger(0);
-                        for (List clazzTemp : modelAndView.getParams().values()) {
-                            if (clazzTemp != null && clazzTemp.size() > 0) {
-                                classParam[cursor.get()] = clazzTemp.get(0).getClass();
-                                objects[cursor.get()] = clazzTemp.get(0);
-                                cursor.getAndIncrement();
-                            }
-                        }
-                        try {//进一步封装参数
-                            if (beans.get(mappings.get(urlMapping)) != null) {//只允许一个实体参数封装
-                                beanParam = new Class[1];
-                                beanParam[0] = beans.get(mappings.get(urlMapping));
-                                method = controller.getDeclaredMethod(mappings.get(urlMapping), beanParam);
-                            } else {
-                                method = controller.getDeclaredMethod(mappings.get(urlMapping), classParam);
-                            }
-                            cursor.set(0);
-                            if (method != null && method.getParameterAnnotations() != null) {
-                                for (Annotation[] an : method.getParameterAnnotations()) {
-                                    for (Annotation a : an) {
-                                        if (a instanceof RequestParam) {
-                                            String param = ((RequestParam) a).value();
-                                            if (!param.equals("")) {
-                                                objects[cursor.get()] = modelAndView.getParams().get(param).get(0);
-                                            }
-                                        } else if (a instanceof RequestBody) {
-                                            //参数封装为bean
-                                            Object bean = null;
-                                            if (beanParam != null) {
-                                                bean = beanParam[0].newInstance();
-                                            } else {
-                                                bean = classParam[cursor.get()].newInstance();
-                                            }
-                                            for (Map.Entry clazzTemp1 : modelAndView.getParams().entrySet()) {
-                                                List clazzTemp2 = ((List) clazzTemp1.getValue());
-                                                if (clazzTemp2 != null && clazzTemp2.size() > 0) {
-                                                    Method fieldSet = bean.getClass().getDeclaredMethod("set" + (clazzTemp1.getKey() + "").
-                                                            substring(0, 1).toUpperCase()
-                                                            + (clazzTemp1.getKey() + "").substring(1), clazzTemp1.getKey().getClass());
-                                                    fieldSet.invoke(bean, clazzTemp2.get(0));
-                                                }
-                                            }
-                                            objects[cursor.get()] = bean;
-                                            valueObject.add(bean);
-                                        }
-                                        if (beanParam != null) {
-                                            break;//仅有一个参数，且为实体类封装,且不支持级联赋值
-                                        }
-                                        cursor.getAndIncrement();
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            return null;
-                        }
-
-                        if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
-                            isJson = true;
-                        }
-                        try {
-                            return new Pair<>((method != null) ? beanParam != null ? new ModelAndView(String.valueOf(
-                                    method.invoke(controllers.get(mappings.get(urlMapping)), objects[0])),
-                                    modelAndView.getParams(), isJson) : new ModelAndView(String.valueOf(
-                                    method.invoke(controllers.get(mappings.get(urlMapping)), objects)),
-                                    modelAndView.getParams(), isJson) : null, valueObject);
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    }
+    public void parseUrl(ModelAndView modelAndView) {
+        Map<String, Object> valueObject = new HashMap<>();
+        Method method = mappings.get(modelAndView.getRequest().getReqUrl());
+        Object controller = controllers.get(method);
+        if (controller == null) {
+            return;//生成实例失败
+        }
+        if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
+            modelAndView.setJson(true);
+        }
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object objects[] = new Object[parameterTypes.length];
+        String paramNames[] = new String[parameterTypes.length];
+        Map<String, List<Object>> params = modelAndView.getRequest().getParams();
+        Annotation[][] annotations = method.getParameterAnnotations();
+        for (int i = 0; i < annotations.length; i++) {
+            for (Annotation annotation : annotations[i]) {
+                if (annotation instanceof RequestParam) {
+                    paramNames[i] = ((RequestParam) annotation).value();
                 }
             }
         }
-        return null;
+        for (int i = 0; i < parameterTypes.length; i++) {
+            if (parameterTypes[i] == Request.class) {
+                objects[i] = modelAndView.getRequest();
+            } else if (parameterTypes[i] == Response.class) {
+                objects[i] = modelAndView.getResponse();
+            } else if (parameterTypes[i] == ModelAndView.class) {
+                objects[i] = modelAndView;
+            } else if (!checkBasicClass(parameterTypes[i])) {
+                //不允许参数简单类名重复，即使全类名不一致
+                Object target = ClassUtils.getClass(parameterTypes[i], params);
+                valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
+                objects[i] = target;
+            } else if (paramNames[i] != null) {
+                List<Object> list = params.get(paramNames[i]);
+                objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
+            } else {
+                throw new RuntimeException("基本类型变量缺少注解:" + method.getName());
+            }
+        }
+        try {
+            Object result = method.invoke(controller, objects);
+            if (modelAndView.isJson()) {
+                List<Object> temp = new LinkedList<>();
+                temp.add(result);
+                modelAndView.getRequest().getParams().put(Response.PLAIN, temp);
+                modelAndView.setPage(Response.PLAIN);
+                modelAndView.getResponse().setServlet(Dispatcher.getMvcClass());
+            } else {
+                modelAndView.setPage(result.toString());
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            System.out.println("方法变量值与类型不匹配：" + method.getName());
+        }
+        modelAndView.getRequest().setObjectList(valueObject);
+    }
+
+    //利用ASM操作class字节码文件获取参数名
+    @Deprecated
+    public void handleMethodParamNames(Class<?> t) {
+        Map<String, Integer> modifers = new HashMap<>();
+        Map<String, String[]> paramNames = new HashMap<>();
+        for (Method method : t.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(RequestMapping.class)) {
+                StringBuilder key = new StringBuilder(t.getName());
+                key.append(METHOD_SPLITER);
+                key.append(method.getName());
+                key.append(METHOD_SPLITER);
+                for (Class<?> param : method.getParameterTypes()) {
+                    key.append(param.getName());
+                    key.append(FILE_SPLITER);
+                }
+                modifers.put(key.toString(), method.getModifiers());
+                paramNames.put(key.toString(), new String[method.getParameterTypes().length]);
+            }
+        }
+        String className = t.getName();
+        int lastDotIndex = className.lastIndexOf(FILE_SPLITER);
+        className = className.substring(lastDotIndex + 1) + FILE_SPLITER + CLASS_FILE_POS;
+        InputStream is = t.getResourceAsStream(className);
+        try {
+            ClassReader classReader = new ClassReader(is);
+            classReader.accept(new ClassVisitor(Opcodes.ASM4) {
+                @Override
+                public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                    return new MethodVisitor(Opcodes.ASM4) {
+                        @Override
+                        public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+                            // 静态方法第一个参数就是方法的参数，如果是实例方法，第一个参数是this
+                            StringBuilder key = new StringBuilder(t.getName() + METHOD_SPLITER + name + METHOD_SPLITER);
+                            for (Type type : Type.getArgumentTypes(desc)) {
+                                key.append(type.getClassName());
+                                key.append(FILE_SPLITER);
+                            }
+                            if (Modifier.isStatic(modifers.get(key))) {
+                                paramNames.get(key)[index] = name;
+                            } else if (index > 0) {
+                                paramNames.get(key)[index - 1] = name;
+                            }
+                        }
+                    };
+
+                }
+            }, 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //判断是否为基本数据类型或String类型或包装类型
-    private static boolean isAtomic(Class t) {
+    private static boolean checkBasicClass(Class t) {
         if (t == Integer.class || t == Character.class || t == Long.class || t == String.class || t == int.class
                 || t == boolean.class || t == byte.class || t == Double.class || t == Float.class || t == short.class || t == Boolean.class
                 || t == Byte.class || t == char.class || t == long.class || t == double.class) {
@@ -202,36 +188,28 @@ public final class RequestMappingHandler implements Servlet {
                 }
 
             } else {
-                if (files.getPath().endsWith(".java")) {
+                if (files.getPath().endsWith(FILE_SPLITER + FILE_POS_MARK)) {
                     result.add(executor.submit(new IOTask(files.getPath())));
-//                    try {
-//                        scanResolers(Class.forName(path.substring(4).replace(".java", "").replace("\\", "."),
-//                                true, Thread.currentThread().getContextClassLoader()));
-//                    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-//                        e.printStackTrace();
-//                    }
                 }
             }
         }
     }
 
-    private static <T> void scanResolers(Class<T> t) throws IllegalAccessException, InstantiationException {
+    private static <T> void scanResolers(Class<T> t) {
         if (t.isAnnotationPresent(Controller.class)) {
             for (Method method : t.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(RequestMapping.class)) {
                     Annotation annotation = method.getAnnotation(RequestMapping.class);
                     if (((RequestMapping) annotation).value().equals("")) {
-                        mappings.put(method.getName(), method.getName());
+                        mappings.put(method.getName(), method);
                     } else {
-                        mappings.put(((RequestMapping) annotation).value(), method.getName());
-                        for (Class<?> param : method.getParameterTypes()) {
-                            if (!isAtomic(param)) {//只允许一个实体参数封装
-                                beans.put(method.getName(), param);
-                                break;
-                            }
-                        }
+                        mappings.put(((RequestMapping) annotation).value(), method);
                     }
-                    controllers.put(method.getName(), t.newInstance());
+                    try {
+                        controllers.put(method, t.newInstance());
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } else if (t.isAnnotationPresent(Order.class)) {
@@ -249,25 +227,6 @@ public final class RequestMappingHandler implements Servlet {
         }
     }
 
-    //对文本格式数据处理
-    @Override
-    public void service() {
-
-    }
-
-    @Override
-    public String doGet(Request request, Response response) {
-        Map params = request.getParams();
-        if (params != null && params.get(Response.PLAIN) instanceof List) {
-            return (String) ((List) params.get(Response.PLAIN)).get(0);
-        }
-        return Response.NULL;
-    }
-
-    @Override
-    public String doPost(Request request, Response response) {
-        return null;
-    }
 
     static class IOTask implements Callable<Boolean> {
         private String path;
@@ -279,9 +238,9 @@ public final class RequestMappingHandler implements Servlet {
         @Override
         public Boolean call() {
             try {
-                scanResolers(Class.forName(path.substring(4).replace(".java", "").replace("\\", "."),
+                scanResolers(Class.forName(path.substring(4).replace(FILE_SPLITER + FILE_POS_MARK, "").replace("\\", "."),
                         true, Thread.currentThread().getContextClassLoader()));
-            } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 return false;
             }
@@ -297,7 +256,7 @@ public final class RequestMappingHandler implements Servlet {
         }));
         int core = 2 * Runtime.getRuntime().availableProcessors();
         executor = new ThreadPoolExecutor(core, core + 5, 50, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-        scanFile(rootPath);
+        scanFile(ROOTPATH);
         for (Future future : result) {
             try {
                 future.get(500, TimeUnit.MILLISECONDS);

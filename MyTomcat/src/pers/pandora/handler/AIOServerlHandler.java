@@ -3,15 +3,17 @@ package pers.pandora.handler;
 import pers.pandora.bean.Attachment;
 import pers.pandora.servlet.Dispatcher;
 import pers.pandora.servlet.Request;
+import pers.pandora.utils.StringUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public final class AIOServerlHandler extends Dispatcher implements CompletionHandler<Integer, Attachment> {
@@ -32,8 +34,11 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
             //对于conten-length的长度所指内容是对于文件分隔符之间的所有字段及文件内容值以及其它表单字段所有值以及两者间换行分隔符
             //某些时候浏览器不发送文件只发送文件分隔符，推测与服务器环境有关（带宽），对于隐私模式下的chrome，上传文件不发送文件数据,在头部信息中有文件分隔符,而firefox却可以发送
 //            System.out.println("收到来自客户端的数据: " + msg);
-            handleUploadFile(msg, bytes);
-            handleHeadInfo(msg);
+            try {
+                msg = handleUploadFile(msg, bytes);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
             try {
                 dispatcher(msg);
             } catch (Exception e) {
@@ -55,19 +60,6 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
         }
 //        request.reset();
 //        response.reset();
-        response = null;
-        request = null;
-    }
-
-    private void handleHeadInfo(String msg) {
-        Map<String, String> heads = new HashMap<>();
-        for (String s : msg.split(String.valueOf(Request.CRLF), -1)) {
-            String[] sp = s.split(Request.spliter + Request.BLANK);
-            if (sp.length == 2) {
-                heads.put(sp[0], sp[1].trim());
-            }
-        }
-        request.setHeads(heads);
     }
 
     //firefox
@@ -78,38 +70,86 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
     //----WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau--
-    //基于windows调制分隔符
-    private void handleUploadFile(String msg, byte[] data) {
-        int j = msg.indexOf(Request.FILEMARK);
+    private String handleUploadFile(String msg, byte[] data) throws UnsupportedEncodingException {
+        //text/plain 固定发送 WebKitFormBoundaryvZnw9hoqtB3dl2ak ? 浏览器chrome,firefox一样
+        int j = msg.indexOf(Request.FILEMARK), k;
+        String head = msg;
         if (j >= 0) {
+            request.setMultipart(true);
             j += Request.FILEMARK.length();
             int jj = j;
             for (; j < msg.length() && msg.charAt(j) != Request.CRLF; j++) ;
-            String fileDesc = msg.substring(jj, j - 1);
-            int i = 0;//msg.indexOf(Request.CONTENTLENGTH)+Request.CONTENTLENGTH.length()+1;
-//            int len = 0;
-//            for(;i < msg.length() && Character.isDigit(msg.charAt(i));i++) len = len*10 + msg.charAt(i)-Request.ZERO;
-//            if(len >  0){
-            i = msg.indexOf(Request.FILEVARNAME) + Request.FILEVARNAME.length() + 1;
-            jj = i;
-            for (; i < msg.length() && msg.charAt(i) != Request.FILENAMETAIL; i++) ;
-            int k = i + 3;//msg.indexOf(Request.FILENAME, i);
-            request.setFileVarName(msg.substring(jj, i));
-            k += Request.FILENAME.length() + 1;
-            j = k;
-            for (; k < msg.length() && msg.charAt(k) != Request.FILENAMETAIL; k++) ;
-            i = msg.indexOf(Request.CONTENTTYPE, j);
-            if (i < 0) {
-                return;
+            //拿到文件分隔符
+            String fileDesc = msg.substring(jj, j - Request.LINE_SPLITER + 1);
+            String tmp = msg.substring(0, j);
+            int offset = tmp.getBytes(request.getCharset()).length;
+            msg = msg.substring(j);
+            j = msg.indexOf(fileDesc);
+            if (j >= 0) {
+                head = tmp + msg.substring(0, j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER);
             }
-            for (; i < msg.length() && msg.charAt(i) != Request.CRLF; i++) ;
-            int len = data.length - i - 3 - fileDesc.length() - 8;
-            byte[] fileData = new byte[len];
-            System.arraycopy(data, i + 3, fileData, 0, len);
-            request.setFileName(msg.substring(j, k));
-            request.setFileData(fileData);
-//            }
+            while (j >= 0) {
+                j += fileDesc.length() + Request.LINE_SPLITER;
+                offset += msg.substring(0, j).getBytes(request.getCharset()).length;
+                msg = msg.substring(j);
+                j = msg.indexOf(fileDesc);
+                if (j >= 0) {
+                    String part = msg.substring(0, j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER + 1);
+                    jj = part.indexOf(Request.FILENAME);
+                    if (jj > 0) {//二进制文件
+                        jj += Request.FILENAME.length() + 1;
+                        for (k = jj; k < part.length() && part.charAt(k) != Request.FILENAMETAIL; k++) ;
+                        String fileName = part.substring(jj, k);
+                        k += Request.LINE_SPLITER;
+                        for (; k < part.length() && part.charAt(k) != Request.CRLF; k++) ;
+                        int l;
+                        for (l = ++k; k < part.length() && part.charAt(k) != Request.CRLF; k++) ;
+                        //得到文件类型
+                        String contentType = part.substring(l, k - Request.LINE_SPLITER + 1);
+                        if (StringUtils.isNotEmpty(contentType)) {
+                            String fileType[] = contentType.split(Request.HEAD_INFO_SPLITER);
+                            if (fileType.length == 2) {
+                                request.setFileType(fileType[1].trim());
+                                int end = j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER;
+                                int start = k + 1 + Request.LINE_SPLITER;
+                                if (fileType[1].trim().equals(Request.TEXT_PLAIN)) {
+                                    start += part.substring(k - Request.LINE_SPLITER + 1).indexOf(contentType) + contentType.length();
+                                    for (; end > start && part.charAt(end) != Request.CRLF; end--) ;
+                                    end = end - Request.LINE_SPLITER + 1;
+                                    end = offset + part.substring(0, end).getBytes(request.getCharset()).length;
+                                } else {
+                                    end = data.length - msg.substring(j).getBytes(request.getCharset()).length - Request.MUPART_DESC_LINE_2.getBytes(request.getCharset()).length - 2*Request.LINE_SPLITER+1;
+                                }
+                                //copy file data
+                                start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
+                                byte[] fileData = new byte[end - start];
+                                System.arraycopy(data, start, fileData, 0, fileData.length);
+                                request.setFileName(fileName);
+                                request.setFileData(fileData);
+                            }
+                        }
+                    } else if ((jj = part.indexOf(Request.MUPART_NAME)) > 0) {//二进制表单变量
+                        jj += Request.MUPART_NAME.length() + 1;
+                        for (k = jj; k < part.length() && part.charAt(k) != Request.FILENAMETAIL; k++) ;
+                        String varName = part.substring(jj, k);
+                        k += Request.LINE_SPLITER;
+                        String varValue = part.substring(k);
+                        List<Object> objects = request.getParams().get(varName);
+                        if (objects != null) {
+                            objects.add(varValue);
+                        } else {
+                            objects = new ArrayList<>();
+                            objects.add(varValue.trim());
+                            request.getParams().put(varName, objects);
+                        }
+                    }
+                    offset += msg.substring(0, j).getBytes(request.getCharset()).length;
+                    msg = msg.substring(j);
+                    j = msg.indexOf(fileDesc);
+                }
+            }
         }
+        return head;
     }
 
     @Override

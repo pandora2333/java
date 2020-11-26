@@ -5,13 +5,10 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import pers.pandora.bean.Pair;
 import pers.pandora.interceptor.Interceptor;
 import pers.pandora.mvc.ModelAndView;
 import pers.pandora.mvc.RequestMappingHandler;
-import pers.pandora.utils.MapContent;
 import pers.pandora.utils.StringUtils;
 import pers.pandora.utils.XMLFactory;
 
@@ -24,9 +21,9 @@ public class Dispatcher implements Runnable {
     private static String webConfig = ROOTPATH + "WEB-INF/web.xml";
     private static final String mvcClass = "pers.pandora.mvc.RequestMappingHandler";
     private volatile RequestMappingHandler requestMappingHandler;
-    private static Map<String, MapContent> context;
-    protected Request request = new Request(context, mvcClass);
-    protected Response response = new Response(null, null, null);
+    private static Map<String, String> context;
+    protected Request request = new Request();
+    protected Response response = new Response();
 
     static {
         context = XMLFactory.parse(webConfig);
@@ -37,6 +34,17 @@ public class Dispatcher implements Runnable {
 //        }
     }
 
+    public static String getMvcClass() {
+        return mvcClass;
+    }
+
+    public static Map<String, String> getContext() {
+        return context;
+    }
+
+    public static void addUrlMapping(String url, String mvcClass){
+        context.put(url, mvcClass);
+    }
 
     public Dispatcher(Socket client) {
         this.client = client;
@@ -85,45 +93,35 @@ public class Dispatcher implements Runnable {
             if (servlet != null) {
                 if (servlet.equals(mvcClass)) {
                     //执行mvc操作
-                    requestMappingHandler.setModelAndView(new ModelAndView(request.getReqUrl(), request.getParams(), false));
-                    Pair<ModelAndView, List<Object>> pair = requestMappingHandler.parseUrl(request.getReqUrl());
-                    //请求重定向
-                    if (pair != null) {
-                        request.getJspParser().setValueObject(pair.getV());
-                        if (pair.getK() != null) {
-                            if (pair.getK().isJson()) {
-                                List temp = new LinkedList<>();
-                                temp.add(pair.getK().getPage());
-                                Map<String, List<Object>> params = new ConcurrentHashMap<>();
-                                params.put(Response.PLAIN, temp);
-                                request.setParams(params);
-                                response.setServlet(mvcClass);
-                                //pre intercepter
-                                if (!handlePre()) {
-                                    return;
-                                }
-                                pushClient(response.handle(Request.GET, request), null);
-                                //after intercepter
-                                if (!handleAfter()) {
-                                    return;
-                                }
-                                response.reset();
-                            } else {
-                                request.setParams(pair.getK().getParams());
-                                //pre intercepter
-                                if (!handlePre()) {
-                                    return;
-                                }
-                                dispatcher(Request.GET + Request.BLANK + pair.getK().getPage() + Request.BLANK + Request.HTTP1_1);
-                                //after intercepter
-                                if (!handleAfter()) {
-                                    return;
-                                }
-                            }
+                    //将mvc重定向路径加入map
+                    ModelAndView mv = new ModelAndView(request.getReqUrl(),false);
+                    mv.setRequest(request);
+                    mv.setResponse(response);
+                    requestMappingHandler.parseUrl(mv);
+                    if (mv.isJson()) {
+                        //pre intercepter
+                        if (!handlePre()) {
+                            return;
+                        }
+                        pushClient(response.handle(Request.GET, request), null);
+                        //after intercepter
+                        if (!handleAfter()) {
+                            return;
+                        }
+                        response.reset();
+                    } else {
+                        //pre intercepter
+                        if (!handlePre()) {
+                            return;
+                        }
+                        dispatcher(Request.GET + Request.BLANK + mv.getPage() + Request.BLANK + Request.HTTP1_1);
+                        //after intercepter
+                        if (!handleAfter()) {
+                            return;
                         }
                     }
                 } else {
-                    String ss[] = servlet.split(Request.spliter);
+                    String ss[] = servlet.split(Request.HEAD_INFO_SPLITER);
                     String file = ss.length == 2 ? ss[1] : null;
                     response.setResource(ss.length == 2 ? ss[1] : null);
                     response.setServlet(servlet);

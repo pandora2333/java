@@ -30,6 +30,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>mvc</servlet-name>
-        <url-patterns>/*.do</url-patterns>
+        <url-patterns>/.*.do</url-patterns>
     </servlet-mapping>
 </web>

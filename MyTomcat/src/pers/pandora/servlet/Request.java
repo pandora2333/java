@@ -4,17 +4,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import pers.pandora.utils.JspParser;
-import pers.pandora.utils.MapContent;
 
 public final class Request {
     private String method;
-    private Map<String, MapContent> context;
     private Map<String, List<Object>> params;
     private String reqUrl;
-    private String mvcClass;
     private JspParser jspParser;
     private String filePath = Dispatcher.ROOTPATH + "files/";
     private String fileName;
@@ -22,22 +17,42 @@ public final class Request {
     private byte[] fileData;
     private String fileVarName;
     private Map<String,String> heads;
+    private Map<String,Object> objectList;
     private Cookie cookie;
-    public static final String ERROR_PARAM = "ERROR_QUERY_PARAM";
-    public static final String REQUSTSCOPE = "requstScope";
+    private boolean isMultipart;
+    private String fileType;
+    public static final String MUPART_DESC_LINE_2 = "---";//文件结束
+    public static final String MUPART_NAME = "name=";
+    public static final String MUPART_DESC_LINE = "--";//文件开始
+    public static final int LINE_SPLITER = System.lineSeparator().length();//windows 2 byte:\r\n; linux 1 byte: \n
     public static final String FILEMARK = "Content-Type: multipart/form-data; boundary=";
-    public static final String FILEVARNAME = "Content-Disposition: form-data; name=";
-    public static final String CONTENTTYPE = "Content-Type:";
-    public static final String FILENAME = "filename=";
+    public static final String FILENAME = "; filename=";
     public static final char FILENAMETAIL = '\"';
     public static final char CRLF = '\n';
     public static final String JSP = ".jsp";
     public static final String GET = "GET";
     public static final String POST = "POST";
     public static final String BLANK = " ";
-    public static final String spliter = "\\:";
+    public static final String HEAD_INFO_SPLITER = "\\:";
     public static final String HTTP1_1 = "HTTP/1.1";
     public static final String HTTP = "HTTP";
+    public static final String TEXT_PLAIN = "text/plain";
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
+    }
+
+    public void setMultipart(boolean multipart) {
+        isMultipart = multipart;
+    }
+
+    public boolean isMultipart() {
+        return isMultipart;
+    }
 
     public void setFileVarName(String fileVarName) {
         this.fileVarName = fileVarName;
@@ -55,11 +70,17 @@ public final class Request {
         return heads;
     }
 
-    public Request(Map<String, MapContent> context, String mvcClass) {
-        this.context = context;
-        this.mvcClass = mvcClass;
-        params = new ConcurrentHashMap<>();
-        jspParser = new JspParser(null,context);
+    public void setObjectList(Map<String, Object> objectList) {
+        this.objectList = objectList;
+    }
+
+    public Map<String, Object> getObjectList() {
+        return objectList;
+    }
+
+    public Request() {
+        params = new HashMap<>();
+        jspParser = new JspParser();
     }
 
     public byte[] getFileData() {
@@ -135,6 +156,8 @@ public final class Request {
     }
 
     public String handle(String msg) {//GET /login HTTP/1.1
+        //处理request head
+        msg = handleHeadInfo(msg);
         String reqToken = msg.substring(msg.indexOf("/"), msg.indexOf(HTTP)).trim();//GET /login HTTP/1.1
         String tempStr = reqToken;
         if (reqToken.contains("?")) {
@@ -149,23 +172,34 @@ public final class Request {
             parseParams(reqToken, GET);
         } else if (msg.startsWith(POST)) {
             method = POST;
-            String param = msg.substring(msg.lastIndexOf(CRLF)).trim();
-            parseParams(param, POST);
+            if(!isMultipart) {
+                String param = msg.substring(msg.lastIndexOf(CRLF)).trim();
+                parseParams(param, POST);
+            }
         }
         reqUrl = tempStr;//保存请求路径
         if (reqUrl.contains(Request.JSP)) {
-            return jspParser.parse(Dispatcher.ROOTPATH2 + reqUrl,params);
+            return jspParser.parse(Dispatcher.ROOTPATH2 + reqUrl);
         }
-        if (!isMVC(msg)) {
-            for (MapContent mapContent : context.values()) {
-                if (mapContent.getUrls().contains(reqToken)) {
-                    return mapContent.getClassName();
-                }
+        if (isMVC(reqUrl)) {
+            return Dispatcher.getMvcClass();
+        }
+        return Dispatcher.getContext().get(reqUrl);
+
+    }
+    private String handleHeadInfo(String msg) {
+        Map<String, String> heads = new HashMap<>();
+        StringBuilder other = new StringBuilder();
+        for (String s : msg.split(String.valueOf(Request.CRLF), -1)) {
+            String[] sp = s.split(Request.HEAD_INFO_SPLITER + Request.BLANK);
+            if (sp.length == 2) {
+                heads.put(sp[0], sp[1].trim());
+            }else{
+                other.append(s.trim());
             }
-        } else {
-            return mvcClass;
         }
-        return null;
+        this.heads = heads;
+        return other.toString();
     }
 
     private String judgeStatic(String reqToken) {
@@ -189,16 +223,11 @@ public final class Request {
         }
     }
 
-    private boolean isMVC(String msg) {
-        for (MapContent mapContent : context.values()) {
-            if (mapContent != null && mapContent.getClassName().trim().equals(mvcClass)) {
-                for (String url : mapContent.getUrls()) {
-                    if (url.contains("*")) {
-                        url = url.substring(url.indexOf("*") + 1);
-                    }
-                    if (msg.contains(url)) {// /*.do //".do"
-                        return true;
-                    }
+    private boolean isMVC(String reqUrl) {
+        for (Map.Entry<String,String> entry : Dispatcher.getContext().entrySet()) {
+            if (entry.getValue().equals(Dispatcher.getMvcClass())) {// /.*.do //.do
+                if(entry.getKey().equals(reqUrl) || reqUrl.matches(entry.getKey())) {
+                    return true;
                 }
             }
         }
@@ -225,10 +254,8 @@ public final class Request {
 
     void reset() {
         method = null;
-        context = null;
         params = null;
         reqUrl = null;
-        mvcClass = null;
         jspParser = null;
         filePath = Dispatcher.ROOTPATH + "files/";
         fileName = null;

@@ -11,7 +11,7 @@ public class TestServlet implements Servlet {
     public String doGet(Request request, Response response) {
         if (request.getFileData() != null) {
             request.setFilePath("e:/");
-            request.setFileName("test.jpg");
+//            request.setFileName("test.jpg");
             request.saveFileData();
         }
         StringBuilder sb = new StringBuilder();

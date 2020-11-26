@@ -1,7 +1,7 @@
 <jsp langage="java">
 <html>
    <head>
-       <title>Welcome the Test Jsp||:#{requstScope.username}|#{requstScope.password}</title>
+       <title>Welcome the Test Jsp||:#{username}|#{password}</title>
    </head>
     <body>
         <form action="index.html" method="post">
