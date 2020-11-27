@@ -1,5 +1,9 @@
 package pers.pandora.servlet;
 
+import pers.pandora.bean.Tuple;
+
+import java.util.Map;
+
 @Deprecated
 public class TestServlet implements Servlet {
     @Override
@@ -9,10 +13,8 @@ public class TestServlet implements Servlet {
 
     @Override
     public String doGet(Request request, Response response) {
-        if (request.getFileData() != null) {
-            request.setFilePath("e:/");
-//            request.setFileName("test.jpg");
-            request.saveFileData();
+        for(Map.Entry<String, Tuple<String, String, byte[]>> entry : request.getUploadFiles().entrySet()){
+            request.saveFileData(entry.getKey());
         }
         StringBuilder sb = new StringBuilder();
         sb.append("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>")

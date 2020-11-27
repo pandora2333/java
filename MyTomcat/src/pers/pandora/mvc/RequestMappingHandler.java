@@ -9,7 +9,6 @@ import pers.pandora.servlet.Dispatcher;
 import pers.pandora.servlet.Request;
 import pers.pandora.servlet.Response;
 import pers.pandora.utils.ClassUtils;
-import pers.pandora.utils.JspParser;
 
 import java.io.File;
 
@@ -38,10 +37,20 @@ public final class RequestMappingHandler {
     private static final String CLASS_FILE_POS = "class";
     private static ThreadPoolExecutor executor;
     private static List<Future<Boolean>> result;
+    private long timeout;
 
 //    static {//类加载阶段启用多线程造成死锁：其它类引用到本类的信息，会等待本类加载完毕，但是本类自身加载过程中又等待其他类信息加载，造成死锁
 //         init();
 //    }
+
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
 
     public Set<Pair<Integer, Interceptor>> getInterceptors() {
         return interceptors;
@@ -259,7 +268,7 @@ public final class RequestMappingHandler {
         scanFile(ROOTPATH);
         for (Future future : result) {
             try {
-                future.get(500, TimeUnit.MILLISECONDS);
+                future.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
             }

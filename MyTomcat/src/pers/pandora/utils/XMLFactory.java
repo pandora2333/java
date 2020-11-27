@@ -16,7 +16,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class XMLFactory {
     private static SAXParser sax;
-//    private static Map<String,MapContent> context;
+    private static Map<String,MapContent> context;
     private static boolean isMap;
     private static  String servletClass;
     private static Map<String,String> urlMapping;
@@ -45,13 +45,13 @@ public class XMLFactory {
         private MapContent temp;
         private String servletName;
         @Override
-        public void startDocument() throws SAXException {
+        public void startDocument() {
             System.out.println("配置文件解析开始...");
-//            context = new ConcurrentHashMap<>(16);
+            context = new ConcurrentHashMap<>(16);
         }
 
         @Override
-        public void endDocument() throws SAXException {
+        public void endDocument() {
             System.out.println("配置文件解析结束...");
         }
 
@@ -87,8 +87,8 @@ public class XMLFactory {
         public void endElement(String uri, String localName, String qName) throws SAXException {
         	if(qName!=null){
         			if(tag!=null&&tag.equals("servlet-class")&&servletClass!=null){
-//        			    temp.setClassName(servletClass);
-//        				context.put(servletName,temp);
+        			    temp.setClassName(servletClass);
+        				context.put(servletName,temp);
              		}
         
         	}
@@ -107,12 +107,13 @@ public class XMLFactory {
 
                 }
                 	if(tag.equals("url-patterns")){
-//                	    if(context.get(servletName)!=null) {
-//                            context.get(servletName).getUrls().add(meta);
-//                        }else{
-//                	        temp.getUrls().add(meta);
-//                        }
-                        urlMapping.put(meta,servletClass);
+                	    if(context.get(servletName)!=null) {
+                            context.get(servletName).getUrls().add(meta);
+                            urlMapping.put(meta,context.get(servletName).getClassName());
+                        }else{
+                	        temp.getUrls().add(meta);
+                            urlMapping.put(meta,temp.getClassName());
+                        }
                     }
                
             }

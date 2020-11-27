@@ -1,14 +1,13 @@
 package pers.pandora.servlet;
 
+import pers.pandora.bean.Pair;
+import pers.pandora.interceptor.Interceptor;
+import pers.pandora.mvc.RequestMappingHandler;
+import pers.pandora.server.Session;
 import pers.pandora.utils.ClassUtils;
-import pers.pandora.utils.JspParser;
 import pers.pandora.utils.StringUtils;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,8 +16,6 @@ import java.util.Map;
 public final class Response {
 
     private String servlet;
-    //存储头信息
-    private StringBuilder headInfo;
     private String charset = "utf-8";
     //存储正文长度
     private int len;
@@ -26,18 +23,38 @@ public final class Response {
     private StringBuilder content;
     //资源类型
     private String type = "text/html";
+    private RequestMappingHandler requestMappingHandler;
     //静态资源地址
     private String resource;
+    private Session session;
+    //HTTP Response Status
+    private int code;
     private String filePath = "./WebRoot";
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
-    public static final String NULL = "";
-    private static final String CRLF = "\n";
-    private static final String BLANK = " ";
+    private static final char CRLF = '\n';
+    private static final char BLANK = ' ';
     private static final String SERVER = "Server";
     private static final String DATE = "Date";
     private static final String CONTENTTYPE = "Content-type";
     private static final String CONTENTLENGTH = "Content-Length";
+    private static final String SET_COOKIE = "Set-Cookie";
     private static final char RESPONSE_SPLITER = ':';
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
 
     private Map<String, String> heads;
 
@@ -52,8 +69,8 @@ public final class Response {
     public boolean addHeads(String key, String value) {
         if (StringUtils.isNotEmpty(key)) {
             String t = key.toLowerCase();
-            if (!t.equals(SERVER.toLowerCase()) && !t.equals(DATE.toLowerCase()) &&
-                    !t.equals(CONTENTLENGTH.toLowerCase()) && !t.equals(CONTENTTYPE.toLowerCase())) {
+            if (!t.equals(SERVER.toLowerCase()) && !t.equals(DATE.toLowerCase()) && !t.equals(CONTENTLENGTH.toLowerCase())
+                    && !t.equals(CONTENTTYPE.toLowerCase())) {
                 this.heads.put(key, value);
                 return true;
             } else {
@@ -61,6 +78,10 @@ public final class Response {
             }
         }
         return false;
+    }
+
+    public void setRequestMappingHandler(RequestMappingHandler requestMappingHandler) {
+        this.requestMappingHandler = requestMappingHandler;
     }
 
     public String getCharset() {
@@ -83,7 +104,9 @@ public final class Response {
         if (type == null && servlet == null) {
             content = new StringBuilder("请求URI参数出错");
         }
-        this.type = type;
+        if (type != null) {
+            this.type = type;
+        }
     }
 
     public String getType() {
@@ -111,8 +134,8 @@ public final class Response {
     /**
      * 构建响应头
      */
-    private void createHeadInfo(int code) {
-        headInfo = new StringBuilder();
+    private StringBuilder createHeadInfo(List<Cookie> cookies) {
+        StringBuilder headInfo = new StringBuilder();
         //1.http协议版本，状态代码，描述
         headInfo.append("HTTP/1.1").append(BLANK).append(code).append(BLANK);
         switch (code) {
@@ -120,13 +143,16 @@ public final class Response {
                 headInfo.append("OK");
                 break;
             case 404:
-                headInfo.append("not found");
+                headInfo.append("Not Found");
                 break;
             case 500:
-                headInfo.append("server error");
+                headInfo.append("Server Error");
+                break;
+            case 302:
+                headInfo.append("Found");
                 break;
             default:
-                headInfo.append("error code");
+                headInfo.append("Error Code");
         }
         headInfo.append(CRLF);
         //2.响应头
@@ -138,20 +164,57 @@ public final class Response {
         for (Map.Entry<String, String> head : heads.entrySet()) {
             headInfo.append(head.getKey() + RESPONSE_SPLITER + head.getValue()).append(CRLF);
         }
-//        headInfo.append("Transfer-Encoding: ").append(charset).append(CRLF);
+        //构建Cookie头
+        if (cookies != null && cookies.size() > 0) {
+            for (Cookie cookie : cookies) {
+                StringBuilder sb = new StringBuilder(SET_COOKIE);
+                sb.append(RESPONSE_SPLITER).append(BLANK).append(cookie.getKey()).append(Request.COOKIE_KV_SPLITE).append(cookie.getValue())
+                        .append(Request.COOKIE_SPLITER);
+                sb.append(RESPONSE_SPLITER).append(BLANK).append("Version").append(Request.COOKIE_KV_SPLITE).append(cookie.getVersion())
+                        .append(Request.COOKIE_SPLITER);
+                if (cookie.isFlag()) {
+                    if (StringUtils.isNotEmpty(cookie.getExpires())) {
+                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Expires").append(Request.COOKIE_KV_SPLITE).append(cookie.getExpires())
+                                .append(Request.COOKIE_SPLITER);
+                    }
+                    if (cookie.getMax_age() >= 0) {
+                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Max-Age").append(Request.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                                .append(Request.COOKIE_SPLITER);
+                    }
+                    if (StringUtils.isNotEmpty(cookie.getDoamin())) {
+                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Domain").append(Request.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                                .append(Request.COOKIE_SPLITER);
+                    }
+                    if (StringUtils.isNotEmpty(cookie.getDoamin())) {
+                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Path").append(Request.COOKIE_KV_SPLITE).append(cookie.getPath())
+                                .append(Request.COOKIE_SPLITER);
+                    }
+                    if (cookie.getSecure() > 0) {
+                        sb.append(RESPONSE_SPLITER).append(BLANK).append("secure").append(Request.COOKIE_KV_SPLITE).append(cookie.getSecure())
+                                .append(Request.COOKIE_SPLITER);
+                    }
+                }
+                sb.append(CRLF);
+                headInfo.append(sb);
+            }
+        }
         headInfo.append(CRLF);//分隔符
+        return headInfo;
     }
 
     public String handle(String method, Request request) {
         if (content == null) {
             content = new StringBuilder();
         }
+        //response session以request session为准
+        session = request.getSession();
+        handlePre(request);
         try {
             if (request != null && request.getParams().containsKey(PLAIN)) {
                 type = "text/plain";
                 content.append(request.getParams().get(Response.PLAIN).get(0));//保留JSON序列化
                 len = content.toString().getBytes(charset).length;
-                createHeadInfo(200);
+                code = 200;
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = request.getParams();
                 //初始化对象赋值只支持基本数据类型和String类型
@@ -164,7 +227,9 @@ public final class Response {
                         content.append(handler.doPost(request, this));
                     }
                     len = content.toString().getBytes(charset).length;
-                    createHeadInfo(200);
+                    if (code <= 0) {
+                        code = 200;
+                    }
                 } else {
                     handle_404_NOT_FOUND();
                 }
@@ -173,19 +238,38 @@ public final class Response {
             } else {
                 File file = new File(filePath + resource);
                 len += file.length();
-                createHeadInfo(file.exists() ? 200 : 404);
+                code = file.exists() ? 200 : 404;
             }
         } catch (Exception e) {
             System.out.println("当前编码不支持:" + charset);
         }
-        return headInfo.append(content).toString();
+        handleAfter(request);
+        return createHeadInfo(request.isUpdateCookie() ? request.getCookies() : null).append(content).toString();
+    }
+
+    private boolean handleAfter(Request request) {
+        for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
+            if (!interceptor.getV().afterMethod(request, this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean handlePre(Request request) {
+        for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
+            if (!interceptor.getV().preMethod(request, this)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void handle_404_NOT_FOUND() throws UnsupportedEncodingException {
         content.append("页面找不到!");
         type = "text/plain";
         len = content.toString().getBytes(charset).length;
-        createHeadInfo(404);
+        code = 404;
     }
 
     private void initRequstObjectList(Map<String, Object> objectList, Servlet handler) {
@@ -196,10 +280,7 @@ public final class Response {
     void reset() {
         servlet = null;
         type = "text/html";
-        charset = "utf-8";
-        filePath = Dispatcher.ROOTPATH2;
         resource = null;
-        headInfo = null;
         content = null;
         len = 0;
     }

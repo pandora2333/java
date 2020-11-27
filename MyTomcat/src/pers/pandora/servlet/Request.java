@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+
+import pers.pandora.bean.Tuple;
+import pers.pandora.server.Session;
 import pers.pandora.utils.JspParser;
+import pers.pandora.utils.StringUtils;
 
 public final class Request {
     private String method;
@@ -12,16 +16,16 @@ public final class Request {
     private String reqUrl;
     private JspParser jspParser;
     private String filePath = Dispatcher.ROOTPATH + "files/";
-    private String fileName;
     private String charset = "utf-8";
-    private byte[] fileData;
+    private Map<String, Tuple<String, String, byte[]>> uploadFiles;//fileVarName -> {fileName,fileType,byte[] data}
     private String fileVarName;
-    private Map<String,String> heads;
-    private Map<String,Object> objectList;
-    private Cookie cookie;
+    private Map<String, String> heads;
+    private Map<String, Object> objectList;
+    private List<Cookie> cookies;
     private boolean isMultipart;
-    private String fileType;
-    public static final String MUPART_DESC_LINE_2 = "---";//文件结束
+    //是否更新浏览器Cookie
+    private boolean updateCookie;//默认不向浏览器设置Cookie
+    private Session session;
     public static final String MUPART_NAME = "name=";
     public static final String MUPART_DESC_LINE = "--";//文件开始
     public static final int LINE_SPLITER = System.lineSeparator().length();//windows 2 byte:\r\n; linux 1 byte: \n
@@ -34,16 +38,47 @@ public final class Request {
     public static final String POST = "POST";
     public static final String BLANK = " ";
     public static final String HEAD_INFO_SPLITER = "\\:";
+    public static final String COOKIE_SPLITER = "; ";
+    public static final String COOKIE_KV_SPLITE = "=";
     public static final String HTTP1_1 = "HTTP/1.1";
     public static final String HTTP = "HTTP";
     public static final String TEXT_PLAIN = "text/plain";
+    public static final String COOKIE_MARK = "cookie";
+    public static final String SESSION_MARK = "sessionID";
 
-    public String getFileType() {
-        return fileType;
+    public void setUpdateCookie(boolean updateCookie) {
+        this.updateCookie = updateCookie;
     }
 
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
+    public boolean isUpdateCookie() {
+        return updateCookie;
+    }
+
+
+    public Map<String, Tuple<String, String, byte[]>> getUploadFiles() {
+        return uploadFiles;
+    }
+
+    public List<Cookie> getCookies() {
+        return cookies;
+    }
+
+    public void addCookies(Cookie cookie) {
+        if (cookie != null) {
+            cookies.add(cookie);
+        }
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+    public void setUploadFiles(Map<String, Tuple<String, String, byte[]>> uploadFiles) {
+        this.uploadFiles = uploadFiles;
     }
 
     public void setMultipart(boolean multipart) {
@@ -81,14 +116,8 @@ public final class Request {
     public Request() {
         params = new HashMap<>();
         jspParser = new JspParser();
-    }
-
-    public byte[] getFileData() {
-        return fileData;
-    }
-
-    public void setFileData(byte[] fileData) {
-        this.fileData = fileData;
+        uploadFiles = new HashMap<>();
+        cookies = new ArrayList<>();
     }
 
     public void setJspParser(JspParser jspParser) {
@@ -115,14 +144,6 @@ public final class Request {
         this.charset = charset;
     }
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
     public String getReqUrl() {
         return reqUrl;
     }
@@ -140,16 +161,17 @@ public final class Request {
     }
 
 
-    public void saveFileData() {
-        if (fileData == null || fileData.length == 0) {
+    public void saveFileData(String fileVarName) {
+        if (!StringUtils.isNotEmpty(fileVarName) || !uploadFiles.containsKey(fileVarName)) {
             throw new RuntimeException("无文件上传!");
         }
         java.io.File path = new java.io.File(filePath);
         if (!path.exists()) {
             path.mkdirs();
         }
+        Tuple<String, String, byte[]> file = uploadFiles.get(fileVarName);
         try {
-            Files.write(Paths.get(filePath + fileName), fileData);
+            Files.write(Paths.get(filePath + file.getK1()), file.getV());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -172,7 +194,7 @@ public final class Request {
             parseParams(reqToken, GET);
         } else if (msg.startsWith(POST)) {
             method = POST;
-            if(!isMultipart) {
+            if (!isMultipart) {
                 String param = msg.substring(msg.lastIndexOf(CRLF)).trim();
                 parseParams(param, POST);
             }
@@ -187,19 +209,61 @@ public final class Request {
         return Dispatcher.getContext().get(reqUrl);
 
     }
+
     private String handleHeadInfo(String msg) {
         Map<String, String> heads = new HashMap<>();
         StringBuilder other = new StringBuilder();
         for (String s : msg.split(String.valueOf(Request.CRLF), -1)) {
             String[] sp = s.split(Request.HEAD_INFO_SPLITER + Request.BLANK);
             if (sp.length == 2) {
+                if (sp[0].toLowerCase().equals(COOKIE_MARK)) {
+                    initCookies(sp[1]);
+                }
                 heads.put(sp[0], sp[1].trim());
-            }else{
+            } else {
                 other.append(s.trim());
             }
         }
         this.heads = heads;
         return other.toString();
+    }
+
+    private void initCookies(String cookie_str) {
+        boolean sessionCookie = false;
+        if(StringUtils.isNotEmpty(cookie_str)){
+            for (String tmp : cookie_str.split(COOKIE_SPLITER)) {
+                String[] ss = tmp.split(COOKIE_KV_SPLITE);
+                if (ss.length == 2) {
+                    Cookie cookie = new Cookie();
+                    if (ss[0].equals(SESSION_MARK)) {
+                        if (Dispatcher.getSessionMap().containsKey(ss[1]) &&
+                                Dispatcher.getSessionMap().get(ss[1]).getMax_age() != 0) {
+                            session = Dispatcher.getSessionMap().get(ss[1]);
+                        } else {
+                            //惰性删除过期session
+                            Dispatcher.getSessionMap().remove(ss[1]);
+                            session = new Session();
+                            ss[1] = session.getSessionID();
+                            Dispatcher.getSessionMap().put(ss[1],session);
+                            updateCookie = true;
+                        }
+                        sessionCookie = true;
+                    }
+                    cookie.setKey(ss[0]);
+                    cookie.setValue(ss[1]);
+                    cookies.add(cookie);
+                }
+            }
+        }
+        if(!sessionCookie){
+            session = new Session();
+            updateCookie = true;
+            Cookie cookie = new Cookie();
+            cookie.setKey(SESSION_MARK);
+            cookie.setValue(session.getSessionID());
+            Dispatcher.getSessionMap().put(session.getSessionID(),session);
+            cookies.add(cookie);
+        }
     }
 
     private String judgeStatic(String reqToken) {
@@ -224,9 +288,9 @@ public final class Request {
     }
 
     private boolean isMVC(String reqUrl) {
-        for (Map.Entry<String,String> entry : Dispatcher.getContext().entrySet()) {
+        for (Map.Entry<String, String> entry : Dispatcher.getContext().entrySet()) {
             if (entry.getValue().equals(Dispatcher.getMvcClass())) {// /.*.do //.do
-                if(entry.getKey().equals(reqUrl) || reqUrl.matches(entry.getKey())) {
+                if (entry.getKey().equals(reqUrl) || reqUrl.matches(entry.getKey())) {
                     return true;
                 }
             }
@@ -254,12 +318,10 @@ public final class Request {
 
     void reset() {
         method = null;
-        params = null;
+        params.clear();
         reqUrl = null;
-        jspParser = null;
-        filePath = Dispatcher.ROOTPATH + "files/";
-        fileName = null;
-        charset = "utf-8";
-        fileData = null;
+        uploadFiles.clear();
+        cookies.clear();
+        updateCookie = false;
     }
 }

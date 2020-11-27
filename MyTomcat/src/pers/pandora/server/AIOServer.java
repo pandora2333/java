@@ -3,6 +3,7 @@ package pers.pandora.server;
 import pers.pandora.bean.Attachment;
 import pers.pandora.handler.AIOServerlHandler;
 import pers.pandora.mvc.RequestMappingHandler;
+import pers.pandora.servlet.Dispatcher;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,6 +14,9 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public final class AIOServer {
@@ -81,7 +85,9 @@ public final class AIOServer {
             running = true;
             Attachment att = new Attachment();
             att.setServer(asyncServerSocketChannel);
+            long start = System.currentTimeMillis();
             RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
+            requestMappingHandler.setTimeout(1000);//ms
             requestMappingHandler.init();
             att.setRequestMappingHandler(requestMappingHandler);
             asyncServerSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
@@ -109,7 +115,31 @@ public final class AIOServer {
                     System.out.println("accept failed");
                 }
             });
-            System.out.println("AIO server Start!");
+            //扫描驱逐后台线程
+            Thread invalidResourceExecutor = new Thread(() -> {
+                while (true) {
+                    List<String> invalidKey = new ArrayList<>();
+                    for (Map.Entry<String, Session> session : Dispatcher.getSessionMap().entrySet()) {
+                        if (session.getValue().getMax_age() > 0) {
+                            if (session.getValue().invalidTime() == 0) {
+                                invalidKey.add(session.getKey());
+                            }
+                        }
+                    }
+                    for (String removeKey : invalidKey) {
+                        Dispatcher.getSessionMap().remove(removeKey);
+                    }
+                    try {
+                        //最多每秒执行一次
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            invalidResourceExecutor.setDaemon(true);//后台线程
+            invalidResourceExecutor.start();
+            System.out.println("AIO server Start! in time:"+(System.currentTimeMillis() - start)+" ms");
             Thread.currentThread().join();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

@@ -5,10 +5,13 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import pers.pandora.bean.Pair;
 import pers.pandora.interceptor.Interceptor;
 import pers.pandora.mvc.ModelAndView;
 import pers.pandora.mvc.RequestMappingHandler;
+import pers.pandora.server.Session;
 import pers.pandora.utils.StringUtils;
 import pers.pandora.utils.XMLFactory;
 
@@ -22,16 +25,17 @@ public class Dispatcher implements Runnable {
     private static final String mvcClass = "pers.pandora.mvc.RequestMappingHandler";
     private volatile RequestMappingHandler requestMappingHandler;
     private static Map<String, String> context;
-    protected Request request = new Request();
-    protected Response response = new Response();
+    public Request request = new Request();
+    public Response response = new Response();
+    //全局session管理,基于内存的生命周期
+    private static Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
 
     static {
         context = XMLFactory.parse(webConfig);
-//        try {
-//            requestMappingHandler = (RequestMappingHandler) Class.forName(mvcClass).newInstance();
-//        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
+    }
+
+    public static Map<String, Session> getSessionMap() {
+        return sessionMap;
     }
 
     public static String getMvcClass() {
@@ -42,7 +46,7 @@ public class Dispatcher implements Runnable {
         return context;
     }
 
-    public static void addUrlMapping(String url, String mvcClass){
+    public static void addUrlMapping(String url, String mvcClass) {
         context.put(url, mvcClass);
     }
 
@@ -77,12 +81,16 @@ public class Dispatcher implements Runnable {
             int len = client.getInputStream().available();
             byte[] data = new byte[len];
             client.getInputStream().read(data);
-            dispatcher(new String(data));
+            //HTTP资源预处理
+            initRequest(data);
+            dispatcher(new String(data,0,data.length,request.getCharset()));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("分发执行出错!");
         } finally {
             close();
+            //资源回收处理
+            handleRequestCompleted();
         }
     }
 
@@ -94,31 +102,15 @@ public class Dispatcher implements Runnable {
                 if (servlet.equals(mvcClass)) {
                     //执行mvc操作
                     //将mvc重定向路径加入map
-                    ModelAndView mv = new ModelAndView(request.getReqUrl(),false);
+                    ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
                     mv.setRequest(request);
                     mv.setResponse(response);
                     requestMappingHandler.parseUrl(mv);
                     if (mv.isJson()) {
-                        //pre intercepter
-                        if (!handlePre()) {
-                            return;
-                        }
                         pushClient(response.handle(Request.GET, request), null);
-                        //after intercepter
-                        if (!handleAfter()) {
-                            return;
-                        }
                         response.reset();
                     } else {
-                        //pre intercepter
-                        if (!handlePre()) {
-                            return;
-                        }
                         dispatcher(Request.GET + Request.BLANK + mv.getPage() + Request.BLANK + Request.HTTP1_1);
-                        //after intercepter
-                        if (!handleAfter()) {
-                            return;
-                        }
                     }
                 } else {
                     String ss[] = servlet.split(Request.HEAD_INFO_SPLITER);
@@ -126,37 +118,30 @@ public class Dispatcher implements Runnable {
                     response.setResource(ss.length == 2 ? ss[1] : null);
                     response.setServlet(servlet);
                     response.setType(ss.length == 2 ? ss[0] : null);
-                    //after intercepter
-                    if (!handlePre()) {
-                        return;
-                    }
                     String content = response.handle(request.getMethod(), request);
                     pushClient(content, file);
-                    //after intercepter
-                    if (!handleAfter()) {
-                        return;
-                    }
                     response.reset();
                 }
             } else {
                 pushClient(response.handle(null, null), null);
+                response.reset();
             }
         }
     }
 
-    private boolean handleAfter() {
+    protected boolean handleRequestCompleted() {
         for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
-            if (!interceptor.getV().afterRequest(request, response)) {
-                return false;
+            if (!interceptor.getV().completeRequest(request, response)) {
+                throw new RuntimeException(interceptor.getV().getClass().getName() + "执行completeRequest资源处理出错");
             }
         }
         return true;
     }
 
-    private boolean handlePre() {
-        for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
-            if (!interceptor.getV().preRequest(request, response)) {
-                return false;
+    protected boolean initRequest(byte[] data) {
+        for (Pair<Integer, Interceptor> interceptor : getRequestMappingHandler().getInterceptors()) {
+            if (!interceptor.getV().initRequest(request, data)) {
+                throw new RuntimeException(interceptor.getV().getClass().getName() + "执行initRequest资源处理出错");
             }
         }
         return true;

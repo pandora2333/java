@@ -8,14 +8,26 @@ import pers.pandora.servlet.Response;
 @Order(2)
 public class TestInterceptor_1 implements Interceptor {
     @Override
-    public boolean preRequest(Request request, Response response) {
-        System.out.println("preRequest:"+this.getClass().getSimpleName());
+    public boolean preMethod(Request request, Response response) {
+        System.out.println("preMethod:"+this.getClass().getSimpleName());
         return true;
     }
 
     @Override
-    public boolean afterRequest(Request request, Response response) {
-        System.out.println("afterRequest:"+this.getClass().getSimpleName());
+    public boolean afterMethod(Request request, Response response) {
+        System.out.println("afterMethod:"+this.getClass().getSimpleName());
+        return true;
+    }
+
+    @Override
+    public boolean completeRequest(Request request, Response response) {
+        System.out.println("completeRequest:"+this.getClass().getSimpleName());
+        return true;
+    }
+
+    @Override
+    public boolean initRequest(Request request, byte[] data) {
+        System.out.println("initRequest:"+this.getClass().getSimpleName());
         return true;
     }
 }
