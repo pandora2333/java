@@ -3,20 +3,18 @@ package pers.pandora.mvc;
 import pers.pandora.servlet.Request;
 import pers.pandora.servlet.Response;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * 封装参数和模型
  * 页面间，请求重定向传参
  */
 public final class ModelAndView {
+
     private String page;
+
     private boolean isJson;
+
     private Request request;
+
     private Response response;
 
     public void setResponse(Response response) {

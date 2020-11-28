@@ -1,31 +1,25 @@
-package pers.pandora.bean;
+package pers.pandora.vo;
 
-import pers.pandora.mvc.RequestMappingHandler;
+import pers.pandora.server.Server;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 
 public class Attachment {
-    private AsynchronousServerSocketChannel server;
+
     private AsynchronousSocketChannel client;
+
+    private Server server;
+
     private boolean isReadMode;
+
     private ByteBuffer buffer;
-    private RequestMappingHandler requestMappingHandler;
 
-    public RequestMappingHandler getRequestMappingHandler() {
-        return requestMappingHandler;
-    }
-
-    public void setRequestMappingHandler(RequestMappingHandler requestMappingHandler) {
-        this.requestMappingHandler = requestMappingHandler;
-    }
-
-    public AsynchronousServerSocketChannel getServer() {
+    public Server getServer() {
         return server;
     }
 
-    public void setServer(AsynchronousServerSocketChannel server) {
+    public void setServer(Server server) {
         this.server = server;
     }
 

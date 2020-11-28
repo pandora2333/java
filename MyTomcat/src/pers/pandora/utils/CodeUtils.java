@@ -7,7 +7,9 @@ import java.security.NoSuchAlgorithmException;
 public class CodeUtils {
     //默认md5
     public static final String DEFAULTENCODE = "md5";
-    private static final String ZERO = "0";
+
+    private static final char ZERO = '0';
+
     public static String hashEncode(String plainText,String salt,String hashEncode) {
         if(!StringUtils.isNotEmpty(hashEncode)){
             hashEncode = DEFAULTENCODE;

@@ -1,11 +1,14 @@
-package pers.pandora.utils;
+package pers.pandora.vo;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public final class MapContent {
+
     private String className;
+
     private List<String> urls;
+
     public MapContent(){
         urls = new LinkedList<>();
     }
@@ -20,9 +23,5 @@ public final class MapContent {
 
     public List<String> getUrls() {
         return urls;
-    }
-
-    public void setUrls(List<String> urls) {
-        this.urls = urls;
     }
 }

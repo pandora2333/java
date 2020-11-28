@@ -1,4 +1,4 @@
-package pers.pandora.bean;
+package pers.pandora.vo;
 @Deprecated
 public class User {
     private String username;

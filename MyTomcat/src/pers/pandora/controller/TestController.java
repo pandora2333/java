@@ -1,7 +1,7 @@
 package pers.pandora.controller;
 
 import pers.pandora.annotation.*;
-import pers.pandora.bean.User;
+import pers.pandora.vo.User;
 import pers.pandora.servlet.Request;
 import pers.pandora.servlet.Response;
 

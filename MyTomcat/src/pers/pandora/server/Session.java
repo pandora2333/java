@@ -5,6 +5,7 @@ import pers.pandora.utils.StringUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Session {
@@ -12,29 +13,38 @@ public final class Session {
     //全局session唯一ID
     private String sessionID;
     //session会话过期时间
-    private AtomicInteger max_age = new AtomicInteger(-1);//默认不过期
+    private AtomicInteger max_age = new AtomicInteger(0);//默认Session级别过期
     //Session Id生成器
     private static IdWorker idWorker = new IdWorker();
 
-    public Session(){
+    private AtomicBoolean isValid = new AtomicBoolean(false);
+
+    public Session() {
         sessionID = idWorker.nextSessionID();
     }
 
-    private Map<String,Object> attrbuites = new ConcurrentHashMap<>();
+    public boolean getIsValid() {
+        return isValid.get();
+    }
+
+    private Map<String, Object> attrbuites = new ConcurrentHashMap<>();
 
     public Map<String, Object> getAttrbuites() {
         return attrbuites;
     }
 
-    public void addAttrbuites(String key,Object value) {
-        if(StringUtils.isNotEmpty(key)){
-            attrbuites.put(key,value);
+    public void addAttrbuites(String key, Object value) {
+        if (StringUtils.isNotEmpty(key)) {
+            attrbuites.put(key, value);
         }
     }
 
     public void setMax_age(int max_age) {
-        if(max_age > 0) {
-            this.max_age.set(max_age);
+        this.max_age.set(max_age);
+        if(max_age > 0){
+            isValid.set(true);
+        }else {
+            isValid.set(false);
         }
     }
 
@@ -42,9 +52,10 @@ public final class Session {
         return max_age.get();
     }
 
-    public int invalidTime(){
+    public int invalidTime() {
         return max_age.decrementAndGet();
     }
+
     public String getSessionID() {
         return sessionID;
     }
@@ -53,9 +64,9 @@ public final class Session {
         this.sessionID = sessionID;
     }
 
-    public void invalid(){
+    public void invalid() {
         attrbuites.clear();
-        max_age.set(-1);
+        max_age.set(0);
         sessionID = null;
     }
 }

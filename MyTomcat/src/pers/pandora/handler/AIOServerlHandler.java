@@ -1,11 +1,8 @@
 package pers.pandora.handler;
-
-import pers.pandora.bean.Attachment;
-import pers.pandora.bean.Pair;
-import pers.pandora.bean.Tuple;
-import pers.pandora.interceptor.Interceptor;
+import pers.pandora.vo.Attachment;
+import pers.pandora.vo.Tuple;
+import pers.pandora.constant.HTTPStatus;
 import pers.pandora.servlet.Dispatcher;
-import pers.pandora.servlet.Request;
 import pers.pandora.utils.StringUtils;
 
 import java.io.FileInputStream;
@@ -26,18 +23,17 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
     @Override
     public void completed(Integer result, Attachment att) {
         if (att.isReadMode()) {
+            server = att.getServer();
             this.att = att;
             ByteBuffer buffer = att.getBuffer();
             buffer.flip();
             byte bytes[] = new byte[buffer.limit()];
             buffer.get(bytes);
-            setRequestMappingHandler(att.getRequestMappingHandler());
-            response.setRequestMappingHandler(att.getRequestMappingHandler());
             //HTTP资源预处理
             initRequest(bytes);
             String msg = null;
             try {
-                msg = new String(bytes,0,bytes.length,request.getCharset()).trim();
+                msg = new String(bytes, 0, bytes.length, request.getCharset()).trim();
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -84,25 +80,29 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
     private String handleUploadFile(String msg, byte[] data) throws UnsupportedEncodingException {
         //text/plain 固定发送 WebKitFormBoundaryvZnw9hoqtB3dl2ak ? 浏览器chrome,firefox一样
         //对于jpg文件，xffxd8 --- xffxd9
-        int j = msg.indexOf(Request.FILEMARK), k;
+        int j = msg.indexOf(HTTPStatus.FILEMARK), k,l,start,end,sideLen,len;
         String head = msg;
         if (j >= 0) {
             request.setMultipart(true);
-            j += Request.FILEMARK.length();
+            j += HTTPStatus.FILEMARK.length();
             int jj = j;
-            for (; j < msg.length() && msg.charAt(j) != Request.CRLF; j++) ;
+            for (; j < msg.length() && msg.charAt(j) != HTTPStatus.CRLF; j++) ;
             //拿到文件分隔符
-            String fileDesc = msg.substring(jj, j - Request.LINE_SPLITER + 1);
+            String fileDesc = msg.substring(jj, j - HTTPStatus.LINE_SPLITER + 1);
             String tmp = msg.substring(0, j);
             int offset = tmp.getBytes(request.getCharset()).length;
             msg = msg.substring(j);
             j = msg.indexOf(fileDesc);
             if (j >= 0) {
-                head = tmp + msg.substring(0, j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER);
+                head = tmp + msg.substring(0, j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER);
             }
             boolean isFile = false;
+            String part,varName,fileName,contentType,sideWindow,varValue;
+            String fileType[];
+            byte[] fileData;
+            List<Object> objects;
             while (j >= 0) {
-                j += fileDesc.length() + Request.LINE_SPLITER;
+                j += fileDesc.length() + HTTPStatus.LINE_SPLITER;
                 if (!isFile) {
                     offset += msg.substring(0, j).getBytes(request.getCharset()).length;
                 }
@@ -110,48 +110,47 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
                 j = msg.indexOf(fileDesc);
                 isFile = false;
                 if (j >= 0) {
-                    String part = msg.substring(0, j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER + 1);
-                    jj = part.indexOf(Request.MUPART_NAME);
+                    part = msg.substring(0, j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER + 1);
+                    jj = part.indexOf(HTTPStatus.MUPART_NAME);
                     if (jj > 0) {
-                        jj += Request.MUPART_NAME.length() + 1;
-                        for (k = jj; k < part.length() && part.charAt(k) != Request.FILENAMETAIL; k++) ;
-                        String varName = part.substring(jj, k);
-                        if ((jj = part.indexOf(Request.FILENAME, jj)) > 0) {//二进制文件
-                            jj += Request.FILENAME.length() + 1;
-                            for (k = jj; k < part.length() && part.charAt(k) != Request.FILENAMETAIL; k++) ;
-                            String fileName = part.substring(jj, k);
-                            k += Request.LINE_SPLITER;
-                            for (; k < part.length() && part.charAt(k) != Request.CRLF; k++) ;
-                            int l;
-                            for (l = ++k; k < part.length() && part.charAt(k) != Request.CRLF; k++) ;
+                        jj += HTTPStatus.MUPART_NAME.length() + 1;
+                        for (k = jj; k < part.length() && part.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
+                        varName = part.substring(jj, k);
+                        if ((jj = part.indexOf(HTTPStatus.FILENAME, jj)) > 0) {//二进制文件
+                            jj += HTTPStatus.FILENAME.length() + 1;
+                            for (k = jj; k < part.length() && part.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
+                            fileName = part.substring(jj, k);
+                            k += HTTPStatus.LINE_SPLITER;
+                            for (; k < part.length() && part.charAt(k) != HTTPStatus.CRLF; k++) ;
+                            for (l = ++k; k < part.length() && part.charAt(k) != HTTPStatus.CRLF; k++) ;
                             //得到文件类型
-                            String contentType = part.substring(l, k - Request.LINE_SPLITER + 1);
+                            contentType = part.substring(l, k - HTTPStatus.LINE_SPLITER + 1);
                             if (StringUtils.isNotEmpty(contentType)) {
-                                String fileType[] = contentType.split(Request.HEAD_INFO_SPLITER);
+                                fileType = contentType.split(HTTPStatus.HEAD_INFO_SPLITER);
                                 if (fileType.length == 2) {
-                                    int end = j - Request.MUPART_DESC_LINE.length() - Request.LINE_SPLITER;
-                                    int start = k + 1 + Request.LINE_SPLITER;
-                                    if (fileType[1].trim().equals(Request.TEXT_PLAIN)) {
-                                        end = end - Request.LINE_SPLITER + 1;
+                                    end = j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER;
+                                    start = k + 1 + HTTPStatus.LINE_SPLITER;
+                                    if (fileType[1].trim().equals(HTTPStatus.TEXT_PLAIN)) {
+                                        end = end - HTTPStatus.LINE_SPLITER + 1;
                                         end = offset + part.substring(0, end).getBytes(request.getCharset()).length + part.substring(end, end + 1).getBytes(request.getCharset()).length;
                                         start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
                                     } else {
                                         start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
-                                        String sideWindoww = Request.CRLF + Request.MUPART_DESC_LINE + fileDesc;
-                                        int sideLen = sideWindoww.getBytes(request.getCharset()).length;
+                                        sideWindow = HTTPStatus.CRLF + HTTPStatus.MUPART_DESC_LINE + fileDesc;
+                                        sideLen = sideWindow.getBytes(request.getCharset()).length;
                                         for (end = start; end < data.length; end++) {
-                                            if (new String(data, end, sideLen, request.getCharset()).equals(sideWindoww)) {
-                                                offset = end + sideLen + Request.LINE_SPLITER;
-                                                end = end - Request.LINE_SPLITER + 1;//在windows中String,即使是一个字符\n也会被解析成\r\n
+                                            if (new String(data, end, sideLen, request.getCharset()).equals(sideWindow)) {
+                                                offset = end + sideLen + HTTPStatus.LINE_SPLITER;
+                                                end = end - HTTPStatus.LINE_SPLITER + 1;//在windows中String,即使是一个字符\n也会被解析成\r\n
                                                 isFile = true;
                                                 break;
                                             }
                                         }
                                     }
-                                    int len = end - start;
+                                    len = end - start;
                                     if (len >= 0 && end <= data.length) {
                                         //copy file data
-                                        byte[] fileData = new byte[len];
+                                        fileData = new byte[len];
                                         System.arraycopy(data, start, fileData, 0, len);
                                         Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType[1].trim(), fileData);
                                         request.getUploadFiles().put(varName, file);//文件varname名字相同的只保留一份
@@ -159,9 +158,9 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
                                 }
                             }
                         } else {//二进制表单变量
-                            k += Request.LINE_SPLITER;
-                            String varValue = part.substring(k);
-                            List<Object> objects = request.getParams().get(varName);
+                            k += HTTPStatus.LINE_SPLITER;
+                            varValue = part.substring(k);
+                            objects = request.getParams().get(varName);
                             if (objects != null) {
                                 objects.add(varValue);
                             } else {
@@ -199,7 +198,7 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
             FileInputStream in = null;
             if (staticFile != null) {
                 try {
-                    in = new FileInputStream(new java.io.File(ROOTPATH + staticFile));
+                    in = new FileInputStream(new java.io.File(server.getRootPath() + HTTPStatus.SLASH + staticFile));
                     FileChannel fin = in.getChannel();
                     ByteBuffer by = ByteBuffer.allocateDirect(2048);
                     while (fin.read(by) != -1) {

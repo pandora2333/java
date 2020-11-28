@@ -1,9 +1,8 @@
 package pers.pandora.servlet;
 
-import pers.pandora.bean.Pair;
+import pers.pandora.vo.Pair;
+import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
-import pers.pandora.mvc.RequestMappingHandler;
-import pers.pandora.server.Session;
 import pers.pandora.utils.ClassUtils;
 import pers.pandora.utils.StringUtils;
 
@@ -16,29 +15,23 @@ import java.util.Map;
 public final class Response {
 
     private String servlet;
-    private String charset = "utf-8";
+
+    private String charset = HTTPStatus.DEFAULTENCODING;
     //存储正文长度
     private int len;
     //正文
     private StringBuilder content;
     //资源类型
-    private String type = "text/html";
-    private RequestMappingHandler requestMappingHandler;
+    private String type = HTTPStatus.TEXT_HTML;
     //静态资源地址
     private String resource;
-    private Session session;
-    //HTTP Response Status
+
+    private Dispatcher dispatcher;
+    //响应状态码
     private int code;
-    private String filePath = "./WebRoot";
+
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
-    private static final char CRLF = '\n';
-    private static final char BLANK = ' ';
-    private static final String SERVER = "Server";
-    private static final String DATE = "Date";
-    private static final String CONTENTTYPE = "Content-type";
-    private static final String CONTENTLENGTH = "Content-Length";
-    private static final String SET_COOKIE = "Set-Cookie";
-    private static final char RESPONSE_SPLITER = ':';
+
 
     public void setCode(int code) {
         this.code = code;
@@ -48,18 +41,11 @@ public final class Response {
         return code;
     }
 
-    public Session getSession() {
-        return session;
-    }
-
-    public void setSession(Session session) {
-        this.session = session;
-    }
-
     private Map<String, String> heads;
 
-    public Response() {
+    public Response(Dispatcher dispatcher) {
         heads = new HashMap<>();
+        this.dispatcher = dispatcher;
     }
 
     public Map<String, String> getHeads() {
@@ -69,8 +55,9 @@ public final class Response {
     public boolean addHeads(String key, String value) {
         if (StringUtils.isNotEmpty(key)) {
             String t = key.toLowerCase();
-            if (!t.equals(SERVER.toLowerCase()) && !t.equals(DATE.toLowerCase()) && !t.equals(CONTENTLENGTH.toLowerCase())
-                    && !t.equals(CONTENTTYPE.toLowerCase())) {
+            if (!t.equals(HTTPStatus.SERVER.toLowerCase()) && !t.equals(HTTPStatus.DATE.toLowerCase()) &&
+                    !t.equals(HTTPStatus.CONTENTLENGTH.toLowerCase())
+                    && !t.equals(HTTPStatus.CONTENTTYPE.toLowerCase())) {
                 this.heads.put(key, value);
                 return true;
             } else {
@@ -80,24 +67,12 @@ public final class Response {
         return false;
     }
 
-    public void setRequestMappingHandler(RequestMappingHandler requestMappingHandler) {
-        this.requestMappingHandler = requestMappingHandler;
-    }
-
     public String getCharset() {
         return charset;
     }
 
     public void setCharset(String charset) {
         this.charset = charset;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
-    public String getFilePath() {
-        return filePath;
     }
 
     public void setType(String type) {
@@ -122,7 +97,7 @@ public final class Response {
     }
 
     public void setServlet(String servlet) {
-        if (StringUtils.isNotEmpty(servlet) && !servlet.contains(":")) {
+        if (StringUtils.isNotEmpty(servlet) && !servlet.contains(String.valueOf(HTTPStatus.COLON))) {
             this.servlet = servlet;
         }
     }
@@ -137,68 +112,72 @@ public final class Response {
     private StringBuilder createHeadInfo(List<Cookie> cookies) {
         StringBuilder headInfo = new StringBuilder();
         //1.http协议版本，状态代码，描述
-        headInfo.append("HTTP/1.1").append(BLANK).append(code).append(BLANK);
+        headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
         switch (code) {
             case 200:
-                headInfo.append("OK");
+                headInfo.append(HTTPStatus.CODE_200);
                 break;
             case 404:
-                headInfo.append("Not Found");
+                headInfo.append(HTTPStatus.CODE_404);
                 break;
             case 500:
-                headInfo.append("Server Error");
+                headInfo.append(HTTPStatus.CODE_500);
                 break;
             case 302:
-                headInfo.append("Found");
+                headInfo.append(HTTPStatus.CODE_302);
                 break;
             default:
-                headInfo.append("Error Code");
+                headInfo.append(HTTPStatus.ERROR_CODE);
         }
-        headInfo.append(CRLF);
+        headInfo.append(HTTPStatus.CRLF);
         //2.响应头
-        headInfo.append("Server: Pandora Server/1.0.1").append(CRLF);
-        headInfo.append("Date: ").append(new Date()).append(CRLF);
-        headInfo.append("Content-type: " + type + ";charset=utf8").append(CRLF);
+        headInfo.append(HTTPStatus.SERVER + HTTPStatus.COLON + HTTPStatus.BLANK + HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.DATE + HTTPStatus.COLON + HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.CONTENTTYPE + HTTPStatus.COLON + HTTPStatus.BLANK + type + HTTPStatus.COOKIE_SPLITER +
+                HTTPStatus.CHARSET + HTTPStatus.COOKIE_KV_SPLITE + charset).append(HTTPStatus.CRLF);
         //正文长度，字节长度
-        headInfo.append("Content-Length: ").append(len).append(CRLF);
+        headInfo.append(HTTPStatus.CONTENTLENGTH + HTTPStatus.COLON + HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
         for (Map.Entry<String, String> head : heads.entrySet()) {
-            headInfo.append(head.getKey() + RESPONSE_SPLITER + head.getValue()).append(CRLF);
+            headInfo.append(head.getKey() + HTTPStatus.COLON + head.getValue()).append(HTTPStatus.CRLF);
         }
         //构建Cookie头
         if (cookies != null && cookies.size() > 0) {
+            StringBuilder sb = new StringBuilder();
             for (Cookie cookie : cookies) {
-                StringBuilder sb = new StringBuilder(SET_COOKIE);
-                sb.append(RESPONSE_SPLITER).append(BLANK).append(cookie.getKey()).append(Request.COOKIE_KV_SPLITE).append(cookie.getValue())
-                        .append(Request.COOKIE_SPLITER);
-                sb.append(RESPONSE_SPLITER).append(BLANK).append("Version").append(Request.COOKIE_KV_SPLITE).append(cookie.getVersion())
-                        .append(Request.COOKIE_SPLITER);
-                if (cookie.isFlag()) {
+                if (cookie != null && cookie.isNeedUpdate()) {
+                    sb.append(HTTPStatus.SET_COOKIE);
+                    sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getValue())
+                            .append(HTTPStatus.COOKIE_SPLITER);
+                    sb.append(HTTPStatus.VERSION).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getVersion())
+                            .append(HTTPStatus.COOKIE_SPLITER);
                     if (StringUtils.isNotEmpty(cookie.getExpires())) {
-                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Expires").append(Request.COOKIE_KV_SPLITE).append(cookie.getExpires())
-                                .append(Request.COOKIE_SPLITER);
+                        sb.append(HTTPStatus.EXPIRES).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getExpires())
+                                .append(HTTPStatus.COOKIE_SPLITER);
                     }
-                    if (cookie.getMax_age() >= 0) {
-                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Max-Age").append(Request.COOKIE_KV_SPLITE).append(cookie.getMax_age())
-                                .append(Request.COOKIE_SPLITER);
-                    }
-                    if (StringUtils.isNotEmpty(cookie.getDoamin())) {
-                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Domain").append(Request.COOKIE_KV_SPLITE).append(cookie.getMax_age())
-                                .append(Request.COOKIE_SPLITER);
+                    if (cookie.getMax_age() != 0) {
+                        sb.append(HTTPStatus.MAXAEG).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                                .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (StringUtils.isNotEmpty(cookie.getDoamin())) {
-                        sb.append(RESPONSE_SPLITER).append(BLANK).append("Path").append(Request.COOKIE_KV_SPLITE).append(cookie.getPath())
-                                .append(Request.COOKIE_SPLITER);
+                        sb.append(HTTPStatus.DOMAIN).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                                .append(HTTPStatus.COOKIE_SPLITER);
+                    }
+                    if (StringUtils.isNotEmpty(cookie.getDoamin())) {
+                        sb.append(HTTPStatus.PATH).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getPath())
+                                .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (cookie.getSecure() > 0) {
-                        sb.append(RESPONSE_SPLITER).append(BLANK).append("secure").append(Request.COOKIE_KV_SPLITE).append(cookie.getSecure())
-                                .append(Request.COOKIE_SPLITER);
+                        sb.append(HTTPStatus.SECURE).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getSecure())
+                                .append(HTTPStatus.COOKIE_SPLITER);
                     }
+                    sb.append(HTTPStatus.CRLF);
+                    headInfo.append(sb);
+                    sb.delete(0, sb.length());
+                    cookie.setNeedUpdate(false);
                 }
-                sb.append(CRLF);
-                headInfo.append(sb);
             }
         }
-        headInfo.append(CRLF);//分隔符
+        headInfo.append(HTTPStatus.CRLF);//分隔符
         return headInfo;
     }
 
@@ -206,13 +185,11 @@ public final class Response {
         if (content == null) {
             content = new StringBuilder();
         }
-        //response session以request session为准
-        session = request.getSession();
         handlePre(request);
         try {
             if (request != null && request.getParams().containsKey(PLAIN)) {
-                type = "text/plain";
-                content.append(request.getParams().get(Response.PLAIN).get(0));//保留JSON序列化
+                type = HTTPStatus.PLAIN;
+                content.append(request.getParams().get(HTTPStatus.PLAIN).get(0));//保留JSON序列化扩展
                 len = content.toString().getBytes(charset).length;
                 code = 200;
             } else if (StringUtils.isNotEmpty(servlet)) {
@@ -221,9 +198,9 @@ public final class Response {
                 Servlet handler = ClassUtils.getClass(servlet, params);
                 initRequstObjectList(request.getObjectList(), handler);
                 if (handler != null) {
-                    if (method.equals("GET")) {
+                    if (method.equals(HTTPStatus.GET)) {
                         content.append(handler.doGet(request, this));
-                    } else if (method.equals("POST")) {
+                    } else if (method.equals(HTTPStatus.POST)) {
                         content.append(handler.doPost(request, this));
                     }
                     len = content.toString().getBytes(charset).length;
@@ -236,19 +213,19 @@ public final class Response {
             } else if (resource == null) {
                 handle_404_NOT_FOUND();
             } else {
-                File file = new File(filePath + resource);
+                File file = new File(dispatcher.server.getRootPath() + resource);
                 len += file.length();
                 code = file.exists() ? 200 : 404;
             }
         } catch (Exception e) {
-            System.out.println("当前编码不支持:" + charset);
+            handle_500_SERVER_ERROR(e.getMessage());
         }
         handleAfter(request);
-        return createHeadInfo(request.isUpdateCookie() ? request.getCookies() : null).append(content).toString();
+        return createHeadInfo(request.getCookies()).append(content).toString();
     }
 
     private boolean handleAfter(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().afterMethod(request, this)) {
                 return false;
             }
@@ -257,7 +234,7 @@ public final class Response {
     }
 
     private boolean handlePre(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : requestMappingHandler.getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().preMethod(request, this)) {
                 return false;
             }
@@ -265,9 +242,20 @@ public final class Response {
         return true;
     }
 
+    private void handle_500_SERVER_ERROR(String errorMessage) {
+        content.append(HTTPStatus.CODE_500_DESC + HTTPStatus.COLON + errorMessage);
+        type = HTTPStatus.PLAIN;
+        try {
+            len = content.toString().getBytes(charset).length;
+        } catch (UnsupportedEncodingException e) {
+            System.out.println("当前编码错误: " + charset + "\n编码内容： " + content);
+        }
+        code = 500;
+    }
+
     private void handle_404_NOT_FOUND() throws UnsupportedEncodingException {
-        content.append("页面找不到!");
-        type = "text/plain";
+        content.append(HTTPStatus.CODE_404_DESC);
+        type = HTTPStatus.PLAIN;
         len = content.toString().getBytes(charset).length;
         code = 404;
     }
@@ -279,9 +267,9 @@ public final class Response {
 
     void reset() {
         servlet = null;
-        type = "text/html";
         resource = null;
         content = null;
         len = 0;
+        code = 0;
     }
 }

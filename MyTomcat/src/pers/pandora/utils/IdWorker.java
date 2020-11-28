@@ -10,18 +10,24 @@ public class IdWorker {
     //snowflake 改版
     protected long epoch = 1288834974657L;
 
-
     protected long workerIdBits = 10L;
+
     protected long maxWorkerId = -1L ^ (-1L << workerIdBits);
+
     protected long sequenceBits = 11L;
 
     protected long workerIdShift = sequenceBits;
+
     protected long timestampLeftShift = sequenceBits + workerIdBits;
+
     protected long sequenceMask = -1L ^ (-1L << sequenceBits);
 
     protected long lastMillis = -1L;
+
     protected long workerId;
+
     protected long sequence = 0L;
+
 //    protected Logger logger = LoggerFactory.getLogger(IdWorker.class);
 
     public IdWorker() {
@@ -93,11 +99,14 @@ public class IdWorker {
      *
      * @return 固定21位数字字符串
      */
+    public static final String NEXT_FORMAT = "%014d";
+    public static final String DATE_FORMAT = "yyMMdd";
+    public static final char PADDING_CHAR = '0';
 
     public String next() {
         long id = nextId();
-        String yyMMdd = new SimpleDateFormat("yyMMdd").format(new Date());
-        return yyMMdd + String.format("%014d", id);
+        String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
+        return yyMMdd + String.format(NEXT_FORMAT, id);
     }
 
 
@@ -106,8 +115,8 @@ public class IdWorker {
      */
     public String nextShort() {
         long id = nextId();
-        String yyMMdd = new SimpleDateFormat("yyMMdd").format(new Date());
-        return padLeft(encode(id), 10, '0') + yyMMdd;
+        String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
+        return padLeft(encode(id), 10, PADDING_CHAR) + yyMMdd;
     }
 
     public static String encode(long num) {
@@ -146,7 +155,7 @@ public class IdWorker {
         return s.toString();
     }
 
-    //SessionID生成器 750+ ms 延迟
+    //SessionID生成器(53位) 750+ ms 延迟
     public String nextSessionID() {
 //        long start = System.currentTimeMillis();
         return nextShort() + "_" + UUID.randomUUID().toString().toUpperCase();

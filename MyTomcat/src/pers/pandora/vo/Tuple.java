@@ -1,4 +1,4 @@
-package pers.pandora.bean;
+package pers.pandora.vo;
 
 public class Tuple<K1, K2, V> {
     private K1 k1;

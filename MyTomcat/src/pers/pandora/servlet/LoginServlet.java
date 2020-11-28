@@ -1,5 +1,6 @@
 package pers.pandora.servlet;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 @Deprecated
@@ -36,6 +37,17 @@ public class LoginServlet implements Servlet{
 //                    .append("</body></html>");
 //        }
         //Cookie测试
+        List<Cookie> cookies = request.getCookies();
+        System.out.println("current cookies:" + cookies);
+        Cookie cookie = new Cookie();
+        cookie.setKey("current_uesr");
+        cookie.setValue("Pandora WebServer");
+        cookie.setMax_age(60);
+//        Date date = new Date();
+//        date.setMinutes(date.getMinutes()+1);
+//        System.out.println("cookie:"+cookie);
+//        cookie.setExpires(date.toString());
+        cookies.add(cookie);
         String value1 = "user=pandora; Version=1; Domain=localhost; Max-Age=60";
         response.addHeads("Set-Cookie",value1);
 //        response.addHeads("Set-Cookie",value2);

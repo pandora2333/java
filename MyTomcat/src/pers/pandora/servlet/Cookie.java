@@ -1,7 +1,9 @@
 package pers.pandora.servlet;
 
 public final class Cookie {
+
     private String key;
+
     private String value;
     //GMT时间串
     private String expires;
@@ -12,19 +14,11 @@ public final class Cookie {
     //安全属性
     private int secure;//默认不设置
     //过期时间 s为单位
-    private int max_age = -1;//默认不过期
+    private int max_age;//默认Session级别过期
     //cookie版本
     private int version = 1;//默认version1
-    //是否设置cookie属性
-    private boolean flag ;//默认不设置属性值，让浏览器设置
-
-    public void setFlag(boolean flag) {
-        this.flag = flag;
-    }
-
-    public boolean isFlag() {
-        return flag;
-    }
+    //是否更新本Cookie
+    private boolean needUpdate;
 
     public String getKey() {
         return key;
@@ -47,7 +41,7 @@ public final class Cookie {
     }
 
     public void setExpires(String expires) {
-        flag = true;
+        needUpdate = true;
         this.expires = expires;
     }
 
@@ -56,7 +50,7 @@ public final class Cookie {
     }
 
     public void setDoamin(String doamin) {
-        flag = true;
+        needUpdate = true;
         this.doamin = doamin;
     }
 
@@ -65,7 +59,7 @@ public final class Cookie {
     }
 
     public void setPath(String path) {
-        flag = true;
+        needUpdate = true;
         this.path = path;
     }
 
@@ -74,7 +68,7 @@ public final class Cookie {
     }
 
     public void setSecure(int secure) {
-        flag = true;
+        needUpdate = true;
         this.secure = secure;
     }
 
@@ -83,7 +77,7 @@ public final class Cookie {
     }
 
     public void setMax_age(int max_age) {
-        flag = true;
+        needUpdate = true;
         this.max_age = max_age;
     }
 
@@ -92,7 +86,7 @@ public final class Cookie {
     }
 
     public void setVersion(int version) {
-        flag = true;
+        needUpdate = true;
         this.version = version;
     }
 
@@ -108,5 +102,13 @@ public final class Cookie {
                 ", max_age=" + max_age +
                 ", version=" + version +
                 '}';
+    }
+
+    public boolean isNeedUpdate() {
+        return  needUpdate;
+    }
+
+    public void setNeedUpdate(boolean needUpdate) {
+        this.needUpdate = needUpdate;
     }
 }

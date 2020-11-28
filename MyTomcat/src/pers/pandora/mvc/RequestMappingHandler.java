@@ -3,9 +3,11 @@ package pers.pandora.mvc;
 import javassist.Modifier;
 import jdk.internal.org.objectweb.asm.*;
 import pers.pandora.annotation.*;
-import pers.pandora.bean.Pair;
+import pers.pandora.constant.JSP;
+import pers.pandora.utils.StringUtils;
+import pers.pandora.vo.Pair;
+import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
-import pers.pandora.servlet.Dispatcher;
 import pers.pandora.servlet.Request;
 import pers.pandora.servlet.Response;
 import pers.pandora.utils.ClassUtils;
@@ -26,38 +28,40 @@ import java.util.concurrent.*;
  * 3.赋值mvc方法参数
  */
 public final class RequestMappingHandler {
-    private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);//url - method
-    private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);//method - controller(singleton instance)
-    private static Map<Method, List<String>> parameters = new ConcurrentHashMap<>(16);//method - parameter list
-    private static Set<Pair<Integer, Interceptor>> interceptors;
-    private static final String ROOTPATH = "src/";
-    private static final String METHOD_SPLITER = "|";
-    private static final char FILE_SPLITER = '.';
-    private static final String FILE_POS_MARK = "java";
-    private static final String CLASS_FILE_POS = "class";
-    private static ThreadPoolExecutor executor;
-    private static List<Future<Boolean>> result;
-    private long timeout;
 
-//    static {//类加载阶段启用多线程造成死锁：其它类引用到本类的信息，会等待本类加载完毕，但是本类自身加载过程中又等待其他类信息加载，造成死锁
+    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);//url - method
+
+    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);//method - controller(singleton instance)
+
+    private Set<Pair<Integer, Interceptor>> interceptors;
+
+    public static final String ROOTPATH = "src/";
+
+    public static final String METHOD_SPLITER = "|";
+
+    public static final char FILE_SPLITER = '.';
+
+    public static final String FILE_POS_MARK = "java";
+
+    public static final String CLASS_FILE_POS = "class";
+
+    public static final char PATH_SPLITER_PATTERN = '\\';
+
+    public static final char JAVA_PACKAGE_SPLITER = '.';
+
+    private ThreadPoolExecutor executor;
+
+    private List<Future<Boolean>> result;
+
+    public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
+//    static {
+// 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
+// 加载任务被分配到另一个线程，因此初始化类信息加载，两个线程互相等待对方释放类加载锁，造成死锁等待
 //         init();
 //    }
 
-
-    public void setTimeout(long timeout) {
-        this.timeout = timeout;
-    }
-
-    public long getTimeout() {
-        return timeout;
-    }
-
     public Set<Pair<Integer, Interceptor>> getInterceptors() {
         return interceptors;
-    }
-
-    public void setInterceptors(Set<Pair<Integer, Interceptor>> interceptors) {
-        interceptors.addAll(interceptors);
     }
 
 
@@ -97,11 +101,16 @@ public final class RequestMappingHandler {
                 objects[i] = modelAndView.getResponse();
             } else if (parameterTypes[i] == ModelAndView.class) {
                 objects[i] = modelAndView;
-            } else if (!checkBasicClass(parameterTypes[i])) {
+            } else if (!ClassUtils.checkBasicClass(parameterTypes[i])) {
                 //不允许参数简单类名重复，即使全类名不一致
-                Object target = ClassUtils.getClass(parameterTypes[i], params);
-                valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
-                objects[i] = target;
+                Object target = null;
+                try {
+                    target = ClassUtils.getClass(parameterTypes[i], params);
+                    valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
+                    objects[i] = target;
+                } catch (IllegalAccessException|InstantiationException e) {
+                    //ignore
+                }
             } else if (paramNames[i] != null) {
                 List<Object> list = params.get(paramNames[i]);
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
@@ -114,9 +123,9 @@ public final class RequestMappingHandler {
             if (modelAndView.isJson()) {
                 List<Object> temp = new LinkedList<>();
                 temp.add(result);
-                modelAndView.getRequest().getParams().put(Response.PLAIN, temp);
-                modelAndView.setPage(Response.PLAIN);
-                modelAndView.getResponse().setServlet(Dispatcher.getMvcClass());
+                modelAndView.getRequest().getParams().put(HTTPStatus.PLAIN, temp);
+                modelAndView.setPage(HTTPStatus.PLAIN);
+                modelAndView.getResponse().setServlet(MVC_CLASS);
             } else {
                 modelAndView.setPage(result.toString());
             }
@@ -178,17 +187,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    //判断是否为基本数据类型或String类型或包装类型
-    private static boolean checkBasicClass(Class t) {
-        if (t == Integer.class || t == Character.class || t == Long.class || t == String.class || t == int.class
-                || t == boolean.class || t == byte.class || t == Double.class || t == Float.class || t == short.class || t == Boolean.class
-                || t == Byte.class || t == char.class || t == long.class || t == double.class) {
-            return true;
-        }
-        return false;
-    }
-
-    private static void scanFile(String path) {
+    private void scanFile(String path) {
         File files = new File(path);
         if (files != null) {
             if (files.isDirectory()) {
@@ -198,18 +197,22 @@ public final class RequestMappingHandler {
 
             } else {
                 if (files.getPath().endsWith(FILE_SPLITER + FILE_POS_MARK)) {
-                    result.add(executor.submit(new IOTask(files.getPath())));
+                    String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, JSP.NO_CHAR).
+                            replace(PATH_SPLITER_PATTERN, JAVA_PACKAGE_SPLITER);
+                    if (!className.equals(MVC_CLASS)) {
+                        result.add(executor.submit(new IOTask(className)));
+                    }
                 }
             }
         }
     }
 
-    private static <T> void scanResolers(Class<T> t) {
+    private <T> void scanResolers(Class<T> t) {
         if (t.isAnnotationPresent(Controller.class)) {
             for (Method method : t.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(RequestMapping.class)) {
                     Annotation annotation = method.getAnnotation(RequestMapping.class);
-                    if (((RequestMapping) annotation).value().equals("")) {
+                    if (!StringUtils.isNotEmpty(((RequestMapping) annotation).value())) {
                         mappings.put(method.getName(), method);
                     } else {
                         mappings.put(((RequestMapping) annotation).value(), method);
@@ -237,17 +240,17 @@ public final class RequestMappingHandler {
     }
 
 
-    static class IOTask implements Callable<Boolean> {
-        private String path;
+    class IOTask implements Callable<Boolean> {
+        private String className;
 
-        public IOTask(String path) {
-            this.path = path;
+        public IOTask(String className) {
+            this.className = className;
         }
 
         @Override
         public Boolean call() {
             try {
-                scanResolers(Class.forName(path.substring(4).replace(FILE_SPLITER + FILE_POS_MARK, "").replace("\\", "."),
+                scanResolers(Class.forName(className,
                         true, Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -257,18 +260,17 @@ public final class RequestMappingHandler {
         }
     }
 
-    public void init() {
+    public void init(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
         result = new ArrayList<>();
         interceptors = Collections.synchronizedSortedSet(new TreeSet<>((p1, p2) -> {
             int t = p1.getK() - p2.getK();
             return t != 0 ? t : System.identityHashCode(p1.getV().hashCode()) - System.identityHashCode(p2.getV());
         }));
-        int core = 2 * Runtime.getRuntime().availableProcessors();
-        executor = new ThreadPoolExecutor(core, core + 5, 50, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+        executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         scanFile(ROOTPATH);
         for (Future future : result) {
             try {
-                future.get(timeout, TimeUnit.MILLISECONDS);
+                future.get(timeout, timeOutUnit);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
             }
@@ -280,9 +282,4 @@ public final class RequestMappingHandler {
         System.gc();
     }
 
-    public static void main(String[] args) {
-        new RequestMappingHandler().init();
-        System.out.println(interceptors.size());
-        System.out.println("load over!");
-    }
 }

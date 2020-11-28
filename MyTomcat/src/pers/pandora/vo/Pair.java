@@ -1,4 +1,4 @@
-package pers.pandora.bean;
+package pers.pandora.vo;
 
 public final class Pair<K, V> {
     private K k;

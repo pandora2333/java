@@ -7,46 +7,40 @@ import java.util.Map;
 
 public final class ClassUtils {
 
-    public static <T> T getClass(String name, Map<String, List<Object>> params) {
-        try {
-            T t = (T) Class.forName(name).newInstance();
-            if (params == null || params.size() == 0) {
-                return t;
-            }
-            Map<String, Field> fieldMap = new HashMap<>();
-            handleObjectField(t, fieldMap, true);
-            for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-                if (params.containsKey(entry.getKey()) && params.get(entry.getKey()).size() == 1
-                        && checkType(params.get(entry.getKey()).get(0).getClass(), entry.getValue().getType())) {
+    public static <T> T getClass(String name, Map<String, List<Object>> params) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        T t = (T) Class.forName(name).newInstance();
+        if (params == null || params.size() == 0) {
+            return t;
+        }
+        Map<String, Field> fieldMap = new HashMap<>();
+        handleObjectField(t, fieldMap, true);
+        for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
+            if (params.containsKey(entry.getKey()) && params.get(entry.getKey()).size() == 1
+                    && checkType(params.get(entry.getKey()).get(0).getClass(), entry.getValue().getType())) {
+                try {
                     entry.getValue().set(t, params.get(entry.getKey()).get(0));
+                } catch (IllegalAccessException e) {
+                    //ignore
                 }
             }
-            return t;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return null;
+        return t;
     }
 
-    public static <T> T getClass(Class<T> tClass, Map<String, List<Object>> params) {
-        try {
-            T t = tClass.newInstance();
-            if (params == null || params.size() == 0) {
-                return t;
-            }
-            Map<String, Field> fieldMap = new HashMap<>();
-            handleObjectField(t, fieldMap, true);
-            for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
-                if (params.containsKey(entry.getKey()) && params.get(entry.getKey()).size() == 1
-                        && checkType(params.get(entry.getKey()).get(0).getClass(), entry.getValue().getType())) {
-                    entry.getValue().set(t, params.get(entry.getKey()).get(0));
-                }
-            }
+    public static <T> T getClass(Class<T> tClass, Map<String, List<Object>> params) throws IllegalAccessException, InstantiationException {
+        T t = tClass.newInstance();
+        if (params == null || params.size() == 0) {
             return t;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return null;
+        Map<String, Field> fieldMap = new HashMap<>();
+        handleObjectField(t, fieldMap, true);
+        for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
+            if (params.containsKey(entry.getKey()) && params.get(entry.getKey()).size() == 1
+                    && checkType(params.get(entry.getKey()).get(0).getClass(), entry.getValue().getType())) {
+                entry.getValue().set(t, params.get(entry.getKey()).get(0));
+            }
+        }
+        return t;
     }
 
     private static boolean checkType(Class<?> aClass, Class<?> type) {
@@ -78,7 +72,7 @@ public final class ClassUtils {
                     entry.getValue().set(handler, valueMap.get(ss[0].toLowerCase()).get(ss[1]));
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                //ignore
             }
         }
 
@@ -93,11 +87,21 @@ public final class ClassUtils {
                     try {
                         fieldMap.put(field.getName(), isField ? field : field.get(t));
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        //ignore
                     }
                 }
             }
             tClass = tClass.getSuperclass();
         }
+    }
+
+    //判断是否为基本数据类型或String类型或包装类型
+    public static boolean checkBasicClass(Class t) {
+        if (t == Integer.class || t == Character.class || t == Long.class || t == String.class || t == int.class
+                || t == boolean.class || t == byte.class || t == Double.class || t == Float.class || t == short.class || t == Boolean.class
+                || t == Byte.class || t == char.class || t == long.class || t == double.class) {
+            return true;
+        }
+        return false;
     }
 }

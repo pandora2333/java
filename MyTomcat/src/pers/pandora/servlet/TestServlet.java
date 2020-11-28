@@ -1,6 +1,6 @@
 package pers.pandora.servlet;
 
-import pers.pandora.bean.Tuple;
+import pers.pandora.vo.Tuple;
 
 import java.util.Map;
 

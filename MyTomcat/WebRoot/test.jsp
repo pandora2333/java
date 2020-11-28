@@ -9,7 +9,7 @@
             <input type="submit" value="#{user.password}">
         </form>
         #{user.username}
-    <% System.out.println("hello world");%>
+    <% System.out.println("hello world\\(^_^)/!!!");%>
     </body>
 </html>
 </jsp>
