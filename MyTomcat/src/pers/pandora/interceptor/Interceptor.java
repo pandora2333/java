@@ -1,7 +1,7 @@
 package pers.pandora.interceptor;
 
-import pers.pandora.servlet.Request;
-import pers.pandora.servlet.Response;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
 
 public interface Interceptor {
     //修改请求参数，修改响应信息（比如编码）

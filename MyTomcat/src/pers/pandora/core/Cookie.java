@@ -1,4 +1,4 @@
-package pers.pandora.servlet;
+package pers.pandora.core;
 
 public final class Cookie {
 
@@ -9,7 +9,7 @@ public final class Cookie {
     private String expires;
     //域名
     private String doamin;
-    //生效路径
+    //Cookie域名子路径
     private String path;
     //安全属性
     private int secure;//默认不设置

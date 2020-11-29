@@ -2,14 +2,17 @@ package pers.pandora.mvc;
 
 import javassist.Modifier;
 import jdk.internal.org.objectweb.asm.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
 import pers.pandora.constant.JSP;
+import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtils;
 import pers.pandora.vo.Pair;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
-import pers.pandora.servlet.Request;
-import pers.pandora.servlet.Response;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
 import pers.pandora.utils.ClassUtils;
 
 import java.io.File;
@@ -29,9 +32,11 @@ import java.util.concurrent.*;
  */
 public final class RequestMappingHandler {
 
-    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);//url - method
-
-    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);//method - controller(singleton instance)
+    private Logger logger = LogManager.getLogger(this.getClass());
+    //url - method
+    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);
+    //method - controller(singleton instance)
+    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
 
     private Set<Pair<Integer, Interceptor>> interceptors;
 
@@ -57,6 +62,7 @@ public final class RequestMappingHandler {
 //    static {
 // 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
 // 加载任务被分配到另一个线程，因此初始化类信息加载，两个线程互相等待对方释放类加载锁，造成死锁等待
+//    解决方式: 添加IOTask人物时候，排除掉当前类文件
 //         init();
 //    }
 
@@ -75,9 +81,14 @@ public final class RequestMappingHandler {
     public void parseUrl(ModelAndView modelAndView) {
         Map<String, Object> valueObject = new HashMap<>();
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
+        if (method == null) {
+            modelAndView.setPage(null);
+            return;//找不到对应路径
+        }
         Object controller = controllers.get(method);
         if (controller == null) {
-            return;//生成实例失败
+            modelAndView.setPage(null);
+            return;//初始化Controller类生成实例失败
         }
         if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
             modelAndView.setJson(true);
@@ -108,14 +119,18 @@ public final class RequestMappingHandler {
                     target = ClassUtils.getClass(parameterTypes[i], params);
                     valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
                     objects[i] = target;
-                } catch (IllegalAccessException|InstantiationException e) {
+                } catch (IllegalAccessException | InstantiationException e) {
                     //ignore
                 }
             } else if (paramNames[i] != null) {
                 List<Object> list = params.get(paramNames[i]);
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
             } else {
-                throw new RuntimeException("基本类型变量缺少注解:" + method.getName());
+                logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
+                                LOG.LOG_PRE + LOG.LOG_PRE, this.getClass().getName(), modelAndView, controller.getClass().getName(),
+                        method.getName(), LOG.ERROR_DESC);
+                modelAndView.setPage(null);
+                return;
             }
         }
         try {
@@ -130,7 +145,10 @@ public final class RequestMappingHandler {
                 modelAndView.setPage(result.toString());
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
-            System.out.println("方法变量值与类型不匹配：" + method.getName());
+            logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
+                            LOG.LOG_PRE + LOG.LOG_POS, this.getClass().getName(), modelAndView, controller.getClass().getName(),
+                    method.getName(), LOG.ERROR_DESC, e);
+            modelAndView.setPage(null);
         }
         modelAndView.getRequest().setObjectList(valueObject);
     }
@@ -183,7 +201,8 @@ public final class RequestMappingHandler {
                 }
             }, 0);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(LOG.LOG_PRE + "handleMethodParamNames for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                    this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
         }
     }
 
@@ -208,19 +227,22 @@ public final class RequestMappingHandler {
     }
 
     private <T> void scanResolers(Class<T> t) {
-        if (t.isAnnotationPresent(Controller.class)) {
+        Controller controller = t.getAnnotation(Controller.class);
+        if (controller != null) {
+            String parentPath = controller.value();
             for (Method method : t.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(RequestMapping.class)) {
                     Annotation annotation = method.getAnnotation(RequestMapping.class);
                     if (!StringUtils.isNotEmpty(((RequestMapping) annotation).value())) {
-                        mappings.put(method.getName(), method);
+                        mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
                     } else {
-                        mappings.put(((RequestMapping) annotation).value(), method);
+                        mappings.put(parentPath + ((RequestMapping) annotation).value(), method);
                     }
                     try {
                         controllers.put(method, t.newInstance());
                     } catch (InstantiationException | IllegalAccessException e) {
-                        e.printStackTrace();
+                        logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                                this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
                     }
                 }
             }
@@ -231,7 +253,8 @@ public final class RequestMappingHandler {
                     try {
                         interceptors.add(new Pair<>(t.getAnnotation(Order.class).value(), (Interceptor) t.newInstance()));
                     } catch (InstantiationException | IllegalAccessException e) {
-                        e.printStackTrace();
+                        logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                                this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
                     }
                     break;
                 }
@@ -253,7 +276,8 @@ public final class RequestMappingHandler {
                 scanResolers(Class.forName(className,
                         true, Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                        this.getClass().getName(), className, LOG.EXCEPTION_DESC, e);
                 return false;
             }
             return true;
@@ -272,7 +296,8 @@ public final class RequestMappingHandler {
             try {
                 future.get(timeout, timeOutUnit);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "init" + LOG.LOG_POS,
+                        this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
         }
         executor.shutdown();

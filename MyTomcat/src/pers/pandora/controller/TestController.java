@@ -2,14 +2,14 @@ package pers.pandora.controller;
 
 import pers.pandora.annotation.*;
 import pers.pandora.vo.User;
-import pers.pandora.servlet.Request;
-import pers.pandora.servlet.Response;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
 
 /**
  * 引入Spring MVC的@Controllert模式
  */
 @Deprecated
-@Controller
+@Controller("/test")
 public class TestController {
     @RequestMapping("/loginUser.do")
     public String login(Request request, @RequestBody User user, Response response) {

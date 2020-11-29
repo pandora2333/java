@@ -1,9 +1,12 @@
 package pers.pandora.utils;
 
 import javassist.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.JSP;
-import pers.pandora.servlet.Dispatcher;
+import pers.pandora.constant.LOG;
+import pers.pandora.vo.Tuple;
 
 import javax.tools.*;
 import java.io.*;
@@ -16,6 +19,8 @@ import java.util.regex.Pattern;
  * 解析jsp页面
  */
 public final class JspParser {
+
+    private Logger logger = LogManager.getLogger(this.getClass());
 
     //生成JSP servlet类名所需hash编码
     private String hashEncode;
@@ -48,7 +53,7 @@ public final class JspParser {
     }
 
     //懒加载，不访问就不生成
-    public String parse(String jspFile, Dispatcher dispatcher) {
+    public Tuple<String, String, String> parse(String jspFile) {
         File file = new File(jspFile);
         if (!file.exists()) {
             return null;
@@ -74,7 +79,7 @@ public final class JspParser {
             file = new File(CLASSDIR + PATH_SPLITER + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
             className = JSP_PACKAGE + PACKAGE_SPLITER + className;
             if (file.exists()) {
-                return className;
+                return new Tuple<>(className, null, null);
             }
             StringBuffer sb = new StringBuffer();
             if (jsp.contains(JSP.JSP_LANGUAGE_DESC)) {
@@ -129,17 +134,17 @@ public final class JspParser {
                         ct.addField(CtField.make(field, ct));
                     }
                     //HTTPStatus.FILENAMETAIL + JSP.JAVA_ADD = 77 ? 表达式类型从左向右推断造成字符ascii相加
-                    matcher.appendReplacement(sb, String.valueOf(HTTPStatus.FILENAMETAIL) + JSP.JAVA_ADD + tmp + JSP.JAVA_ADD + HTTPStatus.FILENAMETAIL);
+                    matcher.appendReplacement(sb, String.valueOf(HTTPStatus.FILENAMETAIL) + JSP.JAVA_ADD + tmp +
+                            JSP.JAVA_ADD + HTTPStatus.FILENAMETAIL);
                 } else {
-                    throw new RuntimeException("不支持级联赋值或者变量名格式错误");
+                    logger.warn(LOG.LOG_PRE + "parse for " + LOG.LOG_PRE + "that can't parse this format string", this.getClass().getName(), el);
                 }
             }
             matcher.appendTail(sb);
-            dispatcher.addUrlMapping(jspFile.substring(urlIndex), className);
             servletGenerator(ct, sbuf.toString(), sb.toString());
-            return className;
+            return new Tuple<>(className, jspFile.substring(urlIndex), className);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
         }
         return null;
     }
@@ -149,7 +154,7 @@ public final class JspParser {
         ct.addMethod(CtMethod.make(buildDoGet(jsp), ct));
         ct.addMethod(CtMethod.make(buildDoPost(), ct));
         ct.writeFile(CLASSDIR + PATH_SPLITER);
-        System.out.println("编译结束：" + ct.getName());
+        logger.info("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
     }
 
     private String buildDoPost() {
@@ -178,7 +183,7 @@ public final class JspParser {
         //编译参数，类似于javac <options>中的options
         List<String> optionsList = new ArrayList<String>();
         //编译文件的存放地方，注意：此处是为Eclipse工具特设的
-//        optionsList.addAll(Arrays.asList("-d","./bin"));
+        // optionsList.addAll(Arrays.asList("-d","./bin"));
         //要编译的单元
         List<JavaFileObject> jfos = Arrays.asList(jfo);
         //设置编译环境
@@ -186,9 +191,10 @@ public final class JspParser {
         //编译成功
         if (task.call()) {
             try {
-                System.out.println(Class.forName(JSP.JSP_PACKAGE + className, true, Thread.currentThread().getContextClassLoader()));
+                logger.info("Complie And Completed:" + LOG.LOG_PRE,
+                        Class.forName(JSP.JSP_PACKAGE + className, true, Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "dynamicClas" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
             return true;
         }
@@ -198,7 +204,7 @@ public final class JspParser {
     //提供动态编译的辅助类,实现三种方式的动态编译:字符串，文件（源文件，字节码文件），url资源
     static class StringJavaObject extends SimpleJavaFileObject {
         //源代码
-        private String content = "";
+        private String content;
 
         //遵循Java规范的类名及文件
         public StringJavaObject(String _javaFileName, String _content) {

@@ -4,8 +4,11 @@ import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
+import pers.pandora.constant.LOG;
 import pers.pandora.vo.MapContent;
 
 import javax.xml.parsers.SAXParser;
@@ -13,6 +16,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 
 public class XMLFactory {
+
+    private Logger logger = LogManager.getLogger(this.getClass());
 
     public static final String SERVLET = "servlet";
 
@@ -39,8 +44,7 @@ public class XMLFactory {
         try {
             sax = SAXParserFactory.newInstance().newSAXParser();
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("解析工厂初始化异常！");
+            logger.error(LOG.LOG_PRE + "init()" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
         }
     }
 
@@ -50,8 +54,7 @@ public class XMLFactory {
             sax.parse(new File(file), new XMLHandler());
             return urlMapping;
         } catch (Exception e) {
-            System.out.println("文件解析异常!");
-            System.out.println(e);
+            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
         }
         return null;
     }
@@ -63,13 +66,13 @@ public class XMLFactory {
 
         @Override
         public void startDocument() {
-            System.out.println("配置文件解析开始...");
+            logger.debug("XML file init for loading...");
             context = new ConcurrentHashMap<>(16);
         }
 
         @Override
         public void endDocument() {
-            System.out.println("配置文件解析结束...");
+            logger.debug("XML file init for completed");
         }
 
         @Override
@@ -101,7 +104,7 @@ public class XMLFactory {
         }
 
         @Override
-        public void endElement(String uri, String localName, String qName){
+        public void endElement(String uri, String localName, String qName) {
             if (qName != null) {
                 if (tag != null && tag.equals(SERVLET_CLASS) && servletClass != null) {
                     temp.setClassName(servletClass);

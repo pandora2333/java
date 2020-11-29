@@ -1,5 +1,9 @@
 package pers.pandora.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.LOG;
+
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -7,6 +11,7 @@ import java.util.*;
 
 public class IdWorker {
 
+    private Logger logger = LogManager.getLogger(this.getClass());
     //snowflake 改版
     protected long epoch = 1288834974657L;
 
@@ -28,20 +33,17 @@ public class IdWorker {
 
     protected long sequence = 0L;
 
-//    protected Logger logger = LoggerFactory.getLogger(IdWorker.class);
-
     public IdWorker() {
         //初始随机数
         this.workerId = checkWorkerId(System.identityHashCode(this) ^ System.currentTimeMillis());
-
-        //logger.debug("worker starting. timestamp left shift {}, worker id {}", timestampLeftShift, workerId);
+        logger.debug("worker starting. timestamp left shift " + LOG.LOG_PRE + ", worker id " + LOG.LOG_PRE, timestampLeftShift, workerId);
     }
 
     private long checkWorkerId(long workerId) {
         // sanity check for workerId
         if (workerId > maxWorkerId || workerId < 0) {
             int rand = new SecureRandom().nextInt((int) maxWorkerId + 1);
-            //logger.warn("worker Id can't be greater than {} or less than 0, use a random {}", maxWorkerId, rand);
+            logger.warn("worker Id can't be greater than " + LOG.LOG_PRE + "or less than 0, use a random " + LOG.LOG_PRE, maxWorkerId, rand);
             return rand;
         }
 
@@ -52,9 +54,8 @@ public class IdWorker {
         long timestamp = millisGen();
 
         if (timestamp < lastMillis) {
-//            logger.error("clock is moving backwards.  Rejecting requests until {}.", lastMillis);
-//            throw new InvalidSystemClock(String.format(
-//                    "Clock moved backwards.  Refusing to generate id for {} milliseconds", lastMillis - timestamp));
+            logger.error("clock is moving backwards.  Rejecting requests until " + LOG.LOG_PRE, lastMillis);
+            return maxWorkerId;
         }
 
         if (lastMillis == timestamp) {
@@ -100,7 +101,9 @@ public class IdWorker {
      * @return 固定21位数字字符串
      */
     public static final String NEXT_FORMAT = "%014d";
+
     public static final String DATE_FORMAT = "yyMMdd";
+
     public static final char PADDING_CHAR = '0';
 
     public String next() {
@@ -155,7 +158,7 @@ public class IdWorker {
         return s.toString();
     }
 
-    //SessionID生成器(53位) 750+ ms 延迟
+    //SessionID生成器(53位:16+1+36(32+4)) 750+ ms 延迟
     public String nextSessionID() {
 //        long start = System.currentTimeMillis();
         return nextShort() + "_" + UUID.randomUUID().toString().toUpperCase();

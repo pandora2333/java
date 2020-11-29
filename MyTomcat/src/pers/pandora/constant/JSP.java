@@ -24,13 +24,13 @@ public class JSP {
 
     public static final char JAVA_ADD = '+';
 
-    public static final String JAVA_DOPOST = "public String doPost(pers.pandora.servlet.Request request,pers.pandora.servlet.Response response){return doGet(request,response);}";
+    public static final String JAVA_DOPOST = "public String doPost(pers.pandora.core.Request request,pers.pandora.core.Response response){return doGet(request,response);}";
 
     public static  final String JAVA_SERVICE_PRE = "public void service(){";
 
     public static final char JAVA_RIGHT_BRACKET = '}';
 
-    public static final String JAVA_DOGET_PRE = "public String doGet(pers.pandora.servlet.Request request,pers.pandora.servlet.Response response) {StringBuffer sb = new StringBuffer(\"";
+    public static final String JAVA_DOGET_PRE = "public String doGet(pers.pandora.core.Request request,pers.pandora.core.Response response) {StringBuffer sb = new StringBuffer(\"";
 
     public static final String JAVA_DOGET_POS = "\");service();return sb.toString();}";
 

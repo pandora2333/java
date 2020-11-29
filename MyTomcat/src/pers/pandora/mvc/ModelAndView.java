@@ -1,7 +1,7 @@
 package pers.pandora.mvc;
 
-import pers.pandora.servlet.Request;
-import pers.pandora.servlet.Response;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
 
 /**
  * 封装参数和模型

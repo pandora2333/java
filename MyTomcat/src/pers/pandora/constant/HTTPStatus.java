@@ -90,9 +90,9 @@ public class HTTPStatus {
 
     public static final String CHARSET = "charset";
 
-    public static final String CODE_500_DESC = "服务器内部出错";
+    public static final String CODE_500_DESC = "Serer Inner Some Errors";
 
-    public static final String CODE_404_DESC = "页面找不到";
+    public static final String CODE_404_DESC = "Page Not Found";
 
     //cookie
     public static final String VERSION = "Version";

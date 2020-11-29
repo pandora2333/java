@@ -1,15 +1,19 @@
-package pers.pandora.servlet;
+package pers.pandora.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.LOG;
 import pers.pandora.vo.Pair;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
 import pers.pandora.mvc.ModelAndView;
 import pers.pandora.mvc.RequestMappingHandler;
-import pers.pandora.server.Server;
 import pers.pandora.utils.StringUtils;
 
 //servlet分发器
-public abstract class Dispatcher {
+abstract class Dispatcher {
+
+    protected Logger logger = LogManager.getLogger(this.getClass());
 
     protected Server server;
 
@@ -18,7 +22,9 @@ public abstract class Dispatcher {
     protected Response response;
 
     public void addUrlMapping(String url, String mvcClass) {
-        server.getContext().put(url, mvcClass);
+        if (StringUtils.isNotEmpty(url)) {
+            server.getContext().put(url, mvcClass);
+        }
     }
 
     protected Dispatcher() {
@@ -27,6 +33,7 @@ public abstract class Dispatcher {
     }
 
     //处理请求
+    //只有第一次返回不是404应答时候才会建立与浏览器sessionID联系
     public final void dispatcher(String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
             String servlet = request.handle(reqMsg);
@@ -38,17 +45,32 @@ public abstract class Dispatcher {
                     mv.setRequest(request);
                     mv.setResponse(response);
                     server.getRequestMappingHandler().parseUrl(mv);
-                    if (mv.isJson()) {
-                        pushClient(response.handle(HTTPStatus.GET, request), null);
+                    if (StringUtils.isNotEmpty(mv.getPage())) {
+                        if (mv.isJson()) {
+                            pushClient(response.handle(HTTPStatus.GET, request), null);
+                        } else {
+                            dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
+                        }
                     } else {
-                        dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
+                        //找不到对应MVC拦截uri路径
+                        pushClient(response.handle(null, request), null);
                     }
                 } else {
                     String ss[] = servlet.split(HTTPStatus.HEAD_INFO_SPLITER);
-                    String file = ss.length == 2 ? ss[1] : null;
-                    response.setResource(ss.length == 2 ? ss[1] : null);
+                    java.io.File file = null;
+                    if (ss.length == 2) {
+                        file = new java.io.File(server.getRootPath() + ss[1]);
+                    }
+                    if (file != null) {
+                        if (!file.exists()) {
+                            file = null;
+                        } else {
+                            response.setResource(true);
+                            response.setType(ss[0]);
+                            response.setLen(file.length());
+                        }
+                    }
                     response.setServlet(servlet);
-                    response.setType(ss.length == 2 ? ss[0] : null);
                     String content = response.handle(request.getMethod(), request);
                     pushClient(content, file);
                 }
@@ -61,7 +83,8 @@ public abstract class Dispatcher {
     protected boolean handleRequestCompleted() {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().completeRequest(request, response)) {
-                throw new RuntimeException(interceptor.getV().getClass().getName() + "执行completeRequest资源处理出错");
+                logger.warn(LOG.LOG_PRE + "exec completeRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
+                return false;
             }
         }
         return true;
@@ -70,12 +93,13 @@ public abstract class Dispatcher {
     protected boolean initRequest(byte[] data) {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
-                throw new RuntimeException(interceptor.getV().getClass().getName() + "执行initRequest资源处理出错");
+                logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
+                return false;
             }
         }
         return true;
     }
 
-    protected abstract void pushClient(String content, String staticFile);
+    protected abstract void pushClient(String content, java.io.File staticFile);
 
 }

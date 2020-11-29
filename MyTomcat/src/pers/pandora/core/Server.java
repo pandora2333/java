@@ -1,5 +1,8 @@
-package pers.pandora.server;
+package pers.pandora.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
 
 import java.util.ArrayList;
@@ -10,18 +13,22 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class Server {
 
+    protected Logger logger = LogManager.getLogger(this.getClass());
+
     private boolean running;
 
     private int port;
 
     private String rootPath = "./WebRoot";
 
+    private String resourceRootPath = "/static/";
+
     private String webConfigPath = rootPath + "/WEB-INF/web.xml";
 
-    public static final String REQUEST_FILE_DIR = "/files/";
+    public String requestFileDir = resourceRootPath + "files/";
 
     private int poolSize = 10;
-
+    //上传文件缓冲区大小 (Byte)
     private int capcity = 2048 * 1024;
 
     //基于MVC模式管理
@@ -33,6 +40,8 @@ public abstract class Server {
     private Map<String, String> context;
 
     private static final String HOST = "127.0.0.1";
+    //下载文件缓冲区大小（Byte）
+    private int fileBuffer = 2048;
 
     public void setRunning(boolean running) {
         this.running = running;
@@ -74,6 +83,22 @@ public abstract class Server {
         this.poolSize = poolSize;
     }
 
+    public void setResourceRootPath(String resourceRootPath) {
+        this.resourceRootPath = resourceRootPath;
+    }
+
+    public String getResourceRootPath() {
+        return resourceRootPath;
+    }
+
+    public void setRequestFileDir(String requestFileDir) {
+        this.requestFileDir = requestFileDir;
+    }
+
+    public String getRequestFileDir() {
+        return requestFileDir;
+    }
+
     public Map<String, Session> getSessionMap() {
         return sessionMap;
     }
@@ -106,15 +131,24 @@ public abstract class Server {
         this.requestMappingHandler = requestMappingHandler;
     }
 
+    public void setFileBuffer(int fileBuffer) {
+        this.fileBuffer = fileBuffer;
+    }
+
+    public int getFileBuffer() {
+        return fileBuffer;
+    }
+
     public RequestMappingHandler getRequestMappingHandler() {
         return requestMappingHandler;
     }
 
     public abstract void start();
 
-    public abstract void start(int port, int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeOut, TimeUnit timeOutUnit, long exvitTime);
+    public abstract void start(int port, int capcity, int minCore, int maxCore, long keepAlive, TimeUnit timeUnit,
+                               long timeOut, TimeUnit timeOutUnit, long exvitTime);
 
-    protected void execEvitThread(long exvitTime) {
+    protected void execExpelThread(long expelTime) {
         //扫描驱逐后台线程
         Thread invalidResourceExecutor = new Thread(() -> {
             while (true) {
@@ -127,14 +161,14 @@ public abstract class Server {
                     }
                 }
                 for (String removeKey : invalidKey) {
-                    System.out.println(Thread.currentThread().getName() + " SessionID invalid:" + removeKey);
+                    logger.info(LOG.LOG_PRE + "exec SessionID invalid:" + LOG.LOG_PRE, Thread.currentThread().getName(), removeKey);
                     sessionMap.remove(removeKey);
                 }
                 try {
                     //最多每秒执行一次
-                    Thread.sleep(exvitTime);
+                    Thread.sleep(expelTime);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
                 }
             }
         });

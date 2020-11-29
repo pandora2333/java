@@ -1,6 +1,6 @@
 package pers.pandora.vo;
 
-import pers.pandora.server.Server;
+import pers.pandora.core.Server;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;

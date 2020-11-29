@@ -1,8 +1,8 @@
 package pers.pandora.interceptor;
 
 import pers.pandora.annotation.Order;
-import pers.pandora.servlet.Request;
-import pers.pandora.servlet.Response;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
 
 @Deprecated
 @Order

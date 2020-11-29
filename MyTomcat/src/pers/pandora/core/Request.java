@@ -1,19 +1,23 @@
-package pers.pandora.servlet;
+package pers.pandora.core;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.JSP;
+import pers.pandora.constant.LOG;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.mvc.RequestMappingHandler;
-import pers.pandora.server.Session;
 import pers.pandora.utils.JspParser;
 import pers.pandora.utils.StringUtils;
 
 public final class Request {
+
+    private Logger logger = LogManager.getLogger(this.getClass());
 
     private String method;
 
@@ -26,8 +30,10 @@ public final class Request {
     private JspParser jspParser;
 
     private String charset = HTTPStatus.DEFAULTENCODING;
-
-    private Map<String, Tuple<String, String, byte[]>> uploadFiles;//fileVarName -> {fileName,fileType,byte[] data}
+    //fileVarName -> {fileName,fileType,byte[] data}
+    private Map<String, Tuple<String, String, byte[]>> uploadFiles;
+    //上传文件保存路径
+    private Map<String, String> filePaths;
 
     private Map<String, String> heads;
 
@@ -39,6 +45,20 @@ public final class Request {
 
     private Session session;
 
+
+    public Map<String, String> getFilePaths() {
+        return filePaths;
+    }
+
+    public void setFilePaths(Map<String, String> filePaths) {
+        this.filePaths = filePaths;
+    }
+
+    public void addFilePath(String fileVarName, String filePath) {
+        if (StringUtils.isNotEmpty(fileVarName) && StringUtils.isNotEmpty(filePath)) {
+            filePaths.put(fileVarName, filePath);
+        }
+    }
 
     public Map<String, Tuple<String, String, byte[]>> getUploadFiles() {
         return uploadFiles;
@@ -104,6 +124,7 @@ public final class Request {
         uploadFiles = new HashMap<>();
         cookies = new ArrayList<>();
         this.dispatcher = dispatcher;
+        filePaths = new HashMap<>();
     }
 
     public void setJspParser(JspParser jspParser) {
@@ -139,22 +160,29 @@ public final class Request {
     }
 
 
-    public void saveFileData(String fileVarName) {
+    public void saveFileData(String fileVarName, String fileName) {
         if (!StringUtils.isNotEmpty(fileVarName) || !uploadFiles.containsKey(fileVarName)) {
-            throw new RuntimeException("无文件上传!");
+            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", this.getClass().getName(), LOG.ERROR_DESC);
+            return;
         }
-        String filePath = dispatcher.server.getRootPath() + dispatcher.server.REQUEST_FILE_DIR;
+        String filePath = filePaths.get(fileVarName);
+        if (!StringUtils.isNotEmpty(filePath)) {
+            filePath = dispatcher.server.getRootPath() + dispatcher.server.requestFileDir;
+        }
         java.io.File path = new java.io.File(filePath);
         if (!path.exists()) {
             path.mkdirs();
         }
         Tuple<String, String, byte[]> file = uploadFiles.get(fileVarName);
-        if(file.getV() != null && StringUtils.isNotEmpty(file.getK1())) {
+        if (file.getV() != null && StringUtils.isNotEmpty(file.getK1())) {
             //若文件名为""会造成文件管理器拒绝创建文件的异常
+            if (!StringUtils.isNotEmpty(fileName)) {
+                fileName = file.getK1();
+            }
             try {
-                Files.write(Paths.get(filePath + file.getK1()), file.getV());
+                Files.write(Paths.get(filePath + fileName), file.getV());
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS, this.getClass().getName(), fileName, LOG.EXCEPTION_DESC, e);
             }
         }
     }
@@ -181,12 +209,18 @@ public final class Request {
                 parseParams(param, HTTPStatus.POST);
             }
         }
-        reqUrl = tempStr;//保存请求路径
-        if (reqUrl.contains(HTTPStatus.JSP)) {
-            return jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher);
-        }
+        reqUrl = tempStr;
         if (isMVC(reqUrl)) {
             return RequestMappingHandler.MVC_CLASS;
+        }
+        if (reqUrl.contains(HTTPStatus.JSP)) {
+            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl);
+            if (parse != null) {
+                dispatcher.addUrlMapping(parse.getK2(), parse.getV());
+                return parse.getK1();
+            } else {
+                return null;
+            }
         }
         return dispatcher.server.getContext().get(reqUrl);
 
@@ -198,10 +232,10 @@ public final class Request {
         StringBuilder other = new StringBuilder();
         String[] sp;
         for (String s : msg.split(String.valueOf(HTTPStatus.CRLF), -1)) {
-            sp = s.split(HTTPStatus.HEAD_INFO_SPLITER + HTTPStatus.BLANK);
+            sp = s.split(HTTPStatus.HEAD_INFO_SPLITER + HTTPStatus.BLANK, -1);
             if (sp.length == 2) {
                 if (sp[0].toLowerCase().equals(HTTPStatus.COOKIE_MARK)) {
-                    initCookies(sp[1]);
+                    initCookies(sp[1].trim());
                     initSession = true;
                 }
                 heads.put(sp[0], sp[1].trim());
@@ -222,6 +256,8 @@ public final class Request {
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
         cookie.setNeedUpdate(true);
+        //将sessionID的Cookie设置在根域名下
+        cookie.setPath(String.valueOf(HTTPStatus.SLASH));
         dispatcher.server.getSessionMap().put(session.getSessionID(), session);
         cookies.add(cookie);
     }
@@ -231,8 +267,8 @@ public final class Request {
         if (StringUtils.isNotEmpty(cookie_str)) {
             Cookie cookie = null;
             String[] ss;
-            for (String tmp : cookie_str.split(HTTPStatus.COOKIE_SPLITER)) {
-                ss = tmp.split(HTTPStatus.COOKIE_KV_SPLITE);
+            for (String tmp : cookie_str.split(HTTPStatus.COOKIE_SPLITER, -1)) {
+                ss = tmp.split(HTTPStatus.COOKIE_KV_SPLITE, -1);
                 if (ss.length == 2) {
                     cookie = new Cookie();
                     if (ss[0].equals(HTTPStatus.SESSION_MARK)) {
@@ -245,6 +281,8 @@ public final class Request {
                             ss[1] = session.getSessionID();
                             dispatcher.server.getSessionMap().put(ss[1], session);
                             cookie.setNeedUpdate(true);
+                            //将sessionID的Cookie设置在根域名下
+                            cookie.setPath(String.valueOf(HTTPStatus.SLASH));
                         }
                         initSession = true;
                     }
@@ -268,11 +306,14 @@ public final class Request {
     }
 
     private String judgeStatic(String reqToken) {
-        if (reqToken.endsWith(HTTPStatus.HTML_MARK) || reqToken.endsWith(HTTPStatus.HTM_MARK)) {
-            return HTTPStatus.TEXT_HTML + HTTPStatus.COLON;
-        }
-        if (reqToken.endsWith(HTTPStatus.JPG) || reqToken.endsWith(HTTPStatus.PNG) || reqToken.endsWith(HTTPStatus.JPEG)) {
-            return HTTPStatus.IMAGE_TYPE + HTTPStatus.COLON;
+        if (reqToken.contains(dispatcher.server.getResourceRootPath())) {
+            if (reqToken.endsWith(HTTPStatus.HTML_MARK) || reqToken.endsWith(HTTPStatus.HTM_MARK)) {
+                return HTTPStatus.TEXT_HTML + HTTPStatus.COLON;
+            }
+            if (reqToken.endsWith(HTTPStatus.JPG) || reqToken.endsWith(HTTPStatus.PNG) || reqToken.endsWith(HTTPStatus.JPEG)) {
+                return HTTPStatus.IMAGE_TYPE + HTTPStatus.COLON;
+            }
+            return HTTPStatus.PLAIN + HTTPStatus.COLON;
         }
         return null;
     }
@@ -282,7 +323,8 @@ public final class Request {
         if (method.equals(HTTPStatus.GET)) {
             if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
                 reqToken.substring(0, reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)).trim();
-                temp = reqToken.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK) + 1).split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+                temp = reqToken.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK) + 1).
+                        split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
             } else {
                 reqToken.trim();
             }
@@ -332,5 +374,6 @@ public final class Request {
         reqUrl = null;
         uploadFiles.clear();
         cookies.clear();
+        filePaths.clear();
     }
 }

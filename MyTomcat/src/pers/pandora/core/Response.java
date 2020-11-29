@@ -1,5 +1,9 @@
-package pers.pandora.servlet;
+package pers.pandora.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.LOG;
+import pers.pandora.servlet.Servlet;
 import pers.pandora.vo.Pair;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
@@ -14,17 +18,19 @@ import java.util.Map;
 
 public final class Response {
 
+    private Logger logger = LogManager.getLogger(this.getClass());
+
     private String servlet;
 
     private String charset = HTTPStatus.DEFAULTENCODING;
     //存储正文长度
-    private int len;
+    private long len;
     //正文
     private StringBuilder content;
     //资源类型
     private String type = HTTPStatus.TEXT_HTML;
-    //静态资源地址
-    private String resource;
+    //是否是静态资源响应
+    private boolean resource;
 
     private Dispatcher dispatcher;
     //响应状态码
@@ -48,6 +54,30 @@ public final class Response {
         this.dispatcher = dispatcher;
     }
 
+    public void setResource(boolean resource) {
+        this.resource = resource;
+    }
+
+    public void setLen(long len) {
+        this.len = len;
+    }
+
+    public long getLen() {
+        return len;
+    }
+
+    public StringBuilder getContent() {
+        return content;
+    }
+
+    public boolean isResource() {
+        return resource;
+    }
+
+    public void setContent(StringBuilder content) {
+        this.content = content;
+    }
+
     public Map<String, String> getHeads() {
         return heads;
     }
@@ -61,7 +91,8 @@ public final class Response {
                 this.heads.put(key, value);
                 return true;
             } else {
-                System.out.println("server,date,content-type,content-length属于固定字段不能添加");
+                logger.warn(LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE +
+                        "can't add into headers", HTTPStatus.SERVER, HTTPStatus.DATE, HTTPStatus.CONTENTLENGTH, HTTPStatus.CONTENTTYPE);
             }
         }
         return false;
@@ -77,7 +108,7 @@ public final class Response {
 
     public void setType(String type) {
         if (type == null && servlet == null) {
-            content = new StringBuilder("请求URI参数出错");
+            content = new StringBuilder(String.format("request uri params " + LOG.LOG_PRE, LOG.ERROR_DESC));
         }
         if (type != null) {
             this.type = type;
@@ -86,14 +117,6 @@ public final class Response {
 
     public String getType() {
         return type;
-    }
-
-    public void setResource(String resource) {
-        this.resource = resource;
-    }
-
-    public String getResource() {
-        return resource;
     }
 
     public void setServlet(String servlet) {
@@ -146,8 +169,8 @@ public final class Response {
             for (Cookie cookie : cookies) {
                 if (cookie != null && cookie.isNeedUpdate()) {
                     sb.append(HTTPStatus.SET_COOKIE);
-                    sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getValue())
-                            .append(HTTPStatus.COOKIE_SPLITER);
+                    sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.COOKIE_KV_SPLITE).
+                            append(cookie.getValue()).append(HTTPStatus.COOKIE_SPLITER);
                     sb.append(HTTPStatus.VERSION).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getVersion())
                             .append(HTTPStatus.COOKIE_SPLITER);
                     if (StringUtils.isNotEmpty(cookie.getExpires())) {
@@ -162,7 +185,7 @@ public final class Response {
                         sb.append(HTTPStatus.DOMAIN).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getMax_age())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
-                    if (StringUtils.isNotEmpty(cookie.getDoamin())) {
+                    if (StringUtils.isNotEmpty(cookie.getPath())) {
                         sb.append(HTTPStatus.PATH).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getPath())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
@@ -210,14 +233,13 @@ public final class Response {
                 } else {
                     handle_404_NOT_FOUND();
                 }
-            } else if (resource == null) {
-                handle_404_NOT_FOUND();
+            } else if (resource) {
+                code = 200;
             } else {
-                File file = new File(dispatcher.server.getRootPath() + resource);
-                len += file.length();
-                code = file.exists() ? 200 : 404;
+                handle_404_NOT_FOUND();
             }
         } catch (Exception e) {
+            logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             handle_500_SERVER_ERROR(e.getMessage());
         }
         handleAfter(request);
@@ -248,7 +270,8 @@ public final class Response {
         try {
             len = content.toString().getBytes(charset).length;
         } catch (UnsupportedEncodingException e) {
-            System.out.println("当前编码错误: " + charset + "\n编码内容： " + content);
+            logger.error(LOG.LOG_PRE + "handle_500_SERVER_ERROR current charset " + LOG.LOG_PRE + LOG.LOG_POS,
+                    this.getClass().getName(), charset, content, LOG.EXCEPTION_DESC, e);
         }
         code = 500;
     }
@@ -267,7 +290,7 @@ public final class Response {
 
     void reset() {
         servlet = null;
-        resource = null;
+        resource = false;
         content = null;
         len = 0;
         code = 0;

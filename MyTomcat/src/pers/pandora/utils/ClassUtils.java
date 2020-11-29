@@ -7,7 +7,8 @@ import java.util.Map;
 
 public final class ClassUtils {
 
-    public static <T> T getClass(String name, Map<String, List<Object>> params) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public static <T> T getClass(String name, Map<String, List<Object>> params) throws ClassNotFoundException, IllegalAccessException,
+            InstantiationException {
         T t = (T) Class.forName(name).newInstance();
         if (params == null || params.size() == 0) {
             return t;
@@ -97,9 +98,10 @@ public final class ClassUtils {
 
     //判断是否为基本数据类型或String类型或包装类型
     public static boolean checkBasicClass(Class t) {
-        if (t == Integer.class || t == Character.class || t == Long.class || t == String.class || t == int.class
-                || t == boolean.class || t == byte.class || t == Double.class || t == Float.class || t == short.class || t == Boolean.class
-                || t == Byte.class || t == char.class || t == long.class || t == double.class) {
+        if (t == Integer.class || t == Character.class || t == Long.class || t == String.class ||
+                t == int.class || t == boolean.class || t == byte.class || t == Double.class ||
+                t == Float.class || t == short.class || t == Boolean.class || t == Byte.class ||
+                t == char.class || t == long.class || t == double.class) {
             return true;
         }
         return false;

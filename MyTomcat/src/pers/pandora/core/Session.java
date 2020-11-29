@@ -1,4 +1,4 @@
-package pers.pandora.server;
+package pers.pandora.core;
 
 import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;

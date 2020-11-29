@@ -1,10 +1,13 @@
 package pers.pandora.servlet;
 
-import java.util.Date;
+import pers.pandora.core.Cookie;
+import pers.pandora.core.Request;
+import pers.pandora.core.Response;
+
 import java.util.List;
-import java.util.Map;
+
 @Deprecated
-public class LoginServlet implements Servlet{
+public class LoginServlet implements Servlet {
     private  String username;
     private  String password;
     private String content;
@@ -43,12 +46,13 @@ public class LoginServlet implements Servlet{
         cookie.setKey("current_uesr");
         cookie.setValue("Pandora WebServer");
         cookie.setMax_age(60);
+        cookie.setPath("/static");
 //        Date date = new Date();
 //        date.setMinutes(date.getMinutes()+1);
 //        System.out.println("cookie:"+cookie);
 //        cookie.setExpires(date.toString());
         cookies.add(cookie);
-        String value1 = "user=pandora; Version=1; Domain=localhost; Max-Age=60";
+        String value1 = "user=pandora; Version=1; Domain=localhost; Max-Age=60; Path=/static;";
         response.addHeads("Set-Cookie",value1);
 //        response.addHeads("Set-Cookie",value2);
         //重定向测试
@@ -59,7 +63,7 @@ public class LoginServlet implements Servlet{
     }
 
     @Override
-    public String doPost(Request request,Response response) {
+    public String doPost(Request request, Response response) {
         return doGet(request,response);
     }
 }

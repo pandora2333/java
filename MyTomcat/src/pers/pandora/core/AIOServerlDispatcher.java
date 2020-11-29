@@ -1,8 +1,9 @@
-package pers.pandora.handler;
+package pers.pandora.core;
+
+import pers.pandora.constant.LOG;
 import pers.pandora.vo.Attachment;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
-import pers.pandora.servlet.Dispatcher;
 import pers.pandora.utils.StringUtils;
 
 import java.io.FileInputStream;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public final class AIOServerlHandler extends Dispatcher implements CompletionHandler<Integer, Attachment> {
+public final class AIOServerlDispatcher extends Dispatcher implements CompletionHandler<Integer, Attachment> {
 
     Attachment att;
 
@@ -32,39 +33,37 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
             //HTTP资源预处理
             initRequest(bytes);
             String msg = null;
-            try {
-                msg = new String(bytes, 0, bytes.length, request.getCharset()).trim();
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
             //firefox对于较大文件会分片发送，即使buffer没满，带宽足够，而chrome会尽可能的一次发送所有数据
             //对于conten-length的长度所指内容是对于文件分隔符之间的所有字段及文件内容值以及其它表单字段所有值以及两者间换行分隔符
             //某些时候浏览器不发送文件只发送文件分隔符，推测与服务器环境有关（带宽），对于隐私模式下的chrome，上传文件不发送文件数据,在头部信息中有文件分隔符,而firefox却可以发送
-//            System.out.println("收到来自客户端的数据: " + msg);
             try {
-                msg = handleUploadFile(msg, bytes);
+                msg = handleUploadFile(bytes);
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
             try {
                 dispatcher(msg);
-                //资源回收处理
-                handleRequestCompleted();
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
             att.setReadMode(false);
             try {
-                System.out.println(att.getClient().getRemoteAddress() + " closed!");
-                att.getClient().close();
+                //资源回收处理，关闭连接前 (比如自主关闭或者浏览器突然关闭窗口）
+                handleRequestCompleted();
+                logger.info(LOG.LOG_PRE + "is closed!", this.getClass().getName(), att.getClient().getRemoteAddress());
+                if (att.getClient().isOpen()) {
+                    att.getClient().close();
+                }
             } catch (IOException e) {
-                //e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
         } else {
             try {
-                att.getClient().close();
+                if (att.getClient().isOpen()) {
+                    att.getClient().close();
+                }
             } catch (IOException e) {
-                //e.printStackTrace();
+                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
             }
         }
     }
@@ -77,10 +76,12 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
     //----WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau--
-    private String handleUploadFile(String msg, byte[] data) throws UnsupportedEncodingException {
+    private String handleUploadFile(byte[] data) throws UnsupportedEncodingException {
         //text/plain 固定发送 WebKitFormBoundaryvZnw9hoqtB3dl2ak ? 浏览器chrome,firefox一样
         //对于jpg文件，xffxd8 --- xffxd9
-        int j = msg.indexOf(HTTPStatus.FILEMARK), k,l,start,end,sideLen,len;
+        String msg = new String(data, request.getCharset());
+//        logger.info(String.format("收到来自客户端的数据: %s", msg));
+        int j = msg.indexOf(HTTPStatus.FILEMARK), k, l, start, end, sideLen, len;
         String head = msg;
         if (j >= 0) {
             request.setMultipart(true);
@@ -97,7 +98,7 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
                 head = tmp + msg.substring(0, j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER);
             }
             boolean isFile = false;
-            String part,varName,fileName,contentType,sideWindow,varValue;
+            String part, varName, fileName, contentType, sideWindow, varValue;
             String fileType[];
             byte[] fileData;
             List<Object> objects;
@@ -132,7 +133,8 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
                                     start = k + 1 + HTTPStatus.LINE_SPLITER;
                                     if (fileType[1].trim().equals(HTTPStatus.TEXT_PLAIN)) {
                                         end = end - HTTPStatus.LINE_SPLITER + 1;
-                                        end = offset + part.substring(0, end).getBytes(request.getCharset()).length + part.substring(end, end + 1).getBytes(request.getCharset()).length;
+                                        end = offset + part.substring(0, end).getBytes(request.getCharset()).length + part.substring(end, end + 1).
+                                                getBytes(request.getCharset()).length;
                                         start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
                                     } else {
                                         start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
@@ -182,12 +184,16 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
     }
 
     @Override
-    public void failed(Throwable exc, Attachment attachment) {
-        System.out.println("连接断开");
+    public void failed(Throwable t, Attachment att) {
+        try {
+            logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
+        } catch (IOException e) {
+            logger.error("Not Get Client Remote IP:" + LOG.LOG_PRE, t);
+        }
     }
 
     @Override
-    protected void pushClient(String content, String staticFile) {
+    protected void pushClient(String content, java.io.File staticFile) {
         if (content != null) {
             att.getBuffer().clear();
             att.getBuffer().put(content.getBytes(Charset.forName(response.getCharset())));
@@ -198,9 +204,9 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
             FileInputStream in = null;
             if (staticFile != null) {
                 try {
-                    in = new FileInputStream(new java.io.File(server.getRootPath() + HTTPStatus.SLASH + staticFile));
+                    in = new FileInputStream(staticFile);
                     FileChannel fin = in.getChannel();
-                    ByteBuffer by = ByteBuffer.allocateDirect(2048);
+                    ByteBuffer by = ByteBuffer.allocateDirect(server.getFileBuffer());
                     while (fin.read(by) != -1) {
                         by.flip();
                         try {
@@ -211,13 +217,14 @@ public final class AIOServerlHandler extends Dispatcher implements CompletionHan
                         by.clear();
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, this.getClass().getName(), staticFile.getAbsolutePath(),
+                            LOG.EXCEPTION_DESC, e);
                 }
                 if (in != null) {
                     try {
                         in.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
                     }
                 }
                 att.setReadMode(false);
