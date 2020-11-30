@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  */
 public final class JspParser {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(JspParser.class);
 
     //生成JSP servlet类名所需hash编码
     private String hashEncode;
@@ -137,14 +137,14 @@ public final class JspParser {
                     matcher.appendReplacement(sb, String.valueOf(HTTPStatus.FILENAMETAIL) + JSP.JAVA_ADD + tmp +
                             JSP.JAVA_ADD + HTTPStatus.FILENAMETAIL);
                 } else {
-                    logger.warn(LOG.LOG_PRE + "parse for " + LOG.LOG_PRE + "that can't parse this format string", this.getClass().getName(), el);
+                    logger.warn(LOG.LOG_PRE + "parse for " + LOG.LOG_PRE + "that can't parse this format string", this, el);
                 }
             }
             matcher.appendTail(sb);
             servletGenerator(ct, sbuf.toString(), sb.toString());
             return new Tuple<>(className, jspFile.substring(urlIndex), className);
         } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
         }
         return null;
     }

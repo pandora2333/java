@@ -3,7 +3,9 @@ package pers.pandora.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
+import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.servlet.Servlet;
+import pers.pandora.utils.CollectionUtil;
 import pers.pandora.vo.Pair;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.interceptor.Interceptor;
@@ -18,7 +20,7 @@ import java.util.Map;
 
 public final class Response {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(Response.class);
 
     private String servlet;
 
@@ -160,13 +162,11 @@ public final class Response {
                 HTTPStatus.CHARSET + HTTPStatus.COOKIE_KV_SPLITE + charset).append(HTTPStatus.CRLF);
         //正文长度，字节长度
         headInfo.append(HTTPStatus.CONTENTLENGTH + HTTPStatus.COLON + HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
-        for (Map.Entry<String, String> head : heads.entrySet()) {
-            headInfo.append(head.getKey() + HTTPStatus.COLON + head.getValue()).append(HTTPStatus.CRLF);
-        }
+        heads.forEach((k,v) -> headInfo.append(k + HTTPStatus.COLON + v).append(HTTPStatus.CRLF));
         //构建Cookie头
-        if (cookies != null && cookies.size() > 0) {
+        if (CollectionUtil.isNotEmptry(cookies)) {
             StringBuilder sb = new StringBuilder();
-            for (Cookie cookie : cookies) {
+            cookies.stream().forEach(cookie -> {
                 if (cookie != null && cookie.isNeedUpdate()) {
                     sb.append(HTTPStatus.SET_COOKIE);
                     sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.COOKIE_KV_SPLITE).
@@ -198,7 +198,7 @@ public final class Response {
                     sb.delete(0, sb.length());
                     cookie.setNeedUpdate(false);
                 }
-            }
+            });
         }
         headInfo.append(HTTPStatus.CRLF);//分隔符
         return headInfo;
@@ -247,7 +247,7 @@ public final class Response {
     }
 
     private boolean handleAfter(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().afterMethod(request, this)) {
                 return false;
             }
@@ -256,7 +256,7 @@ public final class Response {
     }
 
     private boolean handlePre(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().preMethod(request, this)) {
                 return false;
             }
@@ -271,7 +271,7 @@ public final class Response {
             len = content.toString().getBytes(charset).length;
         } catch (UnsupportedEncodingException e) {
             logger.error(LOG.LOG_PRE + "handle_500_SERVER_ERROR current charset " + LOG.LOG_PRE + LOG.LOG_POS,
-                    this.getClass().getName(), charset, content, LOG.EXCEPTION_DESC, e);
+                    this, charset, content, LOG.EXCEPTION_DESC, e);
         }
         code = 500;
     }

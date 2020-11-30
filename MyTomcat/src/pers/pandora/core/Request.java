@@ -17,7 +17,7 @@ import pers.pandora.utils.StringUtils;
 
 public final class Request {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(Request.class);
 
     private String method;
 
@@ -45,6 +45,15 @@ public final class Request {
 
     private Session session;
 
+    public boolean addInvalidSession(String key) {
+        if (StringUtils.isNotEmpty(key)) {
+            Session session = dispatcher.server.getSessionMap().get(key);
+            if (session != null) {
+                return dispatcher.server.addInvalidSessionMap(key, session);
+            }
+        }
+        return false;
+    }
 
     public Map<String, String> getFilePaths() {
         return filePaths;
@@ -162,7 +171,7 @@ public final class Request {
 
     public void saveFileData(String fileVarName, String fileName) {
         if (!StringUtils.isNotEmpty(fileVarName) || !uploadFiles.containsKey(fileVarName)) {
-            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", this.getClass().getName(), LOG.ERROR_DESC);
+            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", this, LOG.ERROR_DESC);
             return;
         }
         String filePath = filePaths.get(fileVarName);
@@ -182,7 +191,7 @@ public final class Request {
             try {
                 Files.write(Paths.get(filePath + fileName), file.getV());
             } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS, this.getClass().getName(), fileName, LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS, this, fileName, LOG.EXCEPTION_DESC, e);
             }
         }
     }
@@ -258,7 +267,7 @@ public final class Request {
         cookie.setNeedUpdate(true);
         //将sessionID的Cookie设置在根域名下
         cookie.setPath(String.valueOf(HTTPStatus.SLASH));
-        dispatcher.server.getSessionMap().put(session.getSessionID(), session);
+        dispatcher.server.addSessionMap(session.getSessionID(), session);
         cookies.add(cookie);
     }
 
@@ -279,7 +288,7 @@ public final class Request {
                             dispatcher.server.getSessionMap().remove(ss[1]);
                             session = new Session();
                             ss[1] = session.getSessionID();
-                            dispatcher.server.getSessionMap().put(ss[1], session);
+                            dispatcher.server.addSessionMap(ss[1], session);
                             cookie.setNeedUpdate(true);
                             //将sessionID的Cookie设置在根域名下
                             cookie.setPath(String.valueOf(HTTPStatus.SLASH));

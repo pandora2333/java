@@ -60,6 +60,8 @@ public class HTTPStatus {
 
     public static final char PARAMETER_SPLITER = '&';
 
+    public static final char TRANSVERSE = '_';
+
     public static final String DEFAULTENCODING = "utf-8";
 
     public static final String HTML_MARK = ".html";

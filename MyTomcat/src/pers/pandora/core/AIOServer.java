@@ -21,19 +21,25 @@ public final class AIOServer extends Server {
     private AsynchronousServerSocketChannel asyncServerSocketChannel;
 
     public static void main(String[] args) {
-        new AIOServer().start();
+        //using simple way
+        //init mvc controller
+        RequestMappingHandler.init();
+        AIOServer server = new AIOServer();
+        //set session serializer and deserializer
+        server.setServerName("pandora_test_1");
+        server.setSerialSessionSupport(new SerialSessionSupportSimpler());
+        SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
+        //start server
+        server.start();
     }
 
     @Override
     public void start() {
-        int minCore = 2 * Runtime.getRuntime().availableProcessors();
-        start(8080, getCapcity(), minCore, minCore + 5, 50, TimeUnit.MILLISECONDS,
-                5, TimeUnit.SECONDS, 1000);
+        start(8080, getCapcity(), 1000);
     }
 
     @Override
-    public void start(int port, int capacity, int minCore, int maxCore, long keepAlive, TimeUnit timeUnit,
-                      long timeOut, TimeUnit timeOutUnit, long expeltTime) {
+    public void start(int port, int capacity, long expeltTime) {
         setPort(port);
         setRunning(true);
         setCapcity(capacity);
@@ -48,15 +54,14 @@ public final class AIOServer extends Server {
             long start = System.currentTimeMillis();
             //初始化web.xml
             setContext(new XMLFactory().parse(getWebConfigPath()));
-            //初始化mvc模式下controller
-            RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
-            requestMappingHandler.init(minCore, maxCore, keepAlive, timeUnit, timeOut, timeOutUnit);
-            setRequestMappingHandler(requestMappingHandler);
             att.setServer(this);
+            //load SESSION.ser if set before the start method is running
+            if (getSerialSessionSupport() != null) {
+                setSessionMap(getSerialSessionSupport().deserialSession(getServerName()));
+            }
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
-                            "byte" + LOG.VERTICAL + "minCore:" + LOG.LOG_PRE + LOG.VERTICAL + "maxCore:" + LOG.LOG_PRE + LOG.VERTICAL + "keepAlive:"
-                            + LOG.LOG_PRE + LOG.VERTICAL + "timeOut:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "]",
-                    this.getClass().getName(), port, capacity, minCore, maxCore, keepAlive, timeOut, expeltTime);
+                            "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms]",
+                    this, port, capacity, expeltTime);
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -65,7 +70,7 @@ public final class AIOServer extends Server {
                     try {
                         clientAddr = client.getRemoteAddress();
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
                     }
 
                     logger.info("A new Connection:" + LOG.LOG_PRE, clientAddr);
@@ -87,10 +92,10 @@ public final class AIOServer extends Server {
                 }
             });
             execExpelThread(expeltTime);
-            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", this.getClass().getName(), (System.currentTimeMillis() - start));
+            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", this, (System.currentTimeMillis() - start));
             Thread.currentThread().join();
-        } catch (IOException | InterruptedException e) {
-            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+        } catch (IOException | InterruptedException | ClassNotFoundException e) {
+            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
         }
         setRunning(false);
     }

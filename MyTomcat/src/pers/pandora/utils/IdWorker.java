@@ -11,7 +11,7 @@ import java.util.*;
 
 public class IdWorker {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(IdWorker.class);
     //snowflake 改版
     protected long epoch = 1288834974657L;
 
@@ -35,7 +35,7 @@ public class IdWorker {
 
     public IdWorker() {
         //初始随机数
-        this.workerId = checkWorkerId(System.identityHashCode(this) ^ System.currentTimeMillis());
+        this.workerId = checkWorkerId((System.identityHashCode(this) ^ System.currentTimeMillis()) & maxWorkerId);
         logger.debug("worker starting. timestamp left shift " + LOG.LOG_PRE + ", worker id " + LOG.LOG_PRE, timestampLeftShift, workerId);
     }
 

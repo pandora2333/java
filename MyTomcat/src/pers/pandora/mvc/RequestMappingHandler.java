@@ -32,14 +32,14 @@ import java.util.concurrent.*;
  */
 public final class RequestMappingHandler {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(RequestMappingHandler.class);
     //url - method
-    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);
+    private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
-    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
+    private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
 
-    private Set<Pair<Integer, Interceptor>> interceptors;
-
+    private static Set<Pair<Integer, Interceptor>> interceptors;
+    //考虑到可能JSP生产大量class文件，这里优化从src源目录获取
     public static final String ROOTPATH = "src/";
 
     public static final String METHOD_SPLITER = "|";
@@ -53,12 +53,24 @@ public final class RequestMappingHandler {
     public static final char PATH_SPLITER_PATTERN = '\\';
 
     public static final char JAVA_PACKAGE_SPLITER = '.';
+    //类加载相关参数
+    private static ThreadPoolExecutor executor;
 
-    private ThreadPoolExecutor executor;
-
-    private List<Future<Boolean>> result;
+    private static List<Future<Boolean>> result;
 
     public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
+    //线程池最小核心数
+    public static int minCore = Runtime.getRuntime().availableProcessors();
+    //线程池最大核心数
+    public static int maxCore = minCore + 5;
+    //线程空闲时间
+    public static long keepAlive = 50;
+    //线程空闲时间单位
+    public static TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+    //超时等待类加载时间
+    public static long timeout = 5;
+    //超时等待类加载时间单位
+    public static TimeUnit timeOutUnit = TimeUnit.SECONDS;
 //    static {
 // 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
 // 加载任务被分配到另一个线程，因此初始化类信息加载，两个线程互相等待对方释放类加载锁，造成死锁等待
@@ -66,7 +78,7 @@ public final class RequestMappingHandler {
 //         init();
 //    }
 
-    public Set<Pair<Integer, Interceptor>> getInterceptors() {
+    public static Set<Pair<Integer, Interceptor>> getInterceptors() {
         return interceptors;
     }
 
@@ -78,7 +90,7 @@ public final class RequestMappingHandler {
      * @return
      * @throws Exception
      */
-    public void parseUrl(ModelAndView modelAndView) {
+    public static void parseUrl(ModelAndView modelAndView) {
         Map<String, Object> valueObject = new HashMap<>();
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
         if (method == null) {
@@ -127,7 +139,7 @@ public final class RequestMappingHandler {
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
             } else {
                 logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
-                                LOG.LOG_PRE + LOG.LOG_PRE, this.getClass().getName(), modelAndView, controller.getClass().getName(),
+                                LOG.LOG_PRE + LOG.LOG_PRE, MVC_CLASS, modelAndView, controller.getClass().getName(),
                         method.getName(), LOG.ERROR_DESC);
                 modelAndView.setPage(null);
                 return;
@@ -146,7 +158,7 @@ public final class RequestMappingHandler {
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
-                            LOG.LOG_PRE + LOG.LOG_POS, this.getClass().getName(), modelAndView, controller.getClass().getName(),
+                            LOG.LOG_PRE + LOG.LOG_POS, MVC_CLASS, modelAndView, controller.getClass().getName(),
                     method.getName(), LOG.ERROR_DESC, e);
             modelAndView.setPage(null);
         }
@@ -155,7 +167,7 @@ public final class RequestMappingHandler {
 
     //利用ASM操作class字节码文件获取参数名
     @Deprecated
-    public void handleMethodParamNames(Class<?> t) {
+    public static void handleMethodParamNames(Class<?> t) {
         Map<String, Integer> modifers = new HashMap<>();
         Map<String, String[]> paramNames = new HashMap<>();
         for (Method method : t.getDeclaredMethods()) {
@@ -202,11 +214,11 @@ public final class RequestMappingHandler {
             }, 0);
         } catch (IOException e) {
             logger.error(LOG.LOG_PRE + "handleMethodParamNames for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                    this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
+                    MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
         }
     }
 
-    private void scanFile(String path) {
+    private static void scanFile(String path) {
         File files = new File(path);
         if (files != null) {
             if (files.isDirectory()) {
@@ -226,7 +238,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private <T> void scanResolers(Class<T> t) {
+    private static <T> void scanResolers(Class<T> t) {
         Controller controller = t.getAnnotation(Controller.class);
         if (controller != null) {
             String parentPath = controller.value();
@@ -242,7 +254,7 @@ public final class RequestMappingHandler {
                         controllers.put(method, t.newInstance());
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                                this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
+                                MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
                     }
                 }
             }
@@ -254,7 +266,7 @@ public final class RequestMappingHandler {
                         interceptors.add(new Pair<>(t.getAnnotation(Order.class).value(), (Interceptor) t.newInstance()));
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                                this.getClass().getName(), t.getName(), LOG.EXCEPTION_DESC, e);
+                                MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
                     }
                     break;
                 }
@@ -263,7 +275,7 @@ public final class RequestMappingHandler {
     }
 
 
-    class IOTask implements Callable<Boolean> {
+    static class IOTask implements Callable<Boolean> {
         private String className;
 
         public IOTask(String className) {
@@ -277,14 +289,14 @@ public final class RequestMappingHandler {
                         true, Thread.currentThread().getContextClassLoader()));
             } catch (ClassNotFoundException e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                        this.getClass().getName(), className, LOG.EXCEPTION_DESC, e);
+                        this, className, LOG.EXCEPTION_DESC, e);
                 return false;
             }
             return true;
         }
     }
 
-    public void init(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
+    public static void init() {
         result = new ArrayList<>();
         interceptors = Collections.synchronizedSortedSet(new TreeSet<>((p1, p2) -> {
             int t = p1.getK() - p2.getK();
@@ -297,7 +309,7 @@ public final class RequestMappingHandler {
                 future.get(timeout, timeOutUnit);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 logger.error(LOG.LOG_PRE + "init" + LOG.LOG_POS,
-                        this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                        MVC_CLASS, LOG.EXCEPTION_DESC, e);
             }
         }
         executor.shutdown();

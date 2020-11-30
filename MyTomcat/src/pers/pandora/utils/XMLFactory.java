@@ -17,7 +17,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class XMLFactory {
 
-    private Logger logger = LogManager.getLogger(this.getClass());
+    private static Logger logger = LogManager.getLogger(XMLFactory.class);
 
     public static final String SERVLET = "servlet";
 
@@ -44,7 +44,7 @@ public class XMLFactory {
         try {
             sax = SAXParserFactory.newInstance().newSAXParser();
         } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "init()" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "init()" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
         }
     }
 
@@ -54,7 +54,7 @@ public class XMLFactory {
             sax.parse(new File(file), new XMLHandler());
             return urlMapping;
         } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
         }
         return null;
     }

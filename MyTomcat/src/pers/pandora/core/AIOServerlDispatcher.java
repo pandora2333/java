@@ -39,23 +39,23 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             try {
                 msg = handleUploadFile(bytes);
             } catch (UnsupportedEncodingException e) {
-                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
             }
             try {
                 dispatcher(msg);
             } catch (Exception e) {
-                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
             }
             att.setReadMode(false);
             try {
                 //资源回收处理，关闭连接前 (比如自主关闭或者浏览器突然关闭窗口）
                 handleRequestCompleted();
-                logger.info(LOG.LOG_PRE + "is closed!", this.getClass().getName(), att.getClient().getRemoteAddress());
+                logger.info(LOG.LOG_PRE + "is closed!", this, att.getClient().getRemoteAddress());
                 if (att.getClient().isOpen()) {
                     att.getClient().close();
                 }
             } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
             }
         } else {
             try {
@@ -63,7 +63,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     att.getClient().close();
                 }
             } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
             }
         }
     }
@@ -217,14 +217,14 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         by.clear();
                     }
                 } catch (IOException e) {
-                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, this.getClass().getName(), staticFile.getAbsolutePath(),
+                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, this, staticFile.getAbsolutePath(),
                             LOG.EXCEPTION_DESC, e);
                 }
                 if (in != null) {
                     try {
                         in.close();
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
                     }
                 }
                 att.setReadMode(false);

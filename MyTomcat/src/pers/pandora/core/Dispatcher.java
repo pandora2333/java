@@ -13,7 +13,7 @@ import pers.pandora.utils.StringUtils;
 //servlet分发器
 abstract class Dispatcher {
 
-    protected Logger logger = LogManager.getLogger(this.getClass());
+    protected static Logger logger = LogManager.getLogger(Dispatcher.class);
 
     protected Server server;
 
@@ -44,7 +44,7 @@ abstract class Dispatcher {
                     ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
                     mv.setRequest(request);
                     mv.setResponse(response);
-                    server.getRequestMappingHandler().parseUrl(mv);
+                    RequestMappingHandler.parseUrl(mv);
                     if (StringUtils.isNotEmpty(mv.getPage())) {
                         if (mv.isJson()) {
                             pushClient(response.handle(HTTPStatus.GET, request), null);
@@ -81,7 +81,7 @@ abstract class Dispatcher {
     }
 
     protected boolean handleRequestCompleted() {
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().completeRequest(request, response)) {
                 logger.warn(LOG.LOG_PRE + "exec completeRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
                 return false;
@@ -91,7 +91,7 @@ abstract class Dispatcher {
     }
 
     protected boolean initRequest(byte[] data) {
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor :  RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
                 return false;
