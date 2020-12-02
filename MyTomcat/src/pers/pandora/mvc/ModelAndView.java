@@ -4,8 +4,8 @@ import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 
 /**
- * 封装参数和模型
- * 页面间，请求重定向传参
+ * Package parameters and models
+ * Request redirection between pages
  */
 public final class ModelAndView {
 

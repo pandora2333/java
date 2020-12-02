@@ -23,48 +23,33 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     @Override
     public void completed(Integer result, Attachment att) {
+        server = att.getServer();
         if (att.isReadMode()) {
-            server = att.getServer();
             this.att = att;
             ByteBuffer buffer = att.getBuffer();
             buffer.flip();
-            byte bytes[] = new byte[buffer.limit()];
-            buffer.get(bytes);
-            //HTTP资源预处理
-            initRequest(bytes);
+            //pre handle HTTP resource
+            byte[] data = buffer.array();
+            initRequest(data);
             String msg = null;
-            //firefox对于较大文件会分片发送，即使buffer没满，带宽足够，而chrome会尽可能的一次发送所有数据
-            //对于conten-length的长度所指内容是对于文件分隔符之间的所有字段及文件内容值以及其它表单字段所有值以及两者间换行分隔符
-            //某些时候浏览器不发送文件只发送文件分隔符，推测与服务器环境有关（带宽），对于隐私模式下的chrome，上传文件不发送文件数据,在头部信息中有文件分隔符,而firefox却可以发送
+            //conten-length = all body data bytes after blank line(\n)
             try {
-                msg = handleUploadFile(bytes);
+                msg = handleUploadFile(data, buffer.position(), buffer.limit());
             } catch (UnsupportedEncodingException e) {
-                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
             }
             try {
                 dispatcher(msg);
             } catch (Exception e) {
-                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
             }
-            att.setReadMode(false);
-            try {
-                //资源回收处理，关闭连接前 (比如自主关闭或者浏览器突然关闭窗口）
-                handleRequestCompleted();
-                logger.info(LOG.LOG_PRE + "is closed!", this, att.getClient().getRemoteAddress());
-                if (att.getClient().isOpen()) {
-                    att.getClient().close();
-                }
-            } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
-            }
+            //after HTTP request completed, and before close the tcp connection
+            handleRequestCompleted();
+            //short connection,one request need one tcp connection
+            server.close(att, this);
         } else {
-            try {
-                if (att.getClient().isOpen()) {
-                    att.getClient().close();
-                }
-            } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "close client" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
-            }
+            //short connection,one request need one tcp connection
+            server.close(att, this);
         }
     }
 
@@ -76,11 +61,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     //----WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau
     //------WebKitFormBoundarysB2AvyXaNzrZAIau--
-    private String handleUploadFile(byte[] data) throws UnsupportedEncodingException {
-        //text/plain 固定发送 WebKitFormBoundaryvZnw9hoqtB3dl2ak ? 浏览器chrome,firefox一样
-        //对于jpg文件，xffxd8 --- xffxd9
-        String msg = new String(data, request.getCharset());
-//        logger.info(String.format("收到来自客户端的数据: %s", msg));
+    private String handleUploadFile(byte[] data, int i, int limit) throws UnsupportedEncodingException {
+        //text/plain send the constant string WebKitFormBoundaryvZnw9hoqtB3dl2ak as the separator for chrome,firefox
+        //for jpg file ,it has the highlight mark: xffxd8 --- xffxd9
+        String msg = new String(data, i, limit, request.getCharset());
+//        logger.info("receive datas from the client:"+LOG.LOG_PRE, msg);
         int j = msg.indexOf(HTTPStatus.FILEMARK), k, l, start, end, sideLen, len;
         String head = msg;
         if (j >= 0) {
@@ -88,7 +73,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             j += HTTPStatus.FILEMARK.length();
             int jj = j;
             for (; j < msg.length() && msg.charAt(j) != HTTPStatus.CRLF; j++) ;
-            //拿到文件分隔符
+            //get file separator
             String fileDesc = msg.substring(jj, j - HTTPStatus.LINE_SPLITER + 1);
             String tmp = msg.substring(0, j);
             int offset = tmp.getBytes(request.getCharset()).length;
@@ -117,14 +102,14 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         jj += HTTPStatus.MUPART_NAME.length() + 1;
                         for (k = jj; k < part.length() && part.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
                         varName = part.substring(jj, k);
-                        if ((jj = part.indexOf(HTTPStatus.FILENAME, jj)) > 0) {//二进制文件
+                        if ((jj = part.indexOf(HTTPStatus.FILENAME, jj)) > 0) {//binary data
                             jj += HTTPStatus.FILENAME.length() + 1;
                             for (k = jj; k < part.length() && part.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
                             fileName = part.substring(jj, k);
                             k += HTTPStatus.LINE_SPLITER;
                             for (; k < part.length() && part.charAt(k) != HTTPStatus.CRLF; k++) ;
                             for (l = ++k; k < part.length() && part.charAt(k) != HTTPStatus.CRLF; k++) ;
-                            //得到文件类型
+                            //get file type
                             contentType = part.substring(l, k - HTTPStatus.LINE_SPLITER + 1);
                             if (StringUtils.isNotEmpty(contentType)) {
                                 fileType = contentType.split(HTTPStatus.HEAD_INFO_SPLITER);
@@ -140,26 +125,26 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                                         start = offset + part.substring(0, start).getBytes(request.getCharset()).length;
                                         sideWindow = HTTPStatus.CRLF + HTTPStatus.MUPART_DESC_LINE + fileDesc;
                                         sideLen = sideWindow.getBytes(request.getCharset()).length;
-                                        for (end = start; end < data.length; end++) {
+                                        for (end = start; end < limit; end++) {
                                             if (new String(data, end, sideLen, request.getCharset()).equals(sideWindow)) {
                                                 offset = end + sideLen + HTTPStatus.LINE_SPLITER;
-                                                end = end - HTTPStatus.LINE_SPLITER + 1;//在windows中String,即使是一个字符\n也会被解析成\r\n
+                                                end = end - HTTPStatus.LINE_SPLITER + 1;//in windows,\n should be the \r\n
                                                 isFile = true;
                                                 break;
                                             }
                                         }
                                     }
                                     len = end - start;
-                                    if (len >= 0 && end <= data.length) {
+                                    if (len >= 0 && end <= limit) {
                                         //copy file data
                                         fileData = new byte[len];
                                         System.arraycopy(data, start, fileData, 0, len);
                                         Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType[1].trim(), fileData);
-                                        request.getUploadFiles().put(varName, file);//文件varname名字相同的只保留一份
+                                        request.getUploadFiles().put(varName, file);//the same varname just save one file
                                     }
                                 }
                             }
-                        } else {//二进制表单变量
+                        } else {//binary form data for variables
                             k += HTTPStatus.LINE_SPLITER;
                             varValue = part.substring(k);
                             objects = request.getParams().get(varName);
@@ -186,9 +171,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     @Override
     public void failed(Throwable t, Attachment att) {
         try {
-            logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
+            logger.error(LOG.LOG_POS + "aio handler" + LOG.LOG_POS,
+                    server.getServerName(), att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
+            server.close(att, this);
         } catch (IOException e) {
-            logger.error("Not Get Client Remote IP:" + LOG.LOG_PRE, t);
+            logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, server.getServerName(), t);
         }
     }
 
@@ -206,25 +193,28 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 try {
                     in = new FileInputStream(staticFile);
                     FileChannel fin = in.getChannel();
-                    ByteBuffer by = ByteBuffer.allocateDirect(server.getFileBuffer());
+                    ByteBuffer by = ByteBuffer.allocateDirect(server.getResponseBuffer());
                     while (fin.read(by) != -1) {
                         by.flip();
                         try {
                             att.getClient().write(by).get();
                         } catch (InterruptedException | ExecutionException e) {
-                            e.printStackTrace();
+                            logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS,
+                                    server.getServerName(), staticFile.getAbsolutePath(),
+                                    LOG.EXCEPTION_DESC, e);
                         }
-                        by.clear();
+                        by.compact();
                     }
                 } catch (IOException e) {
-                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, this, staticFile.getAbsolutePath(),
+                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, server.getServerName(), staticFile.getAbsolutePath(),
                             LOG.EXCEPTION_DESC, e);
                 }
                 if (in != null) {
                     try {
                         in.close();
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
+                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS,
+                                server.getServerName(), LOG.EXCEPTION_DESC, e);
                     }
                 }
                 att.setReadMode(false);

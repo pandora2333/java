@@ -48,7 +48,7 @@ public class XMLFactory {
         }
     }
 
-    //节点解析
+    //Node resolution
     public Map<String, String> parse(String file) {
         try {
             sax.parse(new File(file), new XMLHandler());

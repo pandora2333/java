@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 public class CodeUtils {
 
     private static Logger logger = LogManager.getLogger(CodeUtils.class);
-    //默认md5
+    //default md5
     public static final String DEFAULTENCODE = "md5";
 
     private static final char ZERO = '0';

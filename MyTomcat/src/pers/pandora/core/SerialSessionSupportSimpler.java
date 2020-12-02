@@ -3,6 +3,7 @@ package pers.pandora.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.HTTPStatus;
+import pers.pandora.constant.LOG;
 import pers.pandora.utils.CollectionUtil;
 
 import java.io.*;
@@ -39,12 +40,14 @@ public class SerialSessionSupportSimpler extends SerialSessionSupport {
     public Map<String, Session> deserialSession(String serverName) throws IOException, ClassNotFoundException {
         File file = new File(SESSIONPATH + serverName + HTTPStatus.TRANSVERSE + SESSIONFILE_POS);
         if (!file.exists()) {
-            logger.warn("Not Found Session File");
+            logger.warn(LOG.LOG_PRE + "Not Found Session File", serverName);
             return new HashMap<>();
         }
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
         Map<String, Session> map = (Map<String, Session>) ois.readObject();
         ois.close();
+        //init session and delete source file
+        file.delete();
         return map;
     }
 

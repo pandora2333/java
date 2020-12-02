@@ -4,30 +4,26 @@ import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Session implements Serializable {
 
     private static final long serialVersionUID = 3604972003323896788L;
 
-    //全局session唯一ID
+    //global session only ID
     private String sessionID;
-    //session会话过期时间
-    private AtomicInteger max_age = new AtomicInteger(0);//默认Session级别过期
-    //Session Id生成器
+    //expire time after max_age,default time is session level
+    private Instant max_age = null;
+    //Session-Id Generator
     private static final IdWorker idWorker = new IdWorker();
 
-    private AtomicBoolean isValid = new AtomicBoolean(false);
+    private static final String DEFAULTFORMAT = "yyyy-MM-dd HH:mm:ss";
 
     public Session() {
         sessionID = idWorker.nextSessionID();
-    }
-
-    public boolean getIsValid() {
-        return isValid.get();
     }
 
     private Map<String, Object> attrbuites = new ConcurrentHashMap<>();
@@ -42,22 +38,30 @@ public final class Session implements Serializable {
         }
     }
 
-    //如果需要让Session失效，请设置过期时间后调用Request#addInvalidSession，不然Session不会失效
+    //if session should invalid,please exec the method and exec Request#addInvalidSession as the same time
+    //it set max_age > 0,it will be invalid
     public void setMax_age(int max_age) {
-        this.max_age.set(max_age);
         if (max_age > 0) {
-            isValid.set(true);
+            this.max_age = Instant.now();
+            this.max_age = this.max_age.plusSeconds(max_age);
         } else {
-            isValid.set(false);
+            this.max_age = null;
         }
     }
 
-    public int getMax_age() {
-        return max_age.get();
+    public String getMax_ageByFormatter(String format) {
+        if (max_age == null) {
+            return null;
+        }
+        if(!StringUtils.isNotEmpty(format)){
+            format = DEFAULTFORMAT;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        return formatter.format(max_age);
     }
 
-    public int invalidTime() {
-        return max_age.decrementAndGet();
+    public Instant getMax_age() {
+        return max_age;
     }
 
     public String getSessionID() {
@@ -70,7 +74,6 @@ public final class Session implements Serializable {
 
     public void clearCache() {
         attrbuites.clear();
-        max_age.set(0);
-        isValid.set(false);
+        max_age = null;
     }
 }

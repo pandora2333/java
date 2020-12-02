@@ -19,7 +19,7 @@ public class TestController {
     }
 
     @RequestMapping("/loginUser2.do")
-    public String login2(@RequestParam("username") String username, @RequestParam("password") String pwd) {
+    public String login2(@RequestParam(value = "username", defaultValue = "pandora") String username, @RequestParam("password") String pwd) {
         System.out.println("user登录:" + username + ":" + pwd);
         return "/login";
     }

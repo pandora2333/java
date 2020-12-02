@@ -4,7 +4,8 @@ import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 
 public interface Servlet {
-    public  void service();//提供一些初始化操作
+    //It provides some initialization operations
+    public  void service();
     public  String  doGet(Request request, Response response);
     public String doPost(Request request, Response response);
 }

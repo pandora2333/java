@@ -6,7 +6,7 @@ public class HTTPStatus {
 
     public static final String MUPART_NAME = "name=";
 
-    public static final String MUPART_DESC_LINE = "--";//文件开始
+    public static final String MUPART_DESC_LINE = "--";//file start mark
 
     public static final int LINE_SPLITER = System.lineSeparator().length();//windows 2 byte:\r\n; linux 1 byte: \n
 
@@ -24,13 +24,15 @@ public class HTTPStatus {
 
     public static final String POST = "POST";
 
+    public static final String OPTIONS = "OPTIONS";
+
     public static final char BLANK = ' ';
 
     public static final String HEAD_INFO_SPLITER = "\\:";
 
     public static final String COOKIE_SPLITER = "; ";
 
-    public static final String COOKIE_KV_SPLITE = "=";
+    public static final String PARAM_KV_SPLITER = "=";
 
     public static final String HTTP1_1 = "HTTP/1.1";
 

@@ -16,13 +16,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 解析jsp页面
+ * Jsp Parser
  */
 public final class JspParser {
 
     private static Logger logger = LogManager.getLogger(JspParser.class);
 
-    //生成JSP servlet类名所需hash编码
+    //Hash encoding needed to generate jsp servlet class name
     private String hashEncode;
 
     private static final String JSP_PACKAGE = "jsp";
@@ -52,25 +52,25 @@ public final class JspParser {
         this.hashEncode = hashEncode;
     }
 
-    //懒加载，不访问就不生成
+    //It's lazy loading, no generation without access
     public Tuple<String, String, String> parse(String jspFile) {
         File file = new File(jspFile);
         if (!file.exists()) {
             return null;
         }
-        Reader inFifle = null;
+        Reader inFifle;
         try {
             inFifle = new FileReader(file);
             BufferedReader inputStream = new BufferedReader(inFifle);
             StringBuilder buf = new StringBuilder();
-            String temp = null;
+            String temp;
             while ((temp = inputStream.readLine()) != null) {
                 buf.append(temp.trim());
             }
             inputStream.close();
             inFifle.close();
             String jsp = buf.toString();
-            //重复类不再次生成
+            //Using file hash, duplicate classes are not generated again
             String query = CodeUtils.hashEncode(jsp, SALT, null);
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
@@ -91,7 +91,7 @@ public final class JspParser {
             CtClass ct = pool.makeClass(className);
             ct.setInterfaces(new CtClass[]{pool.get(SERVLET_CLASS)});
             /**
-             * 第一步对<% java %>代码解析
+             * The first step is to parse the code of <% Java% >
              */
             Pattern pattern = Pattern.compile(JSP.JSP_CODE_PATTERN);
             StringBuffer sbuf = new StringBuffer();
@@ -112,18 +112,20 @@ public final class JspParser {
                 jspSrc.append(specToken);
             }
             /**
-             * 第二步对#{}表达式解析
+             * The second step is to analyze the #{} expression
              */
             pattern = Pattern.compile(JSP.JSP_VAR_PATTERN);
             matcher = pattern.matcher(jspSrc);
             sb.delete(0, sb.length());
-            Set<String> set = new HashSet<>();//去重class field字段
+            //De duplicate class field
+            Set<String> set = new HashSet<>();
             String el, tmp, field;
             String[] params;
             while (matcher.find()) {
                 el = jspSrc.toString().substring(matcher.start() + 2, matcher.end() - 1);//#{user.submit}
                 params = el.split(JSP.JSP_VAR_SPLITER_PATTERN);
-                if (params.length <= 2) {//不支持级联赋值或者变量名错误
+                //Cascade assignment or variable name error is not supported
+                if (params.length <= 2) {
                     tmp = params[0];
                     if (params.length == 2) {
                         tmp += CLASS_NAME_SPLITER + params[1];
@@ -133,7 +135,8 @@ public final class JspParser {
                         field = JSP.JSP_JAVA_FIELD_PRE + tmp + JSP.JAVA_SPLITER;
                         ct.addField(CtField.make(field, ct));
                     }
-                    //HTTPStatus.FILENAMETAIL + JSP.JAVA_ADD = 77 ? 表达式类型从左向右推断造成字符ascii相加
+                    //HTTPStatus.FILENAMETAIL + JSP.JAVA_ADD = 77 ?
+                    //The expression type is inferred from left to right, resulting in the addition of the characters ASCII
                     matcher.appendReplacement(sb, String.valueOf(HTTPStatus.FILENAMETAIL) + JSP.JAVA_ADD + tmp +
                             JSP.JAVA_ADD + HTTPStatus.FILENAMETAIL);
                 } else {
@@ -170,25 +173,25 @@ public final class JspParser {
     }
 
     /**
-     * 动态编译Servlet类,jdk6引入
+     * Dynamic compilation of servlet class, introduced by JDK6
      */
     @Deprecated
     private boolean dynamicClass(String className, String javaSrc) {
-        //当前编译器
+        //Current compiler
         JavaCompiler cmp = ToolProvider.getSystemJavaCompiler();
-        //Java标准文件管理器
+        //Java standard file manager
         StandardJavaFileManager fm = cmp.getStandardFileManager(null, null, null);
-        //Java文件对象
+        //Java file object
         JavaFileObject jfo = new StringJavaObject(className, javaSrc);
-        //编译参数，类似于javac <options>中的options
+        //Compile parameters, similar to options in javac <Options>
         List<String> optionsList = new ArrayList<String>();
-        //编译文件的存放地方，注意：此处是为Eclipse工具特设的
+        //Note: This is a special place for eclipse tools
         // optionsList.addAll(Arrays.asList("-d","./bin"));
-        //要编译的单元
+        //Units to compile
         List<JavaFileObject> jfos = Arrays.asList(jfo);
-        //设置编译环境
+        //Set up compilation environment
         JavaCompiler.CompilationTask task = cmp.getTask(null, fm, null, optionsList, null, jfos);
-        //编译成功
+        //Compiled successfully
         if (task.call()) {
             try {
                 logger.info("Complie And Completed:" + LOG.LOG_PRE,
@@ -201,25 +204,25 @@ public final class JspParser {
         return false;
     }
 
-    //提供动态编译的辅助类,实现三种方式的动态编译:字符串，文件（源文件，字节码文件），url资源
+    //It provides the auxiliary class of dynamic compilation and realizes three ways of dynamic compilation: string, file (source file, bytecode file), URL resource
     static class StringJavaObject extends SimpleJavaFileObject {
-        //源代码
+        //source code
         private String content;
 
-        //遵循Java规范的类名及文件
+        //Class name and file following Java specification
         public StringJavaObject(String _javaFileName, String _content) {
             super(_createStringJavaObjectUri(_javaFileName), Kind.SOURCE);
             content = _content;
 
         }
 
-        //产生一个URL资源路径
+        //Generate a URL resource path
         private static URI _createStringJavaObjectUri(String name) {
-            //注意此处没有设置包名
+            //Note that the package name is not set here
             return URI.create(JSP.JSP_DYNAMIC_URI_HEAD + name + Kind.SOURCE.extension);
         }
 
-        //文本文件代码
+        //Text file code
         @Override
         public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
             return content;

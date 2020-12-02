@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Client {
     public static void main(String[] args) {
-        //测试session序列化
+        //It tests session serialization
         try {
 //            Map<String, Session> map = new HashMap<>();
 //            IdWorker idWorker = new IdWorker();

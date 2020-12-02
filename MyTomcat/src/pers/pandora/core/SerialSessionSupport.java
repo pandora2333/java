@@ -16,13 +16,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * notes:you can define your own parser by the interface
  */
 public abstract class SerialSessionSupport {
-    //同机(Java虚拟机)策略
+    //the same JVM strategy
     private static final Map<String, Map<String,Session>> SESSIONPOOL = new ConcurrentHashMap<>(16);
-    //Exclude Session
+    //exclude Session
     private static final Set<String> EXCLUDESESSIONS = new CopyOnWriteArraySet<>();
-    //生成Session文件
+    //create session file
     public static final String SESSIONFILE_POS = "SESSION.ser";
-    //session放置目录
+    //session file dir
     public static final String SESSIONPATH = RequestMappingHandler.ROOTPATH;
 
     public static Map<String, Map<String, Session>> getSessionPool() {
@@ -33,15 +33,11 @@ public abstract class SerialSessionSupport {
         return EXCLUDESESSIONS;
     }
 
-    //Session序列化
     public abstract void serialSession(String serverName) throws IOException;
 
-    //Session反序列化
     public abstract Map<String,Session> deserialSession(String serverName) throws IOException, ClassNotFoundException;
-
-    //标记不需要删除的Session
+    //mark the no-deleted session
     public abstract void excliudeSession(String serverName,String sessionID);
-
-    //删除标记Session
+    //delete the marks for exclude sessions
     public abstract void invalidSession(String serverName,String sessionID);
 }

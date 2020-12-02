@@ -4,7 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtils;
+import pers.pandora.vo.Attachment;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,25 +28,42 @@ public abstract class Server {
     private String webConfigPath = rootPath + "/WEB-INF/web.xml";
 
     public String requestFileDir = resourceRootPath + "files/";
-    //用于服务器扩展功能支持，比如Session序列化
-    private String serverName;
+    //serer name，it use logs,session file,etc
+    private String serverName = "PandoraWeb" + System.currentTimeMillis();
 
-    private int poolSize = 10;
-    //上传文件缓冲区大小 (Byte)
-    private int capcity = 2048 * 1024;
+    private int poolSize = Runtime.getRuntime().availableProcessors() + 1;
+    //up file buffer size (byte)
+    private int capcity = 10 * 1024 * 1024;
 
-    //全局session管理,基于内存的生命周期
+    private static final String HOST = "127.0.0.1";
+    //download resource buffer size（byte）
+    private int responseBuffer = capcity / 10;
+    //server receive buffer size, it should greater than or equal to capcity
+    private int receiveBuffer = capcity;
+    //global session pool,base on memory
     private Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
-    //设置了过期时间的session管理,优化线程扫描时间
+    //set invalid time for the sessions,optimize the thread scanning
     private Map<String, Session> invalidSessionMap = new ConcurrentHashMap<>(16);
-    //Session序列化插件,不设置默认不支持Session序列化
+    //session serializer,default it is not supported
     private SerialSessionSupport serialSessionSupport;
 
     private Map<String, String> context;
 
-    private static final String HOST = "127.0.0.1";
-    //下载文件缓冲区大小（Byte）
-    private int fileBuffer = 2048;
+    protected static void mainLoop() {
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            logger.error(LOG.LOG_PRE + "mainLoop" + LOG.LOG_POS, Thread.currentThread().getName(), LOG.EXCEPTION_DESC, e);
+        }
+    }
+
+    public void setReceiveBuffer(int receiveBuffer) {
+        this.receiveBuffer = receiveBuffer;
+    }
+
+    public int getReceiveBuffer() {
+        return receiveBuffer;
+    }
 
     public void setSessionMap(Map<String, Session> sessionMap) {
         sessionMap.forEach((k, v) -> addSessionMap(k, v));
@@ -140,7 +160,7 @@ public abstract class Server {
     public boolean addSessionMap(String key, Session session) {
         if (StringUtils.isNotEmpty(key) && session != null) {
             sessionMap.put(key, session);
-            if (session.getIsValid()) {
+            if (session.getMax_age() != null) {
                 invalidSessionMap.put(key, session);
             }
             return true;
@@ -168,29 +188,35 @@ public abstract class Server {
         return webConfigPath;
     }
 
-    public void setFileBuffer(int fileBuffer) {
-        this.fileBuffer = fileBuffer;
+    public void setResponseBuffer(int responseBuffer) {
+        this.responseBuffer = responseBuffer;
     }
 
-    public int getFileBuffer() {
-        return fileBuffer;
+    public int getResponseBuffer() {
+        return responseBuffer;
     }
 
     public abstract void start();
 
-    public abstract void start(int port, int capcity, long exvitTime);
+    public abstract void start(int port, int capcity, long expelTime, long waitReceivedTime);
 
     protected void execExpelThread(long expelTime) {
-        //扫描驱逐后台线程
         final List<String> invalidKey = new ArrayList<>();
         final List<String> validKey = new ArrayList<>();
         Thread invalidResourceExecutor = new Thread(() -> {
-            long startTime, endTime;
+            long startTime = 0, endTime = 0;
             while (true) {
-                startTime = System.currentTimeMillis();
+                try {
+                    //expelTime >= 1s ,it can control in ms time level
+                    Thread.sleep(Math.max(0, expelTime - (endTime - startTime)));
+                } catch (InterruptedException e) {
+                    logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, this.getServerName(), LOG.EXCEPTION_DESC, e);
+                }
+                Instant now = Instant.now();
+                startTime = now.getEpochSecond();
                 invalidSessionMap.forEach((k, v) -> {
-                    if (v.getIsValid()) {
-                        if (v.invalidTime() == 0) {
+                    if (v.getMax_age() != null) {
+                        if (now.compareTo(v.getMax_age()) >= 0) {
                             invalidKey.add(k);
                         }
                     } else {
@@ -198,26 +224,31 @@ public abstract class Server {
                     }
                 });
                 invalidKey.stream().forEach(removeKey -> {
-                    logger.info(LOG.LOG_PRE + "exec SessionID invalid:" + LOG.LOG_PRE, Thread.currentThread().getName(), removeKey);
+                    logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, this.getServerName(), removeKey);
                     sessionMap.remove(removeKey);
                     invalidSessionMap.remove(removeKey);
                 });
                 validKey.stream().forEach(addKey -> {
-                    logger.info(LOG.LOG_PRE + "exec SessionID is valid:" + LOG.LOG_PRE, Thread.currentThread().getName(), addKey);
+                    logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, this.getServerName(), addKey);
                     invalidSessionMap.remove(addKey);
                 });
                 invalidKey.clear();
                 validKey.clear();
                 endTime = System.currentTimeMillis();
-                try {
-                    //建议expelTime >= 1s  ms级别执行误差
-                    Thread.sleep(expelTime - (endTime - startTime));
-                } catch (InterruptedException e) {
-                    logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
-                }
             }
         });
-        invalidResourceExecutor.setDaemon(true);//后台线程
+        invalidResourceExecutor.setDaemon(true);
         invalidResourceExecutor.start();
+    }
+
+    public synchronized void close(Attachment att, Object target) {
+        try {
+            if (att.getClient().isOpen()) {
+                logger.info(LOG.LOG_POS + "will be closed!", this.getServerName(), att.getClient().getRemoteAddress());
+                att.getClient().close();
+            }
+        } catch (IOException e) {
+            logger.error(LOG.LOG_POS + "close client" + LOG.LOG_POS, this.getServerName(), target, LOG.EXCEPTION_DESC, e);
+        }
     }
 }

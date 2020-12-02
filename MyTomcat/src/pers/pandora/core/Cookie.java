@@ -5,19 +5,19 @@ public final class Cookie {
     private String key;
 
     private String value;
-    //GMT时间串
+    //GMT time string
     private String expires;
-    //域名
+
     private String doamin;
-    //Cookie域名子路径
+    //Cookie sub-domain path
     private String path;
-    //安全属性
-    private int secure;//默认不设置
-    //过期时间 s为单位
-    private int max_age;//默认Session级别过期
-    //cookie版本
+    //httpOnly,default no
+    private int secure;
+    //expire time after max_age,default time is session level
+    private int max_age;
+    //cookie version
     private int version = 1;//默认version1
-    //是否更新本Cookie
+    //when to update Cookie
     private boolean needUpdate;
 
     public String getKey() {

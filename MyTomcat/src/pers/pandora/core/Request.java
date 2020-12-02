@@ -1,14 +1,18 @@
 package pers.pandora.core;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
+import pers.pandora.utils.CollectionUtil;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.mvc.RequestMappingHandler;
@@ -32,7 +36,7 @@ public final class Request {
     private String charset = HTTPStatus.DEFAULTENCODING;
     //fileVarName -> {fileName,fileType,byte[] data}
     private Map<String, Tuple<String, String, byte[]>> uploadFiles;
-    //上传文件保存路径
+    //up file need save in local paths
     private Map<String, String> filePaths;
 
     private Map<String, String> heads;
@@ -53,6 +57,10 @@ public final class Request {
             }
         }
         return false;
+    }
+
+    public String getServerName() {
+        return dispatcher.server.getServerName();
     }
 
     public Map<String, String> getFilePaths() {
@@ -171,7 +179,7 @@ public final class Request {
 
     public void saveFileData(String fileVarName, String fileName) {
         if (!StringUtils.isNotEmpty(fileVarName) || !uploadFiles.containsKey(fileVarName)) {
-            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", this, LOG.ERROR_DESC);
+            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", dispatcher.server.getServerName(), LOG.ERROR_DESC);
             return;
         }
         String filePath = filePaths.get(fileVarName);
@@ -184,22 +192,28 @@ public final class Request {
         }
         Tuple<String, String, byte[]> file = uploadFiles.get(fileVarName);
         if (file.getV() != null && StringUtils.isNotEmpty(file.getK1())) {
-            //若文件名为""会造成文件管理器拒绝创建文件的异常
+            //if file name is "",it will cause a excetion that file manager refuse to create the file
             if (!StringUtils.isNotEmpty(fileName)) {
                 fileName = file.getK1();
             }
             try {
-                Files.write(Paths.get(filePath + fileName), file.getV());
+                //base on mapped memeroy  file
+                FileChannel outChannel = FileChannel.open(Paths.get(filePath + fileName),
+                        StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
+                MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
+                outMappedBuf.put(file.getV());
+                outChannel.close();
             } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS, this, fileName, LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS,
+                        dispatcher.server.getServerName(), fileName, LOG.EXCEPTION_DESC, e);
             }
         }
     }
 
-    public String handle(String msg) {//GET /login HTTP/1.1
-        //处理request head
+    public String handle(String msg) {
+        //handle request head
         msg = handleHeadInfo(msg);
-        String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();//GET /login HTTP/1.1
+        String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
         String tempStr = reqToken;
         if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
             tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)), JSP.NO_CHAR);
@@ -207,16 +221,20 @@ public final class Request {
         if (msg.startsWith(HTTPStatus.GET)) {
             method = HTTPStatus.GET;
             String type = judgeStatic(reqToken);
-            if (type != null) {//对静态资源处理
+            if (type != null) {
+                //static resource
                 return type + reqToken;
             }
             parseParams(reqToken, HTTPStatus.GET);
         } else if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
             if (!isMultipart) {
-                String param = msg.substring(msg.lastIndexOf(HTTPStatus.CRLF)).trim();
+                String param = msg.substring(msg.indexOf(HTTPStatus.CRLF)).trim();
                 parseParams(param, HTTPStatus.POST);
             }
+        } else if (msg.startsWith(HTTPStatus.OPTIONS)) {
+            method = HTTPStatus.OPTIONS;
+            return HTTPStatus.OPTIONS;
         }
         reqUrl = tempStr;
         if (isMVC(reqUrl)) {
@@ -249,7 +267,11 @@ public final class Request {
                 }
                 heads.put(sp[0], sp[1].trim());
             } else {
-                other.append(s.trim());
+                s = s.trim();
+                other.append(s);
+                if (StringUtils.isNotEmpty(s)) {
+                    other.append(HTTPStatus.CRLF);
+                }
             }
         }
         if (!initSession && (session == null || !checkSessionInvalid(session.getSessionID()))) {
@@ -265,7 +287,7 @@ public final class Request {
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
         cookie.setNeedUpdate(true);
-        //将sessionID的Cookie设置在根域名下
+        //sessionID will be add cookie, and it's path set the root path
         cookie.setPath(String.valueOf(HTTPStatus.SLASH));
         dispatcher.server.addSessionMap(session.getSessionID(), session);
         cookies.add(cookie);
@@ -274,29 +296,19 @@ public final class Request {
     private void initCookies(String cookie_str) {
         boolean initSession = false;
         if (StringUtils.isNotEmpty(cookie_str)) {
-            Cookie cookie = null;
+            Cookie cookie;
             String[] ss;
             for (String tmp : cookie_str.split(HTTPStatus.COOKIE_SPLITER, -1)) {
-                ss = tmp.split(HTTPStatus.COOKIE_KV_SPLITE, -1);
+                ss = tmp.split(HTTPStatus.PARAM_KV_SPLITER, -1);
                 if (ss.length == 2) {
                     cookie = new Cookie();
-                    if (ss[0].equals(HTTPStatus.SESSION_MARK)) {
-                        if (checkSessionInvalid(ss[1])) {
-                            session = dispatcher.server.getSessionMap().get(ss[1]);
-                        } else {
-                            //惰性删除过期session
-                            dispatcher.server.getSessionMap().remove(ss[1]);
-                            session = new Session();
-                            ss[1] = session.getSessionID();
-                            dispatcher.server.addSessionMap(ss[1], session);
-                            cookie.setNeedUpdate(true);
-                            //将sessionID的Cookie设置在根域名下
-                            cookie.setPath(String.valueOf(HTTPStatus.SLASH));
-                        }
-                        initSession = true;
-                    }
                     cookie.setKey(ss[0]);
-                    cookie.setValue(ss[1]);
+                    if (ss[0].equals(HTTPStatus.SESSION_MARK)) {
+                        buildSession(ss[1], cookie);
+                        initSession = true;
+                    } else {
+                        cookie.setValue(ss[1]);
+                    }
                     cookies.add(cookie);
                 }
             }
@@ -311,7 +323,7 @@ public final class Request {
             return false;
         }
         Session session = dispatcher.server.getSessionMap().get(sessionID);
-        return !session.getIsValid() || session.getMax_age() > 0;
+        return session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0;
     }
 
     private String judgeStatic(String reqToken) {
@@ -354,6 +366,24 @@ public final class Request {
         return false;
     }
 
+    private void buildSession(String sessionID, Cookie cookie) {
+        if (checkSessionInvalid(sessionID)) {
+            session = dispatcher.server.getSessionMap().get(sessionID);
+        } else {
+            //it's lazy to delete the session just now
+            dispatcher.server.getSessionMap().remove(sessionID);
+            session = new Session();
+            sessionID = session.getSessionID();
+            dispatcher.server.addSessionMap(sessionID, session);
+            if (cookie != null) {
+                cookie.setNeedUpdate(true);
+                cookie.setValue(sessionID);
+                //sessionID will be add cookie, and it's path set the root path
+                cookie.setPath(String.valueOf(HTTPStatus.SLASH));
+            }
+        }
+    }
+
     private void handleData(String[] temp) {
         if (temp == null) {
             return;
@@ -361,17 +391,18 @@ public final class Request {
         String[] kv;
         List<Object> list;
         for (String str : temp) {
-            kv = str.split(HTTPStatus.COOKIE_KV_SPLITE);
+            kv = str.split(HTTPStatus.PARAM_KV_SPLITER);
             if (kv != null && kv.length == 2) {
-                if (params != null) {
-                    list = params.get(kv[0]);
-                    if (list == null) {
-                        list = new ArrayList<>();
-                        list.add(kv[1]);
-                        params.put(kv[0], list);
-                    } else {
-                        list.add(kv[1]);
-                    }
+                if (kv[0].equals(HTTPStatus.SESSION_MARK) && session == null) {
+                    buildSession(kv[1], null);
+                }
+                list = params.get(kv[0]);
+                if (list == null) {
+                    list = new ArrayList<>();
+                    list.add(kv[1]);
+                    params.put(kv[0], list);
+                } else {
+                    list.add(kv[1]);
                 }
             }
         }
@@ -379,10 +410,30 @@ public final class Request {
 
     void reset() {
         method = null;
-        params.clear();
         reqUrl = null;
-        uploadFiles.clear();
-        cookies.clear();
-        filePaths.clear();
+        if (CollectionUtil.isNotEmptry(params)) {
+            params.clear();
+        }
+        if (CollectionUtil.isNotEmptry(uploadFiles)) {
+            uploadFiles.clear();
+        }
+        if (CollectionUtil.isNotEmptry(cookies)) {
+            cookies.clear();
+        }
+        if (CollectionUtil.isNotEmptry(filePaths)) {
+            filePaths.clear();
+        }
+        if (CollectionUtil.isNotEmptry(objectList)) {
+            objectList.clear();
+        }
+        isMultipart = false;
+        if (CollectionUtil.isNotEmptry(heads)) {
+            heads.clear();
+        }
+        if (CollectionUtil.isNotEmptry(filePaths)) {
+            filePaths.clear();
+        }
+        session = null;
+        charset = HTTPStatus.DEFAULTENCODING;
     }
 }

@@ -4,7 +4,7 @@
        <title>Welcome the Test Jsp||:#{username}|#{password}</title>
    </head>
     <body>
-        <form action="index.html" method="post">
+        <form action="static/index.html" method="post">
             <input type="text" name="#{user.username}">
             <input type="submit" value="#{user.password}">
         </form>

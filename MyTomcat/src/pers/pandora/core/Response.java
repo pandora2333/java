@@ -25,18 +25,20 @@ public final class Response {
     private String servlet;
 
     private String charset = HTTPStatus.DEFAULTENCODING;
-    //存储正文长度
+    //content length
     private long len;
-    //正文
+    //response body data
     private StringBuilder content;
-    //资源类型
+    //resource type for the response
     private String type = HTTPStatus.TEXT_HTML;
-    //是否是静态资源响应
+    //the response is the static resoucre
     private boolean resource;
 
     private Dispatcher dispatcher;
-    //响应状态码
+    //response code
     private int code;
+
+    private Map<String, String> heads;
 
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
 
@@ -48,8 +50,6 @@ public final class Response {
     public int getCode() {
         return code;
     }
-
-    private Map<String, String> heads;
 
     public Response(Dispatcher dispatcher) {
         heads = new HashMap<>();
@@ -93,8 +93,9 @@ public final class Response {
                 this.heads.put(key, value);
                 return true;
             } else {
-                logger.warn(LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE +
-                        "can't add into headers", HTTPStatus.SERVER, HTTPStatus.DATE, HTTPStatus.CONTENTLENGTH, HTTPStatus.CONTENTTYPE);
+                logger.warn(LOG.LOG_POS + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE + LOG.VERTICAL + LOG.LOG_PRE +
+                                "can't add into headers", dispatcher.server.getServerName(), HTTPStatus.SERVER, HTTPStatus.DATE,
+                        HTTPStatus.CONTENTLENGTH, HTTPStatus.CONTENTTYPE);
             }
         }
         return false;
@@ -131,12 +132,9 @@ public final class Response {
         return servlet;
     }
 
-    /**
-     * 构建响应头
-     */
     private StringBuilder createHeadInfo(List<Cookie> cookies) {
         StringBuilder headInfo = new StringBuilder();
-        //1.http协议版本，状态代码，描述
+        //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
         switch (code) {
             case 200:
@@ -155,42 +153,41 @@ public final class Response {
                 headInfo.append(HTTPStatus.ERROR_CODE);
         }
         headInfo.append(HTTPStatus.CRLF);
-        //2.响应头
+        //2.build response head
         headInfo.append(HTTPStatus.SERVER + HTTPStatus.COLON + HTTPStatus.BLANK + HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.DATE + HTTPStatus.COLON + HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTTYPE + HTTPStatus.COLON + HTTPStatus.BLANK + type + HTTPStatus.COOKIE_SPLITER +
-                HTTPStatus.CHARSET + HTTPStatus.COOKIE_KV_SPLITE + charset).append(HTTPStatus.CRLF);
-        //正文长度，字节长度
+                HTTPStatus.CHARSET + HTTPStatus.PARAM_KV_SPLITER + charset).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTLENGTH + HTTPStatus.COLON + HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
-        heads.forEach((k,v) -> headInfo.append(k + HTTPStatus.COLON + v).append(HTTPStatus.CRLF));
-        //构建Cookie头
+        heads.forEach((k, v) -> headInfo.append(k + HTTPStatus.COLON + v).append(HTTPStatus.CRLF));
+        //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
             StringBuilder sb = new StringBuilder();
             cookies.stream().forEach(cookie -> {
                 if (cookie != null && cookie.isNeedUpdate()) {
                     sb.append(HTTPStatus.SET_COOKIE);
-                    sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.COOKIE_KV_SPLITE).
+                    sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.PARAM_KV_SPLITER).
                             append(cookie.getValue()).append(HTTPStatus.COOKIE_SPLITER);
-                    sb.append(HTTPStatus.VERSION).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getVersion())
+                    sb.append(HTTPStatus.VERSION).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getVersion())
                             .append(HTTPStatus.COOKIE_SPLITER);
                     if (StringUtils.isNotEmpty(cookie.getExpires())) {
-                        sb.append(HTTPStatus.EXPIRES).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getExpires())
+                        sb.append(HTTPStatus.EXPIRES).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getExpires())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (cookie.getMax_age() != 0) {
-                        sb.append(HTTPStatus.MAXAEG).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                        sb.append(HTTPStatus.MAXAEG).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getMax_age())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (StringUtils.isNotEmpty(cookie.getDoamin())) {
-                        sb.append(HTTPStatus.DOMAIN).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getMax_age())
+                        sb.append(HTTPStatus.DOMAIN).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getMax_age())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (StringUtils.isNotEmpty(cookie.getPath())) {
-                        sb.append(HTTPStatus.PATH).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getPath())
+                        sb.append(HTTPStatus.PATH).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getPath())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     if (cookie.getSecure() > 0) {
-                        sb.append(HTTPStatus.SECURE).append(HTTPStatus.COOKIE_KV_SPLITE).append(cookie.getSecure())
+                        sb.append(HTTPStatus.SECURE).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getSecure())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     sb.append(HTTPStatus.CRLF);
@@ -200,7 +197,7 @@ public final class Response {
                 }
             });
         }
-        headInfo.append(HTTPStatus.CRLF);//分隔符
+        headInfo.append(HTTPStatus.CRLF);
         return headInfo;
     }
 
@@ -208,18 +205,28 @@ public final class Response {
         if (content == null) {
             content = new StringBuilder();
         }
+        //OPTIONS is HTTP pre-request，just return ok signal
+        if (StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS)) {
+            code = 200;
+            return createHeadInfo(null).toString();
+        }
         handlePre(request);
         try {
             if (request != null && request.getParams().containsKey(PLAIN)) {
                 type = HTTPStatus.PLAIN;
-                content.append(request.getParams().get(HTTPStatus.PLAIN).get(0));//保留JSON序列化扩展
+                content.append(request.getParams().get(HTTPStatus.PLAIN).get(0));
                 len = content.toString().getBytes(charset).length;
                 code = 200;
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = request.getParams();
-                //初始化对象赋值只支持基本数据类型和String类型
-                Servlet handler = ClassUtils.getClass(servlet, params);
-                initRequstObjectList(request.getObjectList(), handler);
+                //init object instance just support basic data type and string type
+                Servlet handler = ClassUtils.getClass(servlet);
+                //requestScope
+                ClassUtils.initWithParams(handler, params);
+                //sessionScope
+                ClassUtils.initWithParams(handler, request.getSession().getAttrbuites());
+                //mvcScope
+                ClassUtils.initWithObjectList(handler, request.getObjectList());
                 if (handler != null) {
                     if (method.equals(HTTPStatus.GET)) {
                         content.append(handler.doGet(request, this));
@@ -239,7 +246,7 @@ public final class Response {
                 handle_404_NOT_FOUND();
             }
         } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, this.getClass().getName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, dispatcher.server.getServerName(), LOG.EXCEPTION_DESC, e);
             handle_500_SERVER_ERROR(e.getMessage());
         }
         handleAfter(request);
@@ -271,7 +278,7 @@ public final class Response {
             len = content.toString().getBytes(charset).length;
         } catch (UnsupportedEncodingException e) {
             logger.error(LOG.LOG_PRE + "handle_500_SERVER_ERROR current charset " + LOG.LOG_PRE + LOG.LOG_POS,
-                    this, charset, content, LOG.EXCEPTION_DESC, e);
+                    dispatcher.server.getServerName(), charset, content, LOG.EXCEPTION_DESC, e);
         }
         code = 500;
     }
@@ -283,16 +290,16 @@ public final class Response {
         code = 404;
     }
 
-    private void initRequstObjectList(Map<String, Object> objectList, Servlet handler) {
-        ClassUtils.initWithObjectList(objectList, handler);
-    }
-
-
     void reset() {
         servlet = null;
         resource = false;
         content = null;
         len = 0;
         code = 0;
+        if (CollectionUtil.isNotEmptry(heads)) {
+            heads.clear();
+        }
+        charset = HTTPStatus.DEFAULTENCODING;
+        type = HTTPStatus.TEXT_HTML;
     }
 }

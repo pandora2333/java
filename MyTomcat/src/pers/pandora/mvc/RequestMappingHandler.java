@@ -26,9 +26,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * 1.处理url path与controller之间映射关系
- * 2.初始化所有实现Interceptor接口的拦截器
- * 3.赋值mvc方法参数
+ * 1.It handles the mapping relationship between URL path and controller
+ * 2.It initializes all interceptors that implement the interceptor interface
+ * 3.It assigns MVC method parameters
  */
 public final class RequestMappingHandler {
 
@@ -39,7 +39,7 @@ public final class RequestMappingHandler {
     private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
 
     private static Set<Pair<Integer, Interceptor>> interceptors;
-    //考虑到可能JSP生产大量class文件，这里优化从src源目录获取
+    //Considering that JSP files may produce a large number of class files, it is optimized to obtain them from the SRC source directory
     public static final String ROOTPATH = "src/";
 
     public static final String METHOD_SPLITER = "|";
@@ -53,23 +53,23 @@ public final class RequestMappingHandler {
     public static final char PATH_SPLITER_PATTERN = '\\';
 
     public static final char JAVA_PACKAGE_SPLITER = '.';
-    //类加载相关参数
+    //Classes loading thread pool related parameters
     private static ThreadPoolExecutor executor;
 
     private static List<Future<Boolean>> result;
 
     public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
-    //线程池最小核心数
+    //Thread pool minimum number of cores
     public static int minCore = Runtime.getRuntime().availableProcessors();
     //线程池最大核心数
     public static int maxCore = minCore + 5;
-    //线程空闲时间
+    //Thread idle time
     public static long keepAlive = 50;
-    //线程空闲时间单位
+    //Thread idle time unit
     public static TimeUnit timeUnit = TimeUnit.MILLISECONDS;
-    //超时等待类加载时间
+    //Timeout waiting for class loading time
     public static long timeout = 5;
-    //超时等待类加载时间单位
+    //Timeout wait class load time unit
     public static TimeUnit timeOutUnit = TimeUnit.SECONDS;
 //    static {
 // 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
@@ -84,7 +84,7 @@ public final class RequestMappingHandler {
 
 
     /**
-     * 执行Controller方法，返回请求转发地址
+     * Execute the controller method to return the request forwarding address
      *
      * @param modelAndView
      * @return
@@ -95,28 +95,35 @@ public final class RequestMappingHandler {
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
         if (method == null) {
             modelAndView.setPage(null);
-            return;//找不到对应路径
+            return;//The corresponding path was not found
         }
         Object controller = controllers.get(method);
         if (controller == null) {
             modelAndView.setPage(null);
-            return;//初始化Controller类生成实例失败
+            return;//Failed to initialize controller class to generate instance
         }
         if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
             modelAndView.setJson(true);
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object objects[] = new Object[parameterTypes.length];
-        String paramNames[] = new String[parameterTypes.length];
+        Map<Integer, String> paramNames = new HashMap<>();
+        Map<String, String> defaultValues = new HashMap<>();
         Map<String, List<Object>> params = modelAndView.getRequest().getParams();
         Annotation[][] annotations = method.getParameterAnnotations();
         for (int i = 0; i < annotations.length; i++) {
             for (Annotation annotation : annotations[i]) {
                 if (annotation instanceof RequestParam) {
-                    paramNames[i] = ((RequestParam) annotation).value();
+                    RequestParam param = (RequestParam) annotation;
+                    paramNames.put(i, param.value());
+                    if (StringUtils.isNotEmpty((param.defaultValue()))) {
+                        defaultValues.put(param.value(), param.defaultValue());
+                    }
                 }
             }
         }
+        Object target;
+        List<Object> list;
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i] == Request.class) {
                 objects[i] = modelAndView.getRequest();
@@ -125,21 +132,27 @@ public final class RequestMappingHandler {
             } else if (parameterTypes[i] == ModelAndView.class) {
                 objects[i] = modelAndView;
             } else if (!ClassUtils.checkBasicClass(parameterTypes[i])) {
-                //不允许参数简单类名重复，即使全类名不一致
-                Object target = null;
+                //Duplicate parameter simple class names are not allowed, even if the whole class names are inconsistent
                 try {
-                    target = ClassUtils.getClass(parameterTypes[i], params);
+                    target = ClassUtils.getClass(parameterTypes[i]);
+                    //requestScope
+                    ClassUtils.initWithParams(target, params);
+                    //sessionScope
+                    ClassUtils.initWithParams(target, modelAndView.getRequest().getSession().getAttrbuites());
                     valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
                     objects[i] = target;
                 } catch (IllegalAccessException | InstantiationException e) {
                     //ignore
                 }
-            } else if (paramNames[i] != null) {
-                List<Object> list = params.get(paramNames[i]);
+            } else if (paramNames.containsKey(i)) {
+                list = params.get(paramNames.get(i));
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
+                if (objects[i] == null) {
+                    objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames.get(i)));
+                }
             } else {
                 logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
-                                LOG.LOG_PRE + LOG.LOG_PRE, MVC_CLASS, modelAndView, controller.getClass().getName(),
+                                LOG.LOG_PRE + LOG.LOG_PRE, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
                         method.getName(), LOG.ERROR_DESC);
                 modelAndView.setPage(null);
                 return;
@@ -158,14 +171,48 @@ public final class RequestMappingHandler {
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
-                            LOG.LOG_PRE + LOG.LOG_POS, MVC_CLASS, modelAndView, controller.getClass().getName(),
+                            LOG.LOG_PRE + LOG.LOG_POS, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
                     method.getName(), LOG.ERROR_DESC, e);
             modelAndView.setPage(null);
         }
         modelAndView.getRequest().setObjectList(valueObject);
     }
 
-    //利用ASM操作class字节码文件获取参数名
+    private static Object getValueByType(Class<?> parameterType, String defaultValue) {
+        if (!StringUtils.isNotEmpty(defaultValue)) {
+            return parameterType == String.class ? JSP.NO_CHAR : null;
+        }
+        if (parameterType == String.class) {
+            return defaultValue;
+        }
+        if (parameterType == Integer.class || parameterType == int.class) {
+            return Integer.valueOf(defaultValue);
+        }
+        if (parameterType == Long.class || parameterType == long.class) {
+            return Long.valueOf(defaultValue);
+        }
+        if (parameterType == Byte.class || parameterType == byte.class) {
+            return Byte.valueOf(defaultValue);
+        }
+        if (parameterType == Short.class || parameterType == short.class) {
+            return Short.valueOf(defaultValue);
+        }
+        if (parameterType == Boolean.class || parameterType == boolean.class) {
+            return Boolean.valueOf(defaultValue);
+        }
+        if (parameterType == Character.class || parameterType == char.class) {
+            return defaultValue.charAt(0);
+        }
+        if (parameterType == Float.class || parameterType == float.class) {
+            return Float.valueOf(defaultValue);
+        }
+        if (parameterType == Double.class || parameterType == double.class) {
+            return Double.valueOf(defaultValue);
+        }
+        return null;
+    }
+
+    //Using ASM to operate class bytecode file to get parameter name
     @Deprecated
     public static void handleMethodParamNames(Class<?> t) {
         Map<String, Integer> modifers = new HashMap<>();
@@ -196,7 +243,7 @@ public final class RequestMappingHandler {
                     return new MethodVisitor(Opcodes.ASM4) {
                         @Override
                         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-                            // 静态方法第一个参数就是方法的参数，如果是实例方法，第一个参数是this
+                            // The first parameter of a static method is the parameter of the method. If it is an instance method, the first parameter is this
                             StringBuilder key = new StringBuilder(t.getName() + METHOD_SPLITER + name + METHOD_SPLITER);
                             for (Type type : Type.getArgumentTypes(desc)) {
                                 key.append(type.getClassName());
@@ -314,9 +361,7 @@ public final class RequestMappingHandler {
         }
         executor.shutdown();
         executor = null;
-        result.clear();
         result = null;
-        System.gc();
     }
 
 }

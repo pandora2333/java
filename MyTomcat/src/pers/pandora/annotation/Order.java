@@ -6,5 +6,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface Order {
-    int value() default 1;//数字越大，越先执行
+    //more number can get more priority
+    int value() default 1;
 }

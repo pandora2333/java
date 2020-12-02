@@ -12,7 +12,7 @@ import java.util.*;
 public class IdWorker {
 
     private static Logger logger = LogManager.getLogger(IdWorker.class);
-    //snowflake 改版
+    //snowflake revision
     protected long epoch = 1288834974657L;
 
     protected long workerIdBits = 10L;
@@ -34,7 +34,7 @@ public class IdWorker {
     protected long sequence = 0L;
 
     public IdWorker() {
-        //初始随机数
+        //Initial random number
         this.workerId = checkWorkerId((System.identityHashCode(this) ^ System.currentTimeMillis()) & maxWorkerId);
         logger.debug("worker starting. timestamp left shift " + LOG.LOG_PRE + ", worker id " + LOG.LOG_PRE, timestampLeftShift, workerId);
     }
@@ -94,11 +94,11 @@ public class IdWorker {
     }
 
     /**
-     * 一天最大毫秒86400000，最大占用27比特
-     * 27+10+11=48位 最大值281474976710655(15字)，YK0XXHZ827(10字)
-     * 6位(YYMMDD)+15位，共21位
+     * one day have max-millisecond-value is 86400000，The maximum occupied 27 bits
+     * 27+10+11=48 The maximum is 281474976710655(15 Char)，YK0XXHZ827(10 Char)
+     * 6(YYMMDD)+15 = 21
      *
-     * @return 固定21位数字字符串
+     * @return Fixed 21 digit string
      */
     public static final String NEXT_FORMAT = "%014d";
 
@@ -114,7 +114,7 @@ public class IdWorker {
 
 
     /**
-     * 返回固定16位的字母数字混编的字符串。
+     * Returns a fixed 16 bit alphanumeric string
      */
     public String nextShort() {
         long id = nextId();
@@ -158,7 +158,7 @@ public class IdWorker {
         return s.toString();
     }
 
-    //SessionID生成器(53位:16+1+36(32+4)) 750+ ms 延迟
+    //SessionID(53位:16+1+36(32+4)) 750+ ms delay time,it means the browser firstly access the web server should have 750 ms+ delay time
     public String nextSessionID() {
 //        long start = System.currentTimeMillis();
         return nextShort() + "_" + UUID.randomUUID().toString().toUpperCase();
