@@ -56,14 +56,14 @@ public final class ClassUtils {
         }
         for (Map.Entry<String, Field> entry : fieldMap.entrySet()) {
             String name = entry.getKey();
-            String[] ss = name.split(JspParser.CLASS_NAME_SPLITER);
+            String[] ss = name.split(JspParser.CLASS_NAME_SPLITER, -1);
             if (ss.length != 2) {
                 continue;
             }
             try {
                 String query = ss[0].toLowerCase();
-                if (valueMap.containsKey(query) && valueMap.get(query).containsKey(ss[1]) &&
-                        checkType(valueMap.get(ss[0].toLowerCase()).get(ss[1]).getClass(), entry.getValue().getType())) {
+                if (valueMap.containsKey(query) && valueMap.get(query).containsKey(ss[1]) && valueMap.get(ss[0].toLowerCase()).get(ss[1]) != null
+                        && checkType(valueMap.get(ss[0].toLowerCase()).get(ss[1]).getClass(), entry.getValue().getType())) {
                     entry.getValue().set(handler, valueMap.get(ss[0].toLowerCase()).get(ss[1]));
                 }
             } catch (IllegalAccessException e) {

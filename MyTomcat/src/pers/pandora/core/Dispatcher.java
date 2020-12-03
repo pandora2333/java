@@ -10,6 +10,8 @@ import pers.pandora.mvc.ModelAndView;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.StringUtils;
 
+import java.nio.ByteBuffer;
+
 //servlet dispatcher
 abstract class Dispatcher {
 
@@ -72,8 +74,7 @@ abstract class Dispatcher {
                         }
                     }
                     response.setServlet(servlet);
-                    String content = response.handle(request.getMethod(), request);
-                    pushClient(content, file);
+                    pushClient(response.handle(request.getMethod(), request), file);
                 }
             } else {
                 pushClient(response.handle(null, request), null);
@@ -91,7 +92,7 @@ abstract class Dispatcher {
         return true;
     }
 
-    protected boolean initRequest(byte[] data) {
+    protected boolean initRequest(ByteBuffer data) {
         for (Pair<Integer, Interceptor> interceptor :  RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
@@ -101,6 +102,6 @@ abstract class Dispatcher {
         return true;
     }
 
-    protected abstract void pushClient(String content, java.io.File staticFile);
+    protected abstract void pushClient(byte[] content, java.io.File staticFile);
 
 }

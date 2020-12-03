@@ -12,7 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -29,12 +28,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             ByteBuffer buffer = att.getBuffer();
             buffer.flip();
             //pre handle HTTP resource
-            byte[] data = buffer.array();
-            initRequest(data);
+            initRequest(buffer);
             String msg = null;
             //conten-length = all body data bytes after blank line(\n)
             try {
-                msg = handleUploadFile(data, buffer.position(), buffer.limit());
+                msg = handleUploadFile(buffer.array(), buffer.position(), buffer.limit());
             } catch (UnsupportedEncodingException e) {
                 logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
             }
@@ -180,10 +178,10 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     }
 
     @Override
-    protected void pushClient(String content, java.io.File staticFile) {
+    protected void pushClient(byte[] content, java.io.File staticFile) {
         if (content != null) {
             att.getBuffer().clear();
-            att.getBuffer().put(content.getBytes(Charset.forName(response.getCharset())));
+            att.getBuffer().put(content);
             att.getBuffer().flip();
             att.getClient().write(att.getBuffer());
             att.getBuffer().clear();

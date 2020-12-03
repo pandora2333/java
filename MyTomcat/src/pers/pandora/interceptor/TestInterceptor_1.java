@@ -4,6 +4,8 @@ import pers.pandora.annotation.Order;
 import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 
+import java.nio.ByteBuffer;
+
 @Deprecated
 @Order(2)
 public class TestInterceptor_1 implements Interceptor {
@@ -26,7 +28,7 @@ public class TestInterceptor_1 implements Interceptor {
     }
 
     @Override
-    public boolean initRequest(Request request, byte[] data) {
+    public boolean initRequest(Request request, ByteBuffer data) {
         System.out.println("initRequest:"+this.getClass().getSimpleName());
         return true;
     }

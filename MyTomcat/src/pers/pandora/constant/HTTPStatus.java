@@ -94,7 +94,7 @@ public class HTTPStatus {
 
     public static final String CHARSET = "charset";
 
-    public static final String CODE_500_DESC = "Serer Inner Some Errors";
+    public static final String CODE_500_DESC = "Server Inner Some Errors";
 
     public static final String CODE_404_DESC = "Page Not Found";
 

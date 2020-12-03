@@ -13,6 +13,7 @@ import pers.pandora.utils.ClassUtils;
 import pers.pandora.utils.StringUtils;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public final class Response {
     //content length
     private long len;
     //response body data
-    private StringBuilder content;
+    private byte[] content;
     //resource type for the response
     private String type = HTTPStatus.TEXT_HTML;
     //the response is the static resoucre
@@ -68,7 +69,7 @@ public final class Response {
         return len;
     }
 
-    public StringBuilder getContent() {
+    public byte[] getContent() {
         return content;
     }
 
@@ -76,7 +77,7 @@ public final class Response {
         return resource;
     }
 
-    public void setContent(StringBuilder content) {
+    public void setContent(byte[] content) {
         this.content = content;
     }
 
@@ -111,7 +112,7 @@ public final class Response {
 
     public void setType(String type) {
         if (type == null && servlet == null) {
-            content = new StringBuilder(String.format("request uri params " + LOG.LOG_PRE, LOG.ERROR_DESC));
+            content = String.format("request uri params " + LOG.LOG_PRE, LOG.ERROR_DESC).getBytes(Charset.forName(charset));
         }
         if (type != null) {
             this.type = type;
@@ -132,7 +133,7 @@ public final class Response {
         return servlet;
     }
 
-    private StringBuilder createHeadInfo(List<Cookie> cookies) {
+    private byte[] createHeadInfo(List<Cookie> cookies) {
         StringBuilder headInfo = new StringBuilder();
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
@@ -198,24 +199,24 @@ public final class Response {
             });
         }
         headInfo.append(HTTPStatus.CRLF);
-        return headInfo;
+        return headInfo.toString().getBytes(Charset.forName(charset));
     }
 
-    public String handle(String method, Request request) {
-        if (content == null) {
-            content = new StringBuilder();
-        }
+    public byte[] handle(String method, Request request) {
         //OPTIONS is HTTP pre-request，just return ok signal
         if (StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS)) {
             code = 200;
-            return createHeadInfo(null).toString();
+            return createHeadInfo(null).toString().getBytes(Charset.forName(charset));
         }
         handlePre(request);
         try {
             if (request != null && request.getParams().containsKey(PLAIN)) {
                 type = HTTPStatus.PLAIN;
-                content.append(request.getParams().get(HTTPStatus.PLAIN).get(0));
-                len = content.toString().getBytes(charset).length;
+                Object obj = request.getParams().get(HTTPStatus.PLAIN).get(0);
+                if (obj != null) {
+                    content = obj.toString().getBytes(Charset.forName(charset));
+                    len = content.toString().getBytes(charset).length;
+                }
                 code = 200;
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = request.getParams();
@@ -228,12 +229,16 @@ public final class Response {
                 //mvcScope
                 ClassUtils.initWithObjectList(handler, request.getObjectList());
                 if (handler != null) {
+                    String ret = null;
                     if (method.equals(HTTPStatus.GET)) {
-                        content.append(handler.doGet(request, this));
+                        ret = handler.doGet(request, this);
                     } else if (method.equals(HTTPStatus.POST)) {
-                        content.append(handler.doPost(request, this));
+                        ret = handler.doPost(request, this);
                     }
-                    len = content.toString().getBytes(charset).length;
+                    if (StringUtils.isNotEmpty(ret)) {
+                        content = ret.getBytes(Charset.forName(charset));
+                        len = content.length;
+                    }
                     if (code <= 0) {
                         code = 200;
                     }
@@ -250,7 +255,13 @@ public final class Response {
             handle_500_SERVER_ERROR(e.getMessage());
         }
         handleAfter(request);
-        return createHeadInfo(request.getCookies()).append(content).toString();
+        byte[] heads = createHeadInfo(request.getCookies());
+        byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
+        System.arraycopy(heads, 0, datas, 0, heads.length);
+        if (content != null) {
+            System.arraycopy(content, 0, datas, heads.length, content.length);
+        }
+        return datas;
     }
 
     private boolean handleAfter(Request request) {
@@ -272,21 +283,16 @@ public final class Response {
     }
 
     private void handle_500_SERVER_ERROR(String errorMessage) {
-        content.append(HTTPStatus.CODE_500_DESC + HTTPStatus.COLON + errorMessage);
+        content = (HTTPStatus.CODE_500_DESC + HTTPStatus.COLON + errorMessage).getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
-        try {
-            len = content.toString().getBytes(charset).length;
-        } catch (UnsupportedEncodingException e) {
-            logger.error(LOG.LOG_PRE + "handle_500_SERVER_ERROR current charset " + LOG.LOG_PRE + LOG.LOG_POS,
-                    dispatcher.server.getServerName(), charset, content, LOG.EXCEPTION_DESC, e);
-        }
+        len = content.length;
         code = 500;
     }
 
     private void handle_404_NOT_FOUND() throws UnsupportedEncodingException {
-        content.append(HTTPStatus.CODE_404_DESC);
+        content = HTTPStatus.CODE_404_DESC.getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
-        len = content.toString().getBytes(charset).length;
+        len = content.length;
         code = 404;
     }
 
