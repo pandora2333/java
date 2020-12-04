@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RequestParam {
-    String value() default  JSP.NO_CHAR;
-    String defaultValue() default JSP.NO_CHAR;
+public @interface PathVariable {
+    String value() default JSP.NO_CHAR;
 }

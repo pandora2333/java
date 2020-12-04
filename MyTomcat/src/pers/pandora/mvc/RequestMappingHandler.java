@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
 import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
+import pers.pandora.utils.CollectionUtil;
 import pers.pandora.utils.StringUtils;
 import pers.pandora.vo.Pair;
 import pers.pandora.constant.HTTPStatus;
@@ -37,6 +38,8 @@ public final class RequestMappingHandler {
     private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
     private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
+    //restful-param-path
+    private static Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
 
     private static Set<Pair<Integer, Interceptor>> interceptors;
     //Considering that JSP files may produce a large number of class files, it is optimized to obtain them from the SRC source directory
@@ -93,9 +96,26 @@ public final class RequestMappingHandler {
     public static void parseUrl(ModelAndView modelAndView) {
         Map<String, Object> valueObject = new HashMap<>();
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
+        boolean restful = false;
+        String[] tmp = null;
         if (method == null) {
-            modelAndView.setPage(null);
-            return;//The corresponding path was not found
+            String reqUrl = modelAndView.getRequest().getReqUrl();
+            if (StringUtils.isNotEmpty(reqUrl)) {
+                int cnt = modelAndView.getRequest().getPathParams().size();
+                for (Map.Entry<String, Method> methodEntry : regexMappings.entrySet()) {
+                    tmp = methodEntry.getKey().split(String.valueOf(HTTPStatus.SLASH), -1);
+                    if (tmp.length == cnt && reqUrl.matches(methodEntry.getKey().replaceAll(HTTPStatus.PATH_PARAM_SEPARATOE,
+                            HTTPStatus.PATH_PARM_REPLACE))) {
+                        method = methodEntry.getValue();
+                        restful = true;
+                        break;
+                    }
+                }
+            }
+            if (method == null) {
+                modelAndView.setPage(null);
+                return;//The corresponding path was not found
+            }
         }
         Object controller = controllers.get(method);
         if (controller == null) {
@@ -105,9 +125,19 @@ public final class RequestMappingHandler {
         if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
             modelAndView.setJson(true);
         }
+        RequestMapping requestMethod = method.getAnnotation(RequestMapping.class);
+        if (requestMethod == null || !requestMethod.method().equals(modelAndView.getRequest().getMethod())) {
+            logger.warn(LOG.LOG_PRE + "target method isn't supported for this method:" + LOG.LOG_PRE,
+                    modelAndView.getRequest().getServerName(), modelAndView.getRequest().getMethod());
+            modelAndView.getResponse().setCode(HTTPStatus.CODE_405);
+            modelAndView.setPage(null);
+            return;
+        }
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object objects[] = new Object[parameterTypes.length];
         Map<Integer, String> paramNames = new HashMap<>();
+        Map<Integer, String> restfulParamNames = new HashMap<>();
+        Map<String, String> restfulParamValues = new HashMap<>();
         Map<String, String> defaultValues = new HashMap<>();
         Map<String, List<Object>> params = modelAndView.getRequest().getParams();
         Annotation[][] annotations = method.getParameterAnnotations();
@@ -118,6 +148,20 @@ public final class RequestMappingHandler {
                     paramNames.put(i, param.value());
                     if (StringUtils.isNotEmpty((param.defaultValue()))) {
                         defaultValues.put(param.value(), param.defaultValue());
+                    }
+                } else if (restful && annotation instanceof PathVariable) {
+                    PathVariable param = (PathVariable) annotation;
+                    restfulParamNames.put(i, param.value());
+                }
+            }
+        }
+        if (restful && tmp != null) {
+            List<String> pathParams = modelAndView.getRequest().getPathParams();
+            if (CollectionUtil.isNotEmptry(pathParams)) {
+                int len = pathParams.size() == tmp.length ? tmp.length : -1;
+                for (int i = 0; i < len; i++) {
+                    if (tmp[i].matches(HTTPStatus.PATH_PARAM_SEPARATOE)) {
+                        restfulParamValues.put(tmp[i].substring(1, tmp[i].length() - 1), pathParams.get(i));
                     }
                 }
             }
@@ -150,10 +194,13 @@ public final class RequestMappingHandler {
                 if (objects[i] == null) {
                     objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames.get(i)));
                 }
+            } else if (restful && restfulParamNames.containsKey(i)) {
+                objects[i] = getValueByType(parameterTypes[i],restfulParamValues.get(restfulParamNames.get(i)));
             } else {
                 logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
                                 LOG.LOG_PRE + LOG.LOG_PRE, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
                         method.getName(), LOG.ERROR_DESC);
+                modelAndView.getResponse().setCode(HTTPStatus.CODE_400);
                 modelAndView.setPage(null);
                 return;
             }
@@ -163,7 +210,7 @@ public final class RequestMappingHandler {
             if (modelAndView.isJson()) {
                 List<Object> temp = new LinkedList<>();
                 temp.add(result);
-                modelAndView.getRequest().getParams().put(HTTPStatus.PLAIN, temp);
+                modelAndView.getRequest().getParams().put(Response.PLAIN, temp);
                 modelAndView.setPage(HTTPStatus.PLAIN);
                 modelAndView.getResponse().setServlet(MVC_CLASS);
             } else {
@@ -173,6 +220,7 @@ public final class RequestMappingHandler {
             logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
                             LOG.LOG_PRE + LOG.LOG_POS, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
                     method.getName(), LOG.ERROR_DESC, e);
+            modelAndView.getResponse().setCode(HTTPStatus.CODE_400);
             modelAndView.setPage(null);
         }
         modelAndView.getRequest().setObjectList(valueObject);
@@ -292,10 +340,13 @@ public final class RequestMappingHandler {
             for (Method method : t.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(RequestMapping.class)) {
                     Annotation annotation = method.getAnnotation(RequestMapping.class);
-                    if (!StringUtils.isNotEmpty(((RequestMapping) annotation).value())) {
+                    String subPath = ((RequestMapping) annotation).value();
+                    if (subPath.matches(HTTPStatus.PATH_REGEX_MARK)) {
+                        regexMappings.put(parentPath + subPath, method);
+                    } else if (!StringUtils.isNotEmpty(subPath)) {
                         mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
                     } else {
-                        mappings.put(parentPath + ((RequestMapping) annotation).value(), method);
+                        mappings.put(parentPath + subPath, method);
                     }
                     try {
                         controllers.put(method, t.newInstance());

@@ -40,14 +40,20 @@ public final class Request {
     private Map<String, String> filePaths;
 
     private Map<String, String> heads;
-
+    //support mvc model
     private Map<String, Object> objectList;
+    //support path parameters for restful param pattern
+    private List<String> pathParams;
 
     private List<Cookie> cookies;
 
     private boolean isMultipart;
 
     private Session session;
+
+    public List<String> getPathParams() {
+        return pathParams;
+    }
 
     public boolean addInvalidSession(String key) {
         if (StringUtils.isNotEmpty(key)) {
@@ -218,15 +224,7 @@ public final class Request {
         if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
             tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)), JSP.NO_CHAR);
         }
-        if (msg.startsWith(HTTPStatus.GET)) {
-            method = HTTPStatus.GET;
-            String type = judgeStatic(reqToken);
-            if (type != null) {
-                //static resource
-                return type + reqToken;
-            }
-            parseParams(reqToken, HTTPStatus.GET);
-        } else if (msg.startsWith(HTTPStatus.POST)) {
+        if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
             if (!isMultipart) {
                 String param = msg.substring(msg.indexOf(HTTPStatus.CRLF)).trim();
@@ -235,6 +233,24 @@ public final class Request {
         } else if (msg.startsWith(HTTPStatus.OPTIONS)) {
             method = HTTPStatus.OPTIONS;
             return HTTPStatus.OPTIONS;
+        } else if (msg.startsWith(HTTPStatus.GET)) {
+            method = HTTPStatus.GET;
+            String type = judgeStatic(reqToken);
+            if (type != null) {
+                //static resource
+                return type + reqToken;
+            }
+            parseParams(reqToken, HTTPStatus.GET);
+        } else if (msg.startsWith(HTTPStatus.PUT)) {
+            method = HTTPStatus.PUT;
+            parseParams(reqToken, HTTPStatus.GET);
+        } else if (msg.startsWith(HTTPStatus.DELETE)) {
+            method = HTTPStatus.DELETE;
+            parseParams(reqToken, HTTPStatus.GET);
+        } else {
+            logger.warn(HTTPStatus.CODE_400_BAD_REQUEST + LOG.LOG_PRE, msg);
+            dispatcher.response.setCode(HTTPStatus.CODE_400);
+            return null;
         }
         reqUrl = tempStr;
         if (isMVC(reqUrl)) {
@@ -342,12 +358,15 @@ public final class Request {
     private void parseParams(String reqToken, String method) {
         String[] temp = null;
         if (method.equals(HTTPStatus.GET)) {
-            if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
-                reqToken.substring(0, reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)).trim();
-                temp = reqToken.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK) + 1).
-                        split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+            int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
+            if (index > 0) {
+                temp = reqToken.substring(index + 1).split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
             } else {
-                reqToken.trim();
+                index = reqToken.length();
+            }
+            String path = reqToken.substring(0, index);
+            if (StringUtils.isNotEmpty(path)) {
+                pathParams = Arrays.asList(path.split(String.valueOf(HTTPStatus.SLASH), -1));
             }
         } else if (method.equals(HTTPStatus.POST)) {
             temp = reqToken.split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
@@ -433,6 +452,7 @@ public final class Request {
         if (CollectionUtil.isNotEmptry(filePaths)) {
             filePaths.clear();
         }
+        pathParams = null;
         session = null;
         charset = HTTPStatus.DEFAULTENCODING;
     }

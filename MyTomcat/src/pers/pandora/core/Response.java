@@ -12,12 +12,8 @@ import pers.pandora.interceptor.Interceptor;
 import pers.pandora.utils.ClassUtils;
 import pers.pandora.utils.StringUtils;
 
-import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class Response {
 
@@ -138,17 +134,23 @@ public final class Response {
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
         switch (code) {
-            case 200:
-                headInfo.append(HTTPStatus.CODE_200);
+            case HTTPStatus.CODE_200:
+                headInfo.append(HTTPStatus.CODE_200_DESC);
                 break;
-            case 404:
-                headInfo.append(HTTPStatus.CODE_404);
+            case HTTPStatus.CODE_302:
+                headInfo.append(HTTPStatus.CODE_302_DESC);
                 break;
-            case 500:
-                headInfo.append(HTTPStatus.CODE_500);
+            case HTTPStatus.CODE_400:
+                headInfo.append(HTTPStatus.CODE_400_BAD_REQUEST);
                 break;
-            case 302:
-                headInfo.append(HTTPStatus.CODE_302);
+            case HTTPStatus.CODE_404:
+                headInfo.append(HTTPStatus.CODE_404_DESC);
+                break;
+            case HTTPStatus.CODE_405:
+                headInfo.append(HTTPStatus.CODE_405_METHOD_NOT_SUPPORTED);
+                break;
+            case HTTPStatus.CODE_500:
+                headInfo.append(HTTPStatus.CODE_500_DESC);
                 break;
             default:
                 headInfo.append(HTTPStatus.ERROR_CODE);
@@ -203,21 +205,20 @@ public final class Response {
     }
 
     public byte[] handle(String method, Request request) {
-        //OPTIONS is HTTP pre-request，just return ok signal
-        if (StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS)) {
-            code = 200;
-            return createHeadInfo(null).toString().getBytes(Charset.forName(charset));
+        //OPTIONS is HTTP pre-request，just return ok signal or other bad request
+        if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || (StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS))) {
+            return createHeadInfo(null);
         }
         handlePre(request);
         try {
             if (request != null && request.getParams().containsKey(PLAIN)) {
                 type = HTTPStatus.PLAIN;
-                Object obj = request.getParams().get(HTTPStatus.PLAIN).get(0);
+                Object obj = request.getParams().get(PLAIN).get(0);
                 if (obj != null) {
                     content = obj.toString().getBytes(Charset.forName(charset));
-                    len = content.toString().getBytes(charset).length;
+                    len = content.length;
                 }
-                code = 200;
+                code = HTTPStatus.CODE_200;
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = request.getParams();
                 //init object instance just support basic data type and string type
@@ -240,13 +241,13 @@ public final class Response {
                         len = content.length;
                     }
                     if (code <= 0) {
-                        code = 200;
+                        code = HTTPStatus.CODE_200;
                     }
                 } else {
                     handle_404_NOT_FOUND();
                 }
             } else if (resource) {
-                code = 200;
+                code = HTTPStatus.CODE_200;
             } else {
                 handle_404_NOT_FOUND();
             }
@@ -283,17 +284,17 @@ public final class Response {
     }
 
     private void handle_500_SERVER_ERROR(String errorMessage) {
-        content = (HTTPStatus.CODE_500_DESC + HTTPStatus.COLON + errorMessage).getBytes(Charset.forName(charset));
+        content = (HTTPStatus.CODE_500_OUTPUT_DESC + HTTPStatus.COLON + errorMessage).getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
         len = content.length;
-        code = 500;
+        code = HTTPStatus.CODE_500;
     }
 
-    private void handle_404_NOT_FOUND() throws UnsupportedEncodingException {
-        content = HTTPStatus.CODE_404_DESC.getBytes(Charset.forName(charset));
+    private void handle_404_NOT_FOUND() {
+        content = HTTPStatus.CODE_404_OUTPUT_DESC.getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
         len = content.length;
-        code = 404;
+        code = HTTPStatus.CODE_404;
     }
 
     void reset() {

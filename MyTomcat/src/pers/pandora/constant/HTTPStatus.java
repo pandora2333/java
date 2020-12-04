@@ -24,6 +24,10 @@ public class HTTPStatus {
 
     public static final String POST = "POST";
 
+    public static final String PUT = "PUT";
+
+    public static final String DELETE = "DELETE";
+
     public static final String OPTIONS = "OPTIONS";
 
     public static final char BLANK = ' ';
@@ -80,13 +84,25 @@ public class HTTPStatus {
 
     public static final String IMAGE_TYPE = "image/jpeg";
 
-    public static final String CODE_200 = "OK";
+    public static final int CODE_200 = 200;
 
-    public static final String CODE_404 = "Not Found";
+    public static final int CODE_302 = 302;
 
-    public static final String CODE_500 = "Server Error";
+    public static final int CODE_400 = 400;
 
-    public static final String CODE_302 = "Found";
+    public static final int CODE_404 = 404;
+
+    public static final int CODE_405 = 405;
+
+    public static final int CODE_500 = 500;
+
+    public static final String CODE_200_DESC = "OK";
+
+    public static final String CODE_404_DESC = "Not Found";
+
+    public static final String CODE_500_DESC = "Server Error";
+
+    public static final String CODE_302_DESC = "Found";
 
     public static final String ERROR_CODE = "Error Code";
 
@@ -94,9 +110,19 @@ public class HTTPStatus {
 
     public static final String CHARSET = "charset";
 
-    public static final String CODE_500_DESC = "Server Inner Some Errors";
+    public static final String CODE_500_OUTPUT_DESC = "Server Inner Some Errors";
 
-    public static final String CODE_404_DESC = "Page Not Found";
+    public static final String CODE_404_OUTPUT_DESC = "Page Not Found";
+
+    public static final String CODE_405_METHOD_NOT_SUPPORTED = "method not allowed";
+
+    public static final String CODE_400_BAD_REQUEST = "Bad Request";
+
+    public static final String PATH_PARAM_SEPARATOE = "\\{.*?\\}";
+
+    public static final String PATH_REGEX_MARK = ".*?/\\{.*?\\}.*";
+
+    public static final String PATH_PARM_REPLACE = ".*?";
 
     //cookie
     public static final String VERSION = "Version";

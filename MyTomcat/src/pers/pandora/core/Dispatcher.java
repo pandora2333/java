@@ -39,9 +39,9 @@ abstract class Dispatcher {
         if (StringUtils.isNotEmpty(reqMsg)) {
             String servlet = request.handle(reqMsg);
             if (servlet != null) {
-                if(servlet.equals(HTTPStatus.OPTIONS)){
+                if (servlet.equals(HTTPStatus.OPTIONS)) {
                     pushClient(response.handle(HTTPStatus.OPTIONS, null), null);
-                }else if (servlet.equals(RequestMappingHandler.MVC_CLASS)) {
+                } else if (servlet.equals(RequestMappingHandler.MVC_CLASS)) {
                     //exec mvc operation
                     //add mvc path into the map
                     ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
@@ -93,7 +93,7 @@ abstract class Dispatcher {
     }
 
     protected boolean initRequest(ByteBuffer data) {
-        for (Pair<Integer, Interceptor> interceptor :  RequestMappingHandler.getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
                 return false;

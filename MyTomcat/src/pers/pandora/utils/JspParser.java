@@ -11,6 +11,7 @@ import pers.pandora.vo.Tuple;
 import javax.tools.*;
 import java.io.*;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,7 +72,7 @@ public final class JspParser {
             inFifle.close();
             String jsp = buf.toString();
             //Using file hash, duplicate classes are not generated again
-            String query = CodeUtils.hashEncode(jsp, SALT, null);
+            String query = CodeUtils.hashEncode(jsp, SALT, null, null);
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = servletName.substring(0, 1).toUpperCase() + servletName.substring(1);

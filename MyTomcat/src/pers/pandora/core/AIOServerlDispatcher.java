@@ -23,32 +23,30 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     @Override
     public void completed(Integer result, Attachment att) {
         server = att.getServer();
-        if (att.isReadMode()) {
-            this.att = att;
-            ByteBuffer buffer = att.getBuffer();
-            buffer.flip();
-            //pre handle HTTP resource
-            initRequest(buffer);
-            String msg = null;
-            //conten-length = all body data bytes after blank line(\n)
-            try {
-                msg = handleUploadFile(buffer.array(), buffer.position(), buffer.limit());
-            } catch (UnsupportedEncodingException e) {
-                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
-            }
-            try {
-                dispatcher(msg);
-            } catch (Exception e) {
-                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
-            }
-            //after HTTP request completed, and before close the tcp connection
-            handleRequestCompleted();
-            //short connection,one request need one tcp connection
-            server.close(att, this);
-        } else {
-            //short connection,one request need one tcp connection
-            server.close(att, this);
+        if(result < 0) {
+            return;
         }
+        this.att = att;
+        ByteBuffer buffer = att.getBuffer();
+        buffer.flip();
+        //pre handle HTTP resource
+        initRequest(buffer);
+        String msg = null;
+        //conten-length = all body data bytes after blank line(\n)
+        try {
+            msg = handleUploadFile(buffer.array(), buffer.position(), buffer.limit());
+        } catch (UnsupportedEncodingException e) {
+            logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+        }
+        try {
+            dispatcher(msg);
+        } catch (Exception e) {
+            logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+        }
+        //after HTTP request completed, and before close the tcp connection
+        handleRequestCompleted();
+        //short connection,one request need one tcp connection
+        server.close(att, this);
     }
 
     //firefox
@@ -215,8 +213,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                                 server.getServerName(), LOG.EXCEPTION_DESC, e);
                     }
                 }
-                att.setReadMode(false);
-                att.getClient().write(att.getBuffer(), att, this);
+                att.getBuffer().clear();
             }
         }
     }

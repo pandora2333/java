@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 public abstract class Server {
 
@@ -210,7 +211,7 @@ public abstract class Server {
                     //expelTime >= 1s ,it can control in ms time level
                     Thread.sleep(Math.max(0, expelTime - (endTime - startTime)));
                 } catch (InterruptedException e) {
-                    logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, this.getServerName(), LOG.EXCEPTION_DESC, e);
+                    logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
                 }
                 Instant now = Instant.now();
                 startTime = now.getEpochSecond();
@@ -224,12 +225,12 @@ public abstract class Server {
                     }
                 });
                 invalidKey.stream().forEach(removeKey -> {
-                    logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, this.getServerName(), removeKey);
+                    logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), removeKey);
                     sessionMap.remove(removeKey);
                     invalidSessionMap.remove(removeKey);
                 });
                 validKey.stream().forEach(addKey -> {
-                    logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, this.getServerName(), addKey);
+                    logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), addKey);
                     invalidSessionMap.remove(addKey);
                 });
                 invalidKey.clear();
@@ -244,11 +245,11 @@ public abstract class Server {
     public synchronized void close(Attachment att, Object target) {
         try {
             if (att.getClient().isOpen()) {
-                logger.info(LOG.LOG_POS + "will be closed!", this.getServerName(), att.getClient().getRemoteAddress());
+                logger.info(LOG.LOG_POS + " will be closed!", getServerName(), att.getClient().getRemoteAddress());
                 att.getClient().close();
             }
         } catch (IOException e) {
-            logger.error(LOG.LOG_POS + "close client" + LOG.LOG_POS, this.getServerName(), target, LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_POS + "close client" + LOG.LOG_POS, getServerName(), target, LOG.EXCEPTION_DESC, e);
         }
     }
 }

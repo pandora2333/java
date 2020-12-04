@@ -87,13 +87,12 @@ public final class AIOServer extends Server {
                     try {
                         clientAddr = client.getRemoteAddress();
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, att.getServer().getServerName(), LOG.EXCEPTION_DESC, e);
+                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
                     }
-                    logger.info(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, att.getServer().getServerName(), clientAddr);
+                    logger.info(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
                     newAtt.setBuffer(ByteBuffer.allocate(getCapcity()));
-                    newAtt.setReadMode(true);
                     if (fileServer) {
                         slavePool.submit(() -> {
                             AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
@@ -117,15 +116,15 @@ public final class AIOServer extends Server {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
                         close(att, this);
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, att.getServer().getServerName(), t);
+                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
                     }
                     asyncServerSocketChannel.accept(att, this);
                 }
             });
             execExpelThread(expeltTime);
-            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", this.getServerName(), (System.currentTimeMillis() - start));
+            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", getServerName(), (System.currentTimeMillis() - start));
         } catch (IOException | ClassNotFoundException e) {
-            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, this.getServerName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
         }
     }
 
