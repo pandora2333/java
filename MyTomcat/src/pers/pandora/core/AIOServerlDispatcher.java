@@ -1,7 +1,7 @@
 package pers.pandora.core;
 
+import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
-import pers.pandora.vo.Attachment;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.utils.StringUtils;
@@ -23,11 +23,13 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     @Override
     public void completed(Integer result, Attachment att) {
         server = att.getServer();
-        if(result < 0) {
+        this.att = att;
+        att.setKeepAlive(true);
+        if (result < 0) {
             return;
         }
-        this.att = att;
         ByteBuffer buffer = att.getBuffer();
+        //model change:write -> read
         buffer.flip();
         //pre handle HTTP resource
         initRequest(buffer);
@@ -40,13 +42,23 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         }
         try {
             dispatcher(msg);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
         }
         //after HTTP request completed, and before close the tcp connection
         handleRequestCompleted();
-        //short connection,one request need one tcp connection
-        server.close(att, this);
+        response.reset();
+        buffer.clear();
+        att.setKeepAlive(false);
+        server.slavePool.submit(() -> {
+            try {
+                //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
+                Thread.sleep(80);
+                completed(att.getClient().read(buffer).get(),att);
+            } catch (InterruptedException | ExecutionException e) {
+                failed(e, att);
+            }
+        });
     }
 
     //firefox
@@ -62,27 +74,35 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //for jpg file ,it has the highlight mark: xffxd8 --- xffxd9
         String msg = new String(data, i, limit, request.getCharset());
 //        logger.info("receive datas from the client:"+LOG.LOG_PRE, msg);
-        int j = msg.indexOf(HTTPStatus.FILEMARK), k, l, start, end, sideLen, len;
-        String head = msg;
+        int j = msg.indexOf(HTTPStatus.FILEMARK), k, l, start, end, sideLen, len, offset = 0, jj;
+        String head = msg, fileDesc, tmp = JSP.NO_CHAR;
+        if (msg.startsWith(HTTPStatus.GET) || msg.startsWith(HTTPStatus.POST) ||
+                msg.startsWith(HTTPStatus.PUT) || msg.startsWith(HTTPStatus.DELETE) || msg.startsWith(HTTPStatus.OPTIONS)) {
+            request.reset();
+        }
         if (j >= 0) {
-            request.setMultipart(true);
             j += HTTPStatus.FILEMARK.length();
-            int jj = j;
+            jj = j;
             for (; j < msg.length() && msg.charAt(j) != HTTPStatus.CRLF; j++) ;
             //get file separator
-            String fileDesc = msg.substring(jj, j - HTTPStatus.LINE_SPLITER + 1);
-            String tmp = msg.substring(0, j);
-            int offset = tmp.getBytes(request.getCharset()).length;
+            fileDesc = msg.substring(jj, j - HTTPStatus.LINE_SPLITER + 1);
+            request.setFileDesc(fileDesc);
+            tmp = msg.substring(0, j);
+            offset = tmp.getBytes(request.getCharset()).length;
             msg = msg.substring(j);
-            j = msg.indexOf(fileDesc);
-            if (j >= 0) {
-                head = tmp + msg.substring(0, j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER);
-            }
+        }
+        if (StringUtils.isNotEmpty(request.getFileDesc())) {
+            request.setMultipart(true);
+            fileDesc = request.getFileDesc();
             boolean isFile = false;
             String part, varName, fileName, contentType, sideWindow, varValue;
             String fileType[];
             byte[] fileData;
             List<Object> objects;
+            j = msg.indexOf(fileDesc);
+            if (j >= 0) {
+                head = tmp + msg.substring(0, Math.max(0,j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER));
+            }
             while (j >= 0) {
                 j += fileDesc.length() + HTTPStatus.LINE_SPLITER;
                 if (!isFile) {
@@ -161,17 +181,13 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 }
             }
         }
-        return head;
+        return request.isFlag() ? HTTPStatus.POST : head;
     }
 
     @Override
     public void failed(Throwable t, Attachment att) {
-        try {
-            logger.error(LOG.LOG_POS + "aio handler" + LOG.LOG_POS,
-                    server.getServerName(), att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
-            server.close(att, this);
-        } catch (IOException e) {
-            logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, server.getServerName(), t);
+        if(att.getClient().isOpen()){
+            server.close(att,this);
         }
     }
 

@@ -37,7 +37,11 @@ abstract class Dispatcher {
     //main handle HTTP message
     public final void dispatcher(String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
-            String servlet = request.handle(reqMsg);
+            String servlet = request.getServlet();
+            if (!request.isFlag()) {
+                servlet = request.handle(reqMsg);
+                request.setServlet(servlet);
+            }
             if (servlet != null) {
                 if (servlet.equals(HTTPStatus.OPTIONS)) {
                     pushClient(response.handle(HTTPStatus.OPTIONS, null), null);

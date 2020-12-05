@@ -23,6 +23,7 @@ public class TestServlet implements Servlet {
                 .append("图片")
                 .append("</title></head><body>")
                 .append("<img src='http://localhost:8080/static/114.png'></img>")
+                .append("<img src='http://localhost:8080/static/1.png'></img>")
                 .append("test页面")
                 .append("</body></html>");
         return sb.toString();

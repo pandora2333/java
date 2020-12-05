@@ -16,6 +16,8 @@ public class CodeUtils {
     private static Logger logger = LogManager.getLogger(CodeUtils.class);
     //default md5
     public static final String DEFAULTENCODE = "md5";
+    //WS default code
+    public static final String SHA1 = "sha1";
 
     private static final char ZERO = '0';
 
@@ -44,9 +46,12 @@ public class CodeUtils {
     }
 
     public static String sha1AndBase64(String msg, String charset) {
+        if (!StringUtils.isNotEmpty(msg)) {
+            return msg;
+        }
         byte[] secretBytes = null;
         try {
-            secretBytes = MessageDigest.getInstance("sha1").digest(
+            secretBytes = MessageDigest.getInstance(SHA1).digest(
                     msg.getBytes(Charset.forName(charset)));
         } catch (NoSuchAlgorithmException e) {
             logger.error(LOG.LOG_PRE + "sha1AndBase64" + LOG.LOG_POS, CodeUtils.class.getName(), LOG.EXCEPTION_DESC, e);

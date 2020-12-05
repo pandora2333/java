@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtils;
-import pers.pandora.vo.Attachment;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -49,6 +48,32 @@ public abstract class Server {
     private SerialSessionSupport serialSessionSupport;
 
     private Map<String, String> context;
+    //browser build the tcps
+    private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
+
+    private int maxKeepClients;
+
+    protected ExecutorService mainPool;
+
+    protected ExecutorService slavePool;
+
+    public void addClients(String ip, Attachment attachment) {
+        if (StringUtils.isNotEmpty(ip) && attachment != null && attachment.isKeepAlive()) {
+            this.keepClients.put(ip, attachment);
+        }
+    }
+
+    public Map<String, Attachment> getKeepClients() {
+        return keepClients;
+    }
+
+    public int getMaxKeepClients() {
+        return maxKeepClients;
+    }
+
+    public void setMaxKeepClients(int maxKeepClients) {
+        this.maxKeepClients = maxKeepClients;
+    }
 
     protected static void mainLoop() {
         try {
@@ -199,7 +224,7 @@ public abstract class Server {
 
     public abstract void start();
 
-    public abstract void start(int port, int capcity, long expelTime, long waitReceivedTime);
+    public abstract void start(int port, int capcity, int maxKeepClients, long expelTime, long gcTime, long waitReceivedTime);
 
     protected void execExpelThread(long expelTime) {
         final List<String> invalidKey = new ArrayList<>();
@@ -240,6 +265,30 @@ public abstract class Server {
         });
         invalidResourceExecutor.setDaemon(true);
         invalidResourceExecutor.start();
+    }
+
+    public void gc(long gcTime) {
+        Thread invalidClientExecutor = new Thread(() -> {
+            long startTime = 0, endTime = 0;
+            while (true) {
+                try {
+                    //gcTime should depends on tcp keepalive backet  ,it can control in ms time level
+                    Thread.sleep(Math.max(0, gcTime - (endTime - startTime)));
+                } catch (InterruptedException e) {
+                    logger.error(LOG.LOG_PRE + "gc" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
+                }
+                Instant now = Instant.now();
+                startTime = now.getEpochSecond();
+                keepClients.forEach((k, v) -> {
+                    if (!v.isKeepAlive()) {
+                        close(v, this);
+                    }
+                });
+                endTime = System.currentTimeMillis();
+            }
+        });
+        invalidClientExecutor.setDaemon(true);
+        invalidClientExecutor.start();
     }
 
     public synchronized void close(Attachment att, Object target) {

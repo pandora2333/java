@@ -3,7 +3,6 @@ package pers.pandora.core;
 import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.XMLFactory;
-import pers.pandora.vo.Attachment;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -37,28 +36,23 @@ public final class AIOServer extends Server {
 
     @Override
     public void start() {
-        start(8080, getCapcity(), 1000, 100);
+        start(8080, getCapcity(), 250, 1000, 30000, 80);
     }
 
     @Override
-    public void start(int port, int capacity, long expeltTime, long waitReceivedTime) {
+    public void start(int port, int capacity, int maxKeepClients, long expeltTime, long gcTime, long waitReceivedTime) {
         setPort(port);
         setRunning(true);
         setCapcity(capacity);
+        setMaxKeepClients(maxKeepClients);
         //as file server? it defines up file size maybe over 1M
         //if 10m file up env,must be 100ms(think that network fluctuation env),maybe page load over 5s
         //the waitReceivedTime = browser sent request(include file data) need time + network fluctuation maybe need time
-        boolean fileServer = waitReceivedTime > 0;
-        if (!fileServer) {
-            //quickly request and high parallel tcp connection pattern
-            //In fact,AIO Server will be expected that as a web page server to  load web page faster rather than as a file server for browser
-            setCapcity(1024 * 1024);
-        }
         try {
             //main thread pool should do to connect tcp socket from client
-            ExecutorService mainPool = Executors.newFixedThreadPool(getPoolSize());
+            mainPool = Executors.newFixedThreadPool(getPoolSize());
             //slave thread pool should do to I/O disk receiving client's datas
-            ExecutorService slavePool = fileServer ? Executors.newFixedThreadPool(getPoolSize()) : null;
+            slavePool = Executors.newFixedThreadPool(2 * getPoolSize() + 1);
             AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             asyncServerSocketChannel = serverSocketChannel;
@@ -72,13 +66,15 @@ public final class AIOServer extends Server {
             //init web.xml
             setContext(new XMLFactory().parse(getWebConfigPath()));
             att.setServer(this);
+            att.setWaitReceivedTime(waitReceivedTime);
             //load SESSION.ser if set before the start method is running
             if (getSerialSessionSupport() != null) {
                 setSessionMap(getSerialSessionSupport().deserialSession(getServerName()));
             }
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
-                            "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" + LOG.VERTICAL + "waitReceivedTime:" + LOG.LOG_PRE + "ms]",
-                    this.getServerName(), port, capacity, expeltTime, waitReceivedTime);
+                            "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
+                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms" + LOG.VERTICAL + "waitReceivedTime:" + LOG.LOG_PRE + "ms]",
+                    getServerName(), port, capacity, maxKeepClients, expeltTime, gcTime, waitReceivedTime);
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -93,20 +89,22 @@ public final class AIOServer extends Server {
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
                     newAtt.setBuffer(ByteBuffer.allocate(getCapcity()));
-                    if (fileServer) {
-                        slavePool.submit(() -> {
-                            AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
-                            try {
-                                //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
-                                Thread.sleep(waitReceivedTime);
-                                dispatcher.completed(client.read(newAtt.getBuffer()).get(), newAtt);
-                            } catch (InterruptedException | ExecutionException e) {
-                                dispatcher.failed(e, newAtt);
-                            }
-                        });
-                    } else {
-                        client.read(newAtt.getBuffer(), newAtt, new AIOServerlDispatcher());
+                    newAtt.setKeepAlive(true);
+                    newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
+                    //long connection or short connection
+                    if (getKeepClients().size() < getMaxKeepClients()) {
+                        addClients(clientAddr.toString(), newAtt);
                     }
+                    slavePool.submit(() -> {
+                        AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
+                        try {
+                            //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
+                            Thread.sleep(waitReceivedTime);
+                            dispatcher.completed(client.read(newAtt.getBuffer()).get(), newAtt);
+                        } catch (InterruptedException | ExecutionException e) {
+                            dispatcher.failed(e, newAtt);
+                        }
+                    });
                     asyncServerSocketChannel.accept(att, this);
                 }
 
@@ -122,6 +120,7 @@ public final class AIOServer extends Server {
                 }
             });
             execExpelThread(expeltTime);
+            gc(gcTime);
             logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", getServerName(), (System.currentTimeMillis() - start));
         } catch (IOException | ClassNotFoundException e) {
             logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);

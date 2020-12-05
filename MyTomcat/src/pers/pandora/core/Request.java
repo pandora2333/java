@@ -51,8 +51,42 @@ public final class Request {
 
     private Session session;
 
+    private String fileDesc;
+
+    private String servlet;
+    //reset flag
+    private boolean flag;
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
+    }
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public String getServlet() {
+        return servlet;
+    }
+
+    public void setServlet(String servlet) {
+        this.servlet = servlet;
+    }
+
+    public String getFileDesc() {
+        return fileDesc;
+    }
+
+    public void setFileDesc(String fileDesc) {
+        this.fileDesc = fileDesc;
+    }
+
     public List<String> getPathParams() {
         return pathParams;
+    }
+
+    public void setPathParams(List<String> pathParams) {
+        this.pathParams = pathParams;
     }
 
     public boolean addInvalidSession(String key) {
@@ -217,6 +251,7 @@ public final class Request {
     }
 
     public String handle(String msg) {
+        flag = true;
         //handle request head
         msg = handleHeadInfo(msg);
         String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
@@ -428,8 +463,11 @@ public final class Request {
     }
 
     void reset() {
+        flag = false;
         method = null;
         reqUrl = null;
+        fileDesc = null;
+        servlet = null;
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
         }
