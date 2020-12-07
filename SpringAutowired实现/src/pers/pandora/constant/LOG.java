@@ -11,4 +11,6 @@ public class LOG {
     public static final String LOG_POS = " {}{}";
 
     public static final char VERTICAL = '|';
+
+    public static final String NO_CHAR = "";
 }

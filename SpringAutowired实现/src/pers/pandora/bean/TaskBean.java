@@ -1,10 +1,9 @@
 package pers.pandora.bean;
+import pers.pandora.annotation.*;
 
-import pers.pandora.annotation.PropertySource;
-import pers.pandora.annotation.Value;
 
-//≤‚ ‘
-@PropertySource
+@Deprecated
+@PropertySource("TaskBean.properties")
 public class TaskBean {
 	@Value("user.name")
 	private String name;
@@ -12,6 +11,17 @@ public class TaskBean {
 	private int age;
 	@Value("user.money")
 	private float money;
+//	@Autowired("a")
+	@Autowired
+	public B b;
+
+	public String get(){
+		return "TaskBean{" +
+				"name='" + name + '\'' +
+				", age=" + age +
+				", money=" + money +
+				"}";
+	}
 
 	public TaskBean() {
 	}
@@ -34,7 +44,11 @@ public class TaskBean {
 
 	@Override
 	public String toString() {
-		return "TaskBean [name=" + name + ", age=" + age+ ", money=" + money  + "]";
+		return "TaskBean{" +
+				"name='" + name + '\'' +
+				", age=" + age +
+				", money=" + money +
+				", b=" + b +
+				'}';
 	}
-
 }

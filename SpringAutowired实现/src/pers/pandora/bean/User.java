@@ -3,6 +3,7 @@ package pers.pandora.bean;
 import pers.pandora.annotation.PropertySource;
 import pers.pandora.annotation.Value;
 
+@Deprecated
 @PropertySource("userPro.properties")
 public class User {
     @Value("uid")

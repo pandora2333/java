@@ -1,11 +1,13 @@
 package pers.pandora.config;
 
 import pers.pandora.annotation.Bean;
-import pers.pandora.annotation.ConfigureScan;
+import pers.pandora.annotation.Configruation;
+import pers.pandora.bean.B;
 import pers.pandora.bean.TaskBean;
 import pers.pandora.bean.User;
 
-@ConfigureScan
+@Deprecated
+@Configruation
 public class SpringConfig {
 
 	@Bean("taskBean")
@@ -20,4 +22,12 @@ public class SpringConfig {
 	public User user(){
 		return new User();
 	}
+	@Bean
+	public B b(){
+		B b = new B();
+		b.setA("A");
+		b.setB("B");
+		return b;
+	}
+
 }
