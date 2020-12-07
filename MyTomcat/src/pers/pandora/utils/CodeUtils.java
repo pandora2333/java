@@ -49,6 +49,9 @@ public class CodeUtils {
         if (!StringUtils.isNotEmpty(msg)) {
             return msg;
         }
+        if (!StringUtils.isNotEmpty(charset)) {
+            charset = HTTPStatus.DEFAULTENCODING;
+        }
         byte[] secretBytes = null;
         try {
             secretBytes = MessageDigest.getInstance(SHA1).digest(

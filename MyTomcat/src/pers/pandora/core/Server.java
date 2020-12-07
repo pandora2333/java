@@ -74,7 +74,7 @@ public abstract class Server {
     public void setMaxKeepClients(int maxKeepClients) {
         this.maxKeepClients = maxKeepClients;
     }
-
+    //You should call this method after you start the server
     protected static void mainLoop() {
         try {
             Thread.currentThread().join();

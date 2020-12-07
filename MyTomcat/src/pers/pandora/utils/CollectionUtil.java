@@ -5,11 +5,11 @@ import java.util.Map;
 
 public class CollectionUtil {
 
-    public static boolean isNotEmptry(Collection collection){
+    public static boolean isNotEmptry(Collection collection) {
         return collection != null && collection.size() > 0;
     }
 
-    public static boolean isNotEmptry(Map collection){
+    public static boolean isNotEmptry(Map collection) {
         return collection != null && collection.size() > 0;
     }
 }

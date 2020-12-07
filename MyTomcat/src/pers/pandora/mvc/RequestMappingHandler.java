@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
 import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
+import pers.pandora.core.WebSocketSession;
 import pers.pandora.utils.CollectionUtil;
 import pers.pandora.utils.StringUtils;
 import pers.pandora.vo.Pair;
@@ -34,12 +35,20 @@ import java.util.concurrent.*;
 public final class RequestMappingHandler {
 
     private static Logger logger = LogManager.getLogger(RequestMappingHandler.class);
+    //for @Controller
     //url - method
     private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
     private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
     //restful-param-path
     private static Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
+    //single controller
+    private static Map<String, Object> objectMap = new ConcurrentHashMap<>();
+    //for @WebSocket
+    //url - method
+    private static Map<String, Method> wsMappings = new ConcurrentHashMap<>(16);
+    //method - controller(singleton instance)
+    private static Map<Method, Object> wsControllers = new ConcurrentHashMap<>(16);
 
     private static Set<Pair<Integer, Interceptor>> interceptors;
     //Considering that JSP files may produce a large number of class files, it is optimized to obtain them from the SRC source directory
@@ -85,6 +94,9 @@ public final class RequestMappingHandler {
         return interceptors;
     }
 
+    public static Map<String, Method> getWsMappings() {
+        return wsMappings;
+    }
 
     /**
      * Execute the controller method to return the request forwarding address
@@ -195,7 +207,7 @@ public final class RequestMappingHandler {
                     objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames.get(i)));
                 }
             } else if (restful && restfulParamNames.containsKey(i)) {
-                objects[i] = getValueByType(parameterTypes[i],restfulParamValues.get(restfulParamNames.get(i)));
+                objects[i] = getValueByType(parameterTypes[i], restfulParamValues.get(restfulParamNames.get(i)));
             } else {
                 logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
                                 LOG.LOG_PRE + LOG.LOG_PRE, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
@@ -224,6 +236,42 @@ public final class RequestMappingHandler {
             modelAndView.setPage(null);
         }
         modelAndView.getRequest().setObjectList(valueObject);
+    }
+
+    /**
+     * Execute WebSocket callback method
+     * @param webSocketSession
+     * @param clients
+     */
+    public static void execWSCallBack(WebSocketSession webSocketSession, Map<String, WebSocketSession> clients) {
+        if (webSocketSession == null || clients == null) {
+            return;
+        }
+        //uri-all-match pattern
+        String reqUrl = webSocketSession.getReqUrl();
+        if(!StringUtils.isNotEmpty(reqUrl)){
+            return;
+        }
+        Method method = wsMappings.get(reqUrl);
+        Object wsController = wsControllers.get(method);
+        if (method != null && wsController != null) {
+            Class<?>[] params = method.getParameterTypes();
+            Object[] values = new Object[params.length];
+            for (int i = 0; i < params.length; i++) {
+                if (params[i] == WebSocketSession.class) {
+                    values[i] = webSocketSession;
+                } else if (params[i] == Map.class) {
+                    values[i] = clients;
+                }
+            }
+            try {
+                method.invoke(wsController, values);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                logger.error("The request method does not exist:" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            }
+        } else {
+            logger.warn("No Match WS uri resource:" + LOG.LOG_PRE, reqUrl);
+        }
     }
 
     private static Object getValueByType(Class<?> parameterType, String defaultValue) {
@@ -333,35 +381,55 @@ public final class RequestMappingHandler {
         }
     }
 
+    private static void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
+        try {
+            if (!objectMap.containsKey(t.getName())) {
+                objectMap.put(t.getName(), t.newInstance());
+            }
+            controllers.put(method, objectMap.get(t.getName()));
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.error(LOG.LOG_PRE + "saveUrlPathMapping for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                    MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
+        }
+    }
+
     private static <T> void scanResolers(Class<T> t) {
-        Controller controller = t.getAnnotation(Controller.class);
-        if (controller != null) {
+        Annotation annotation = t.getAnnotation(Controller.class);
+        //Annotation is common for the same controller class
+        if (annotation != null) {
+            Controller controller = (Controller) annotation;
             String parentPath = controller.value();
             for (Method method : t.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(RequestMapping.class)) {
-                    Annotation annotation = method.getAnnotation(RequestMapping.class);
+                annotation = method.getAnnotation(RequestMapping.class);
+                if (annotation != null) {
                     String subPath = ((RequestMapping) annotation).value();
                     if (subPath.matches(HTTPStatus.PATH_REGEX_MARK)) {
                         regexMappings.put(parentPath + subPath, method);
-                    } else if (!StringUtils.isNotEmpty(subPath)) {
-                        mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
                     } else {
-                        mappings.put(parentPath + subPath, method);
+                        savePathRelation(subPath, parentPath, method, mappings);
                     }
-                    try {
-                        controllers.put(method, t.newInstance());
-                    } catch (InstantiationException | IllegalAccessException e) {
-                        logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                                MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
-                    }
+                    saveUrlPathMapping(t, method, controllers);
                 }
             }
-        } else if (t.isAnnotationPresent(Order.class)) {
+        }
+        if ((annotation = t.getAnnotation(WebSocket.class)) != null) {
+            WebSocket webSocket = (WebSocket) annotation;
+            String parentPath = webSocket.value();
+            for (Method method : t.getDeclaredMethods()) {
+                annotation = method.getAnnotation(WebSocketMethod.class);
+                if (annotation != null) {
+                    String subPath = ((WebSocketMethod) annotation).value();
+                    savePathRelation(subPath, parentPath, method, wsMappings);
+                    saveUrlPathMapping(t, method, wsControllers);
+                }
+            }
+        }
+        if ((annotation = t.getAnnotation(Order.class)) != null) {
             Class<?>[] interfaces = t.getInterfaces();
             for (Class<?> i : interfaces) {
                 if (i == Interceptor.class) {
                     try {
-                        interceptors.add(new Pair<>(t.getAnnotation(Order.class).value(), (Interceptor) t.newInstance()));
+                        interceptors.add(new Pair<>(((Order) annotation).value(), (Interceptor) t.newInstance()));
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                                 MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
@@ -369,6 +437,14 @@ public final class RequestMappingHandler {
                     break;
                 }
             }
+        }
+    }
+
+    private static void savePathRelation(String subPath, String parentPath, Method method, Map<String, Method> mappings) {
+        if (!StringUtils.isNotEmpty(subPath)) {
+            mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
+        } else {
+            mappings.put(parentPath + subPath, method);
         }
     }
 

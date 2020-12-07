@@ -186,9 +186,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     @Override
     public void failed(Throwable t, Attachment att) {
-        if(att.getClient().isOpen()){
-            server.close(att,this);
-        }
+        server.close(att,this);
     }
 
     @Override
