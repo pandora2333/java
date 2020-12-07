@@ -5,6 +5,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Order {
-    //more number can get more priority
+    //The smaller the number, the lower the priority
     int value() default 1;
 }
