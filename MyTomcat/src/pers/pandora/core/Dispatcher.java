@@ -56,6 +56,7 @@ abstract class Dispatcher {
                         if (mv.isJson()) {
                             pushClient(response.handle(HTTPStatus.GET, request), null);
                         } else {
+                            request.setFlag(false);
                             dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
                         }
                     } else {

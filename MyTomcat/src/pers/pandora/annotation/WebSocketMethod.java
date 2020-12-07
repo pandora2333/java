@@ -6,7 +6,6 @@ import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 public @interface WebSocketMethod {
     String value() default JSP.NO_CHAR;
 }
