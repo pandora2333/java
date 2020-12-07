@@ -1,13 +1,25 @@
 package pers.pandora.servlet;
 
+import pers.pandora.annotation.Autowired;
+import pers.pandora.annotation.PropertySource;
+import pers.pandora.annotation.Value;
 import pers.pandora.core.Request;
 import pers.pandora.core.Response;
+import pers.pandora.test.Client;
 import pers.pandora.vo.Tuple;
 
 import java.util.Map;
 
 @Deprecated
+@PropertySource("TestServlet.properties")
 public class TestServlet implements Servlet {
+
+    @Value("testOM")
+    private String test;
+
+    @Autowired
+    Client client;
+
     @Override
     public void service() {
 
@@ -15,9 +27,10 @@ public class TestServlet implements Servlet {
 
     @Override
     public String doGet(Request request, Response response) {
-        for(Map.Entry<String, Tuple<String, String, byte[]>> entry : request.getUploadFiles().entrySet()){
-            request.saveFileData(entry.getKey(),null);
+        for (Map.Entry<String, Tuple<String, String, byte[]>> entry : request.getUploadFiles().entrySet()) {
+            request.saveFileData(entry.getKey(), null);
         }
+        System.out.println("test:" + test + ",client:" + client.getTestOM());
         StringBuilder sb = new StringBuilder();
         sb.append("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>")
                 .append("图片")

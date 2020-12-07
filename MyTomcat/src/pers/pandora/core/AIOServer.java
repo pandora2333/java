@@ -21,6 +21,8 @@ public final class AIOServer extends Server {
 
     public static void main(String[] args) {
         //using simple way
+        //init BeanPool
+        BeanPool.init();
         //init mvc controller
         RequestMappingHandler.init();
         AIOServer server = new AIOServer();

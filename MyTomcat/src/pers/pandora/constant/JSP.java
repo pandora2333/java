@@ -4,8 +4,6 @@ public class JSP {
 
     public static final String JSP_LANGUAGE_DESC = "langage=\"java\"";
 
-    public static final String NO_CHAR = "";
-
     public static final String JSP_HEAD_DESC = "<jsp";
 
     public static final String JSP_TAIL_DESC = "</jsp>";

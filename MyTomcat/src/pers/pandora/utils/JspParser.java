@@ -11,7 +11,6 @@ import pers.pandora.vo.Tuple;
 import javax.tools.*;
 import java.io.*;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,7 +83,7 @@ public final class JspParser {
             }
             StringBuffer sb = new StringBuffer();
             if (jsp.contains(JSP.JSP_LANGUAGE_DESC)) {
-                jsp = jsp.replace(JSP.JSP_LANGUAGE_DESC, JSP.NO_CHAR).trim();
+                jsp = jsp.replace(JSP.JSP_LANGUAGE_DESC, LOG.NO_CHAR).trim();
             }
             sb.append(jsp.substring(jsp.indexOf(JSP.JSP_HEAD_DESC) + 6, jsp.indexOf(JSP.JSP_TAIL_DESC)).trim());
             //target类生成
@@ -103,12 +102,12 @@ public final class JspParser {
                 javaCode = sb.toString().substring(matcher.start() + 2, matcher.end() - 2);
                 //写入Servlet类
                 sbuf.append(JSP.JSP_CODE_PRE + javaCode + HTTPStatus.CRLF);
-                matcher.appendReplacement(jspSrc, JSP.NO_CHAR);
+                matcher.appendReplacement(jspSrc, LOG.NO_CHAR);
             }
             matcher.appendTail(jspSrc);
             //去除所有"特殊符号
             if (jspSrc.toString().contains(String.valueOf(HTTPStatus.FILENAMETAIL))) {
-                specToken = jspSrc.toString().replaceAll(String.valueOf(HTTPStatus.FILENAMETAIL), JSP.NO_CHAR);
+                specToken = jspSrc.toString().replaceAll(String.valueOf(HTTPStatus.FILENAMETAIL), LOG.NO_CHAR);
                 jspSrc.delete(0, jspSrc.length());
                 jspSrc.append(specToken);
             }

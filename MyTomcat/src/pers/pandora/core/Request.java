@@ -10,7 +10,6 @@ import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.CollectionUtil;
 import pers.pandora.vo.Tuple;
@@ -257,7 +256,7 @@ public final class Request {
         String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
         String tempStr = reqToken;
         if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
-            tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)), JSP.NO_CHAR);
+            tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)), LOG.NO_CHAR);
         }
         if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;

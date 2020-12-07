@@ -1,6 +1,5 @@
 package pers.pandora.core;
 
-import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
@@ -75,7 +74,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         String msg = new String(data, i, limit, request.getCharset());
 //        logger.info("receive datas from the client:"+LOG.LOG_PRE, msg);
         int j = msg.indexOf(HTTPStatus.FILEMARK), k, l, start, end, sideLen, len, offset = 0, jj;
-        String head = msg, fileDesc, tmp = JSP.NO_CHAR;
+        String head = msg, fileDesc, tmp = LOG.NO_CHAR;
         if (msg.startsWith(HTTPStatus.GET) || msg.startsWith(HTTPStatus.POST) ||
                 msg.startsWith(HTTPStatus.PUT) || msg.startsWith(HTTPStatus.DELETE) || msg.startsWith(HTTPStatus.OPTIONS)) {
             request.reset();

@@ -1,11 +1,16 @@
 package pers.pandora.utils;
 
+import pers.pandora.core.BeanPool;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClassUtils {
+
+    private static final Map<String,Object> objectMap = new ConcurrentHashMap<>(16);
 
     public static <T> T getClass(String name) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         return (T) getClass(Class.forName(name));
@@ -35,7 +40,19 @@ public final class ClassUtils {
     }
 
     public static <T> T getClass(Class<T> tClass) throws IllegalAccessException, InstantiationException {
-        return tClass.newInstance();
+        if(tClass == null){
+            return null;
+        }
+        Object bean = objectMap.get(tClass.getName());
+        if(bean != null){
+            return (T)bean;
+        }
+        bean = BeanPool.getBeanByType(tClass);
+        if(bean == null){
+            bean = tClass.newInstance();
+        }
+        objectMap.put(tClass.getName(),bean);
+        return (T)bean;
     }
 
     private static boolean checkType(Class<?> aClass, Class<?> type) {

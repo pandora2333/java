@@ -1,12 +1,10 @@
 package pers.pandora.core;
 
 import pers.pandora.constant.HTTPStatus;
-import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.WS;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.CodeUtils;
-import pers.pandora.utils.CollectionUtil;
 import pers.pandora.vo.BinaryWSData;
 import pers.pandora.vo.TextWSData;
 import pers.pandora.vo.WSData;
@@ -43,6 +41,8 @@ public class WebSocketServer extends Server {
     private String charset = HTTPStatus.DEFAULTENCODING;
 
     public static void main(String[] args) {
+        //init BeanPool
+        BeanPool.init();
         //firstly init  RequestMappingHandler class
         RequestMappingHandler.init();
         //secondly,build the WebSocketServer class instance and start up it
@@ -255,7 +255,7 @@ public class WebSocketServer extends Server {
 
                 private byte[] buildWS(String msg) {
                     //Currently, only header SEC_WEBSOCKET_KEY verification is supported
-                    String key = JSP.NO_CHAR;
+                    String key = LOG.NO_CHAR;
                     for (String s : msg.split(String.valueOf(HTTPStatus.CRLF), -1)) {
                         String[] sp = s.split(HTTPStatus.HEAD_INFO_SPLITER + HTTPStatus.BLANK, -1);
                         if (sp.length == 2 && sp[0].equals(WS.SEC_WEBSOCKET_KEY)) {

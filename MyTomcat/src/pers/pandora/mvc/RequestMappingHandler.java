@@ -5,8 +5,8 @@ import jdk.internal.org.objectweb.asm.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
-import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
+import pers.pandora.core.BeanPool;
 import pers.pandora.core.WebSocketSession;
 import pers.pandora.utils.CollectionUtil;
 import pers.pandora.utils.StringUtils;
@@ -73,7 +73,7 @@ public final class RequestMappingHandler {
     public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
     //Thread pool minimum number of cores
     public static int minCore = Runtime.getRuntime().availableProcessors();
-    //线程池最大核心数
+    //Thread pool maximum number of cores
     public static int maxCore = minCore + 5;
     //Thread idle time
     public static long keepAlive = 50;
@@ -240,6 +240,7 @@ public final class RequestMappingHandler {
 
     /**
      * Execute WebSocket callback method
+     *
      * @param webSocketSession
      * @param clients
      */
@@ -249,7 +250,7 @@ public final class RequestMappingHandler {
         }
         //uri-all-match pattern
         String reqUrl = webSocketSession.getReqUrl();
-        if(!StringUtils.isNotEmpty(reqUrl)){
+        if (!StringUtils.isNotEmpty(reqUrl)) {
             return;
         }
         Method method = wsMappings.get(reqUrl);
@@ -276,7 +277,7 @@ public final class RequestMappingHandler {
 
     private static Object getValueByType(Class<?> parameterType, String defaultValue) {
         if (!StringUtils.isNotEmpty(defaultValue)) {
-            return parameterType == String.class ? JSP.NO_CHAR : null;
+            return parameterType == String.class ? LOG.NO_CHAR : null;
         }
         if (parameterType == String.class) {
             return defaultValue;
@@ -371,7 +372,7 @@ public final class RequestMappingHandler {
 
             } else {
                 if (files.getPath().endsWith(FILE_SPLITER + FILE_POS_MARK)) {
-                    String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, JSP.NO_CHAR).
+                    String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, LOG.NO_CHAR).
                             replace(PATH_SPLITER_PATTERN, JAVA_PACKAGE_SPLITER);
                     if (!className.equals(MVC_CLASS)) {
                         result.add(executor.submit(new IOTask(className)));
@@ -384,7 +385,8 @@ public final class RequestMappingHandler {
     private static void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
         try {
             if (!objectMap.containsKey(t.getName())) {
-                objectMap.put(t.getName(), t.newInstance());
+                Object bean = BeanPool.getBeanByType(t);
+                objectMap.put(t.getName(), bean != null ? bean : t.newInstance());
             }
             controllers.put(method, objectMap.get(t.getName()));
         } catch (InstantiationException | IllegalAccessException e) {
@@ -448,8 +450,7 @@ public final class RequestMappingHandler {
         }
     }
 
-
-    static class IOTask implements Callable<Boolean> {
+    private static class IOTask implements Callable<Boolean> {
         private String className;
 
         public IOTask(String className) {

@@ -10,6 +10,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Client {
+
+    private String testOM;
+
+    public void setTestOM(String testOM) {
+        this.testOM = testOM;
+    }
+
+    public String getTestOM() {
+        return testOM;
+    }
+
     public static void main(String[] args) {
         //It tests session serialization
         try {
