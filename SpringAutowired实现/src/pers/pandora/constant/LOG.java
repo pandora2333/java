@@ -13,4 +13,6 @@ public class LOG {
     public static final char VERTICAL = '|';
 
     public static final String NO_CHAR = "";
+
+    public static final String CLASS_NAME_SPLITER = "_";
 }

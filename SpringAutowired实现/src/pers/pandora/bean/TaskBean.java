@@ -51,4 +51,10 @@ public class TaskBean {
 				", b=" + b +
 				'}';
 	}
+
+	public void error() {
+	    int a = 1;
+	    int b = 0;
+		System.out.println("divide 0 :" + a/b);
+	}
 }

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SpringAutowired.iml" filepath="$PROJECT_DIR$/SpringAutowired.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PandoraOM.iml" filepath="$PROJECT_DIR$/PandoraOM.iml" />
     </modules>
   </component>
 </project>
