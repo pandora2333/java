@@ -31,58 +31,57 @@ import java.util.concurrent.*;
  * 1.It handles the mapping relationship between URL path and controller
  * 2.It initializes all interceptors that implement the interceptor interface
  * 3.It assigns MVC method parameters
+ * 4.It handles the mapping relationship between URL path and WebSocket connection
  */
 public final class RequestMappingHandler {
 
     private static Logger logger = LogManager.getLogger(RequestMappingHandler.class);
     //for @Controller
     //url - method
-    private static Map<String, Method> mappings = new ConcurrentHashMap<>(16);
+    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
-    private static Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
+    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
     //restful-param-path
-    private static Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
+    private Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
     //single controller
-    private static Map<String, Object> objectMap = new ConcurrentHashMap<>();
+    private Map<String, Object> objectMap = new ConcurrentHashMap<>();
     //for @WebSocket
     //url - method
-    private static Map<String, Method> wsMappings = new ConcurrentHashMap<>(16);
+    private Map<String, Method> wsMappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
-    private static Map<Method, Object> wsControllers = new ConcurrentHashMap<>(16);
+    private Map<Method, Object> wsControllers = new ConcurrentHashMap<>(16);
+    //Bean Pool
+    private BeanPool beanPool;
 
-    private static Set<Pair<Integer, Interceptor>> interceptors;
-    //Considering that JSP files may produce a large number of class files, it is optimized to obtain them from the SRC source directory
-    public static final String ROOTPATH = "src/";
+    private Set<Pair<Integer, Interceptor>> interceptors;
+
+    private static final Comparator<Pair<Integer, Interceptor>> CMP = (p1, p2) -> {
+        int t = p1.getK().compareTo(p2.getK());
+        return t != 0 ? t : System.identityHashCode(p1.getV()) - System.identityHashCode(p2.getV());
+    };
 
     public static final String METHOD_SPLITER = "|";
 
-    public static final char FILE_SPLITER = '.';
-
-    public static final String FILE_POS_MARK = "java";
-
     public static final String CLASS_FILE_POS = "class";
 
-    public static final char PATH_SPLITER_PATTERN = '\\';
-
-    public static final char JAVA_PACKAGE_SPLITER = '.';
     //Classes loading thread pool related parameters
-    private static ThreadPoolExecutor executor;
+    private ThreadPoolExecutor executor;
 
-    private static List<Future<Boolean>> result;
+    private List<Future<Boolean>> result;
 
     public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
     //Thread pool minimum number of cores
-    public static int minCore = Runtime.getRuntime().availableProcessors();
+    private int minCore = Runtime.getRuntime().availableProcessors();
     //Thread pool maximum number of cores
-    public static int maxCore = minCore + 5;
+    private int maxCore = minCore + 5;
     //Thread idle time
-    public static long keepAlive = 50;
+    private long keepAlive = 50;
     //Thread idle time unit
-    public static TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+    private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     //Timeout waiting for class loading time
-    public static long timeout = 5;
+    private long timeout = 5;
     //Timeout wait class load time unit
-    public static TimeUnit timeOutUnit = TimeUnit.SECONDS;
+    private TimeUnit timeOutUnit = TimeUnit.SECONDS;
 //    static {
 // 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
 // 加载任务被分配到另一个线程，因此初始化类信息加载，两个线程互相等待对方释放类加载锁，造成死锁等待
@@ -90,12 +89,29 @@ public final class RequestMappingHandler {
 //         init();
 //    }
 
-    public static Set<Pair<Integer, Interceptor>> getInterceptors() {
+    public Set<Pair<Integer, Interceptor>> getInterceptors() {
         return interceptors;
     }
 
-    public static Map<String, Method> getWsMappings() {
+    public Map<String, Method> getWsMappings() {
         return wsMappings;
+    }
+
+    public void initThreadPool(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
+        this.minCore = minCore;
+        this.maxCore = maxCore;
+        this.keepAlive = keepAlive;
+        this.timeUnit = timeUnit;
+        this.timeOutUnit = timeOutUnit;
+        this.timeout = timeout;
+    }
+
+    public BeanPool getBeanPool() {
+        return beanPool;
+    }
+
+    public void setBeanPool(BeanPool beanPool) {
+        this.beanPool = beanPool;
     }
 
     /**
@@ -105,7 +121,7 @@ public final class RequestMappingHandler {
      * @return
      * @throws Exception
      */
-    public static void parseUrl(ModelAndView modelAndView) {
+    public void parseUrl(ModelAndView modelAndView) {
         Map<String, Object> valueObject = new HashMap<>();
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
         boolean restful = false;
@@ -190,7 +206,7 @@ public final class RequestMappingHandler {
             } else if (!ClassUtils.checkBasicClass(parameterTypes[i])) {
                 //Duplicate parameter simple class names are not allowed, even if the whole class names are inconsistent
                 try {
-                    target = ClassUtils.getClass(parameterTypes[i]);
+                    target = ClassUtils.getClass(parameterTypes[i], beanPool);
                     //requestScope
                     ClassUtils.initWithParams(target, params);
                     //sessionScope
@@ -244,7 +260,7 @@ public final class RequestMappingHandler {
      * @param webSocketSession
      * @param clients
      */
-    public static void execWSCallBack(WebSocketSession webSocketSession, Map<String, WebSocketSession> clients) {
+    public void execWSCallBack(WebSocketSession webSocketSession, Map<String, WebSocketSession> clients) {
         if (webSocketSession == null || clients == null) {
             return;
         }
@@ -275,7 +291,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static Object getValueByType(Class<?> parameterType, String defaultValue) {
+    private Object getValueByType(Class<?> parameterType, String defaultValue) {
         if (!StringUtils.isNotEmpty(defaultValue)) {
             return parameterType == String.class ? LOG.NO_CHAR : null;
         }
@@ -311,7 +327,7 @@ public final class RequestMappingHandler {
 
     //Using ASM to operate class bytecode file to get parameter name
     @Deprecated
-    public static void handleMethodParamNames(Class<?> t) {
+    public void handleMethodParamNames(Class<?> t) {
         Map<String, Integer> modifers = new HashMap<>();
         Map<String, String[]> paramNames = new HashMap<>();
         for (Method method : t.getDeclaredMethods()) {
@@ -322,15 +338,15 @@ public final class RequestMappingHandler {
                 key.append(METHOD_SPLITER);
                 for (Class<?> param : method.getParameterTypes()) {
                     key.append(param.getName());
-                    key.append(FILE_SPLITER);
+                    key.append(BeanPool.FILE_SPLITER);
                 }
                 modifers.put(key.toString(), method.getModifiers());
                 paramNames.put(key.toString(), new String[method.getParameterTypes().length]);
             }
         }
         String className = t.getName();
-        int lastDotIndex = className.lastIndexOf(FILE_SPLITER);
-        className = className.substring(lastDotIndex + 1) + FILE_SPLITER + CLASS_FILE_POS;
+        int lastDotIndex = className.lastIndexOf(BeanPool.FILE_SPLITER);
+        className = className.substring(lastDotIndex + 1) + BeanPool.FILE_SPLITER + CLASS_FILE_POS;
         InputStream is = t.getResourceAsStream(className);
         try {
             ClassReader classReader = new ClassReader(is);
@@ -344,7 +360,7 @@ public final class RequestMappingHandler {
                             StringBuilder key = new StringBuilder(t.getName() + METHOD_SPLITER + name + METHOD_SPLITER);
                             for (Type type : Type.getArgumentTypes(desc)) {
                                 key.append(type.getClassName());
-                                key.append(FILE_SPLITER);
+                                key.append(BeanPool.FILE_SPLITER);
                             }
                             if (Modifier.isStatic(modifers.get(key))) {
                                 paramNames.get(key)[index] = name;
@@ -362,18 +378,21 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static void scanFile(String path) {
+    private void scanFile(String path) {
         File files = new File(path);
-        if (files != null) {
+        if (!files.exists()) {
+            files = new File(path + BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK);
+        }
+        if (files.exists()) {
             if (files.isDirectory()) {
-                for (File file : files.listFiles()) {
+                for (File file : Objects.requireNonNull(files.listFiles())) {
                     scanFile(file.getPath());
                 }
 
             } else {
-                if (files.getPath().endsWith(FILE_SPLITER + FILE_POS_MARK)) {
-                    String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, LOG.NO_CHAR).
-                            replace(PATH_SPLITER_PATTERN, JAVA_PACKAGE_SPLITER);
+                if (files.getPath().endsWith(BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK)) {
+                    String className = files.getPath().substring(4).replace(BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK, LOG.NO_CHAR).
+                            replace(BeanPool.PATH_SPLITER_PATTERN, BeanPool.FILE_SPLITER);
                     if (!className.equals(MVC_CLASS)) {
                         result.add(executor.submit(new IOTask(className)));
                     }
@@ -382,10 +401,10 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
+    private void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
         try {
             if (!objectMap.containsKey(t.getName())) {
-                Object bean = BeanPool.getBeanByType(t);
+                Object bean = beanPool != null ? beanPool.getBeanByType(t) : null;
                 objectMap.put(t.getName(), bean != null ? bean : t.newInstance());
             }
             controllers.put(method, objectMap.get(t.getName()));
@@ -395,7 +414,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static <T> void scanResolers(Class<T> t) {
+    private <T> void scanResolers(Class<T> t) {
         Annotation annotation = t.getAnnotation(Controller.class);
         //Annotation is common for the same controller class
         if (annotation != null) {
@@ -442,7 +461,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static void savePathRelation(String subPath, String parentPath, Method method, Map<String, Method> mappings) {
+    private void savePathRelation(String subPath, String parentPath, Method method, Map<String, Method> mappings) {
         if (!StringUtils.isNotEmpty(subPath)) {
             mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
         } else {
@@ -450,7 +469,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private static class IOTask implements Callable<Boolean> {
+    private class IOTask implements Callable<Boolean> {
         private String className;
 
         public IOTask(String className) {
@@ -471,14 +490,21 @@ public final class RequestMappingHandler {
         }
     }
 
-    public static void init() {
+    public void init(String... paths) {
+        if (paths == null || paths.length == 0) {
+            logger.warn("No path loaded");
+            return;
+        }
         result = new ArrayList<>();
-        interceptors = Collections.synchronizedSortedSet(new TreeSet<>((p1, p2) -> {
-            int t = p1.getK() - p2.getK();
-            return t != 0 ? t : System.identityHashCode(p1.getV().hashCode()) - System.identityHashCode(p2.getV());
-        }));
+        interceptors = Collections.synchronizedSortedSet(new TreeSet<>(CMP));
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
-        scanFile(ROOTPATH);
+        for (String path : paths) {
+            if (!path.startsWith(BeanPool.ROOTPATH)) {
+                path = BeanPool.ROOTPATH + path;
+            }
+            path = path.replaceAll(BeanPool.FILE_REGEX_SPLITER, String.valueOf(BeanPool.PATH_SEPARATOR));
+            scanFile(path);
+        }
         for (Future future : result) {
             try {
                 future.get(timeout, timeOutUnit);

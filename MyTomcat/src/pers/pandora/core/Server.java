@@ -3,6 +3,7 @@ package pers.pandora.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
+import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
@@ -46,6 +47,8 @@ public abstract class Server {
     private Map<String, Session> invalidSessionMap = new ConcurrentHashMap<>(16);
     //session serializer,default it is not supported
     private SerialSessionSupport serialSessionSupport;
+    //set mvc-pattern paths
+    private RequestMappingHandler requestMappingHandler;
 
     private Map<String, String> context;
     //browser build the tcps
@@ -63,6 +66,14 @@ public abstract class Server {
         }
     }
 
+    public RequestMappingHandler getRequestMappingHandler() {
+        return requestMappingHandler;
+    }
+
+    public void setRequestMappingHandler(RequestMappingHandler requestMappingHandler) {
+        this.requestMappingHandler = requestMappingHandler;
+    }
+
     public Map<String, Attachment> getKeepClients() {
         return keepClients;
     }
@@ -74,6 +85,7 @@ public abstract class Server {
     public void setMaxKeepClients(int maxKeepClients) {
         this.maxKeepClients = maxKeepClients;
     }
+
     //You should call this method after you start the server
     protected static void mainLoop() {
         try {

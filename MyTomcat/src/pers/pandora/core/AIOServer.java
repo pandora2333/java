@@ -22,12 +22,19 @@ public final class AIOServer extends Server {
     public static void main(String[] args) {
         //using simple way
         //init BeanPool
-        BeanPool.init();
-        //init mvc controller
-        RequestMappingHandler.init();
+        BeanPool beanPool = new BeanPool();
+        //init aop config
+        beanPool.setAopPaths("pers.pandora.test");
+        beanPool.setAopProxyFactory(new JavassistAOPProxyFactory());
+        beanPool.init("pers.pandora.test","pers.pandora.servlet");
+        //init mvc-config file
+        RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
+        requestMappingHandler.init("pers.pandora.controller");
+        requestMappingHandler.setBeanPool(beanPool);
         AIOServer server = new AIOServer();
         //set session serializer and deserializer
         server.setServerName("pandora_test_1");
+        server.setRequestMappingHandler(requestMappingHandler);
         server.setSerialSessionSupport(new SerialSessionSupportSimpler());
         SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
         //start server

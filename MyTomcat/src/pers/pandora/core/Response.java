@@ -3,7 +3,6 @@ package pers.pandora.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
-import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.servlet.Servlet;
 import pers.pandora.utils.CollectionUtil;
 import pers.pandora.vo.Pair;
@@ -222,7 +221,7 @@ public final class Response {
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = request.getParams();
                 //init object instance just support basic data type and string type
-                Servlet handler = ClassUtils.getClass(servlet);
+                Servlet handler = ClassUtils.getClass(servlet,request.getDispatcher().server.getRequestMappingHandler().getBeanPool());
                 //requestScope
                 ClassUtils.initWithParams(handler, params);
                 //sessionScope
@@ -266,7 +265,7 @@ public final class Response {
     }
 
     private boolean handleAfter(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().afterMethod(request, this)) {
                 return false;
             }
@@ -275,7 +274,7 @@ public final class Response {
     }
 
     private boolean handlePre(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : RequestMappingHandler.getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().preMethod(request, this)) {
                 return false;
             }

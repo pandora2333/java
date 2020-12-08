@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MyTomcat.iml" filepath="$PROJECT_DIR$/MyTomcat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PandoraWeb.iml" filepath="$PROJECT_DIR$/PandoraWeb.iml" />
     </modules>
   </component>
 </project>

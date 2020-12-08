@@ -33,8 +33,6 @@ public final class JspParser {
 
     private static final char PACKAGE_SPLITER = '.';
 
-    public static final String CLASS_NAME_SPLITER = "_";
-
     private static final String SALT = "PANDORA_SERVER_SECRET_KEY";
 
     private static final String SERVLET_CLASS = "pers.pandora.servlet.Servlet";
@@ -75,7 +73,7 @@ public final class JspParser {
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = servletName.substring(0, 1).toUpperCase() + servletName.substring(1);
-            className = className + CLASS_NAME_SPLITER + query;
+            className = className + LOG.CLASS_NAME_SPLITER + query;
             file = new File(CLASSDIR + PATH_SPLITER + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
             className = JSP_PACKAGE + PACKAGE_SPLITER + className;
             if (file.exists()) {
@@ -128,7 +126,7 @@ public final class JspParser {
                 if (params.length <= 2) {
                     tmp = params[0];
                     if (params.length == 2) {
-                        tmp += CLASS_NAME_SPLITER + params[1];
+                        tmp += LOG.CLASS_NAME_SPLITER + params[1];
                     }
                     if (!set.contains(tmp)) {
                         set.add(tmp);

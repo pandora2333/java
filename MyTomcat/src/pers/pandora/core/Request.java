@@ -410,10 +410,8 @@ public final class Request {
 
     private boolean isMVC(String reqUrl) {
         for (Map.Entry<String, String> entry : dispatcher.server.getContext().entrySet()) {
-            if (entry.getValue().equals(RequestMappingHandler.MVC_CLASS)) {// /.*.do //.do
-                if (entry.getKey().equals(reqUrl) || reqUrl.matches(entry.getKey())) {
-                    return true;
-                }
+            if (entry.getValue().equals(RequestMappingHandler.MVC_CLASS) && reqUrl.matches(entry.getKey())) {// /.*.do //.do
+                return true;
             }
         }
         return false;

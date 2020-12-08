@@ -6,15 +6,15 @@ import pers.pandora.core.Response;
 import java.nio.ByteBuffer;
 
 public interface Interceptor {
-    //修改请求参数，修改响应信息（比如编码）
-    public boolean preMethod(Request request, Response response);
+    //Modify request parameters, modify response information (such as encoding)
+    boolean preMethod(Request request, Response response);
 
-    //修改请求参数（请求转发），修改响应信息（加解密/加解压缩响应信息）
-    public boolean afterMethod(Request request, Response response);
+    //Modify request parameters (request forwarding), modify response information (encryption / decryption / decompression response information)
+    boolean afterMethod(Request request, Response response);
 
-    //做资源回收
-    public boolean completeRequest(Request request, Response response);
+    //Recycling resources
+    boolean completeRequest(Request request, Response response);
 
-    //初始化分析HTTP请求,对请求信息做资源预处理 （比如修改HTTP请求解析编码，修改请求原文信息(加解密/加解压缩请求信息)）
-    public boolean initRequest(Request request, ByteBuffer data);
+    //Initialize and analyze the HTTP request, and preprocess the request information (such as modifying the HTTP request parsing code and modifying the original request information (encryption / decryption / decompression request information))
+    boolean initRequest(Request request, ByteBuffer data);
 }

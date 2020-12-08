@@ -41,12 +41,16 @@ public class WebSocketServer extends Server {
     private String charset = HTTPStatus.DEFAULTENCODING;
 
     public static void main(String[] args) {
-        //init BeanPool
-        BeanPool.init();
-        //firstly init  RequestMappingHandler class
-        RequestMappingHandler.init();
+        //firstly,init BeanPool
+        BeanPool beanPool = new BeanPool();
+        beanPool.init(BeanPool.ROOTPATH);
         //secondly,build the WebSocketServer class instance and start up it
+        //init ws-path config file
+        RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
+        requestMappingHandler.init(BeanPool.ROOTPATH);
+        requestMappingHandler.setBeanPool(beanPool);
         WebSocketServer server = new WebSocketServer();
+        server.setRequestMappingHandler(requestMappingHandler);
         server.setServerName("WebSocket");
         server.start();
         //lastly
@@ -117,7 +121,7 @@ public class WebSocketServer extends Server {
                                 if (ip != null && !clients.containsKey(ip)) {
                                     String msg = new String(buffer.array(), 0, buffer.limit());
                                     webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
-                                    if (RequestMappingHandler.getWsMappings().containsKey(webSocketSession.getReqUrl())) {
+                                    if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
                                         //sync write
                                         writeMsg(buildWS(msg), attachment);
                                         //callBack method for exec some init-methods
@@ -178,9 +182,9 @@ public class WebSocketServer extends Server {
                                                     len = 0;
                                                     for (int j = 0; j < size; j++) {
                                                         len = (len << 0x08) | (buffer.get(++i) & 0xff);
-                                                        if(len > maxWSBits){
-                                                            writeMsg(WS.OVER_UP_DATA_SIZE.getBytes(Charset.forName(charset)),attachment);
-                                                            close(attachment,this);
+                                                        if (len > maxWSBits) {
+                                                            writeMsg(WS.OVER_UP_DATA_SIZE.getBytes(Charset.forName(charset)), attachment);
+                                                            close(attachment, this);
                                                             return;
                                                         }
                                                     }
@@ -199,7 +203,7 @@ public class WebSocketServer extends Server {
                                         }
                                     }
                                     //sync request and exec callback method
-                                    RequestMappingHandler.execWSCallBack(webSocketSession, clients);
+                                    getRequestMappingHandler().execWSCallBack(webSocketSession, clients);
                                     //sync write-task,because of a request for information, only one transmission
                                     if (webSocketSession.getOutPutContent() != null) {
                                         writeMsg(buildSendMsg(webSocketSession), attachment);

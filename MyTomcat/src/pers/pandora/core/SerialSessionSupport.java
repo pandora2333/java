@@ -1,7 +1,5 @@
 package pers.pandora.core;
 
-import pers.pandora.mvc.RequestMappingHandler;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +21,7 @@ public abstract class SerialSessionSupport {
     //create session file
     public static final String SESSIONFILE_POS = "SESSION.ser";
     //session file dir
-    public static final String SESSIONPATH = RequestMappingHandler.ROOTPATH;
+    public static final String SESSIONPATH = BeanPool.ROOTPATH;
 
     public static Map<String, Map<String, Session>> getSessionPool() {
         return SESSIONPOOL;
