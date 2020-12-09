@@ -15,6 +15,7 @@ public class TestBean {
         //secondly,init bean
         beanPool.init(BeanPool.ROOTPATH);
         TaskBean taskBean = beanPool.getBean("taskBean");
+        assert taskBean != null;
         taskBean.error();
 //        System.out.println(Objects.requireNonNull(taskBean).toString());
 //        System.out.println(Objects.requireNonNull(beanPool.getBean("user")).toString());

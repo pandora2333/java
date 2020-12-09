@@ -355,7 +355,7 @@ public final class BeanPool {
     private void loadProperties(Class tClass, String file) {
         try {
             File source = new File(ROOTPATH + file);
-            if (source != null && source.exists()) {
+            if (source.exists()) {
                 prop.get().load(new FileInputStream(source));
             }
             for (Field field : tClass.getDeclaredFields()) {

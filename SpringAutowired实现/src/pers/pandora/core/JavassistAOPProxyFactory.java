@@ -31,6 +31,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         }
         JavassistInterceptor interceptor = new JavassistInterceptor();
         interceptor.setClassName(t.getName());
+        assert javassistProxy != null;
         ((ProxyObject) javassistProxy).setHandler(interceptor);
         return javassistProxy;
     }
