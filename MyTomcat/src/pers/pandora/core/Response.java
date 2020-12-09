@@ -156,16 +156,15 @@ public final class Response {
         }
         headInfo.append(HTTPStatus.CRLF);
         //2.build response head
-        headInfo.append(HTTPStatus.SERVER + HTTPStatus.COLON + HTTPStatus.BLANK + HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
-        headInfo.append(HTTPStatus.DATE + HTTPStatus.COLON + HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
-        headInfo.append(HTTPStatus.CONTENTTYPE + HTTPStatus.COLON + HTTPStatus.BLANK + type + HTTPStatus.COOKIE_SPLITER +
-                HTTPStatus.CHARSET + HTTPStatus.PARAM_KV_SPLITER + charset).append(HTTPStatus.CRLF);
-        headInfo.append(HTTPStatus.CONTENTLENGTH + HTTPStatus.COLON + HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
-        heads.forEach((k, v) -> headInfo.append(k + HTTPStatus.COLON + v).append(HTTPStatus.CRLF));
+        headInfo.append(HTTPStatus.SERVER).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.DATE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER).append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
+        heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
             StringBuilder sb = new StringBuilder();
-            cookies.stream().forEach(cookie -> {
+            cookies.forEach(cookie -> {
                 if (cookie != null && cookie.isNeedUpdate()) {
                     sb.append(HTTPStatus.SET_COOKIE);
                     sb.append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(cookie.getKey()).append(HTTPStatus.PARAM_KV_SPLITER).
@@ -219,6 +218,7 @@ public final class Response {
                 }
                 code = HTTPStatus.CODE_200;
             } else if (StringUtils.isNotEmpty(servlet)) {
+                assert request != null;
                 Map<String, List<Object>> params = request.getParams();
                 //init object instance just support basic data type and string type
                 Servlet handler = ClassUtils.getClass(servlet,request.getDispatcher().server.getRequestMappingHandler().getBeanPool());
@@ -255,6 +255,7 @@ public final class Response {
             handle_500_SERVER_ERROR(e.getMessage());
         }
         handleAfter(request);
+        assert request != null;
         byte[] heads = createHeadInfo(request.getCookies());
         byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
@@ -264,22 +265,20 @@ public final class Response {
         return datas;
     }
 
-    private boolean handleAfter(Request request) {
+    private void handleAfter(Request request) {
         for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().afterMethod(request, this)) {
-                return false;
+                return;
             }
         }
-        return true;
     }
 
-    private boolean handlePre(Request request) {
+    private void handlePre(Request request) {
         for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().preMethod(request, this)) {
-                return false;
+                return;
             }
         }
-        return true;
     }
 
     private void handle_500_SERVER_ERROR(String errorMessage) {

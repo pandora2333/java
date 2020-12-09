@@ -23,7 +23,7 @@ abstract class Dispatcher {
 
     protected Response response;
 
-    public void addUrlMapping(String url, String mvcClass) {
+    void addUrlMapping(String url, String mvcClass) {
         if (StringUtils.isNotEmpty(url)) {
             server.getContext().put(url, mvcClass);
         }
@@ -35,7 +35,7 @@ abstract class Dispatcher {
     }
 
     //main handle HTTP message
-    public final void dispatcher(String reqMsg) {
+    final void dispatcher(String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
             String servlet = request.getServlet();
             if (!request.isFlag()) {
@@ -87,24 +87,22 @@ abstract class Dispatcher {
         }
     }
 
-    protected boolean handleRequestCompleted() {
+    void handleRequestCompleted() {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().completeRequest(request, response)) {
                 logger.warn(LOG.LOG_PRE + "exec completeRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
-                return false;
+                return;
             }
         }
-        return true;
     }
 
-    protected boolean initRequest(ByteBuffer data) {
+    void initRequest(ByteBuffer data) {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
-                return false;
+                return;
             }
         }
-        return true;
     }
 
     protected abstract void pushClient(byte[] content, java.io.File staticFile);

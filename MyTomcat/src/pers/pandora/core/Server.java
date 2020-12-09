@@ -261,12 +261,12 @@ public abstract class Server {
                         validKey.add(k);
                     }
                 });
-                invalidKey.stream().forEach(removeKey -> {
+                invalidKey.forEach(removeKey -> {
                     logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), removeKey);
                     sessionMap.remove(removeKey);
                     invalidSessionMap.remove(removeKey);
                 });
-                validKey.stream().forEach(addKey -> {
+                validKey.forEach(addKey -> {
                     logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), addKey);
                     invalidSessionMap.remove(addKey);
                 });

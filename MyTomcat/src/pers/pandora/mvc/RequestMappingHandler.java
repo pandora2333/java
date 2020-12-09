@@ -415,42 +415,38 @@ public final class RequestMappingHandler {
     }
 
     private <T> void scanResolers(Class<T> t) {
-        Annotation annotation = t.getAnnotation(Controller.class);
-        //Annotation is common for the same controller class
-        if (annotation != null) {
-            Controller controller = (Controller) annotation;
-            String parentPath = controller.value();
+        //Allow the Annotations are common for the same controller class
+        if (t.isAnnotationPresent(Controller.class) || t.isAnnotationPresent(WebSocket.class)) {
+            Controller controller = t.getAnnotation(Controller.class);
+            WebSocket webSocket = t.getAnnotation(WebSocket.class);
+            String parentPath1 = controller != null ? controller.value() : null;
+            String parentPath2 = webSocket != null ? webSocket.value() : null;
             for (Method method : t.getDeclaredMethods()) {
-                annotation = method.getAnnotation(RequestMapping.class);
+                Annotation annotation = method.getAnnotation(RequestMapping.class);
                 if (annotation != null) {
                     String subPath = ((RequestMapping) annotation).value();
                     if (subPath.matches(HTTPStatus.PATH_REGEX_MARK)) {
-                        regexMappings.put(parentPath + subPath, method);
+                        regexMappings.put(parentPath1 + subPath, method);
                     } else {
-                        savePathRelation(subPath, parentPath, method, mappings);
+                        savePathRelation(subPath, parentPath1, method, mappings);
                     }
                     saveUrlPathMapping(t, method, controllers);
                 }
-            }
-        }
-        if ((annotation = t.getAnnotation(WebSocket.class)) != null) {
-            WebSocket webSocket = (WebSocket) annotation;
-            String parentPath = webSocket.value();
-            for (Method method : t.getDeclaredMethods()) {
                 annotation = method.getAnnotation(WebSocketMethod.class);
                 if (annotation != null) {
                     String subPath = ((WebSocketMethod) annotation).value();
-                    savePathRelation(subPath, parentPath, method, wsMappings);
+                    savePathRelation(subPath, parentPath2, method, wsMappings);
                     saveUrlPathMapping(t, method, wsControllers);
                 }
             }
         }
-        if ((annotation = t.getAnnotation(Order.class)) != null) {
+        Order order = t.getAnnotation(Order.class);
+        if (order != null) {
             Class<?>[] interfaces = t.getInterfaces();
             for (Class<?> i : interfaces) {
                 if (i == Interceptor.class) {
                     try {
-                        interceptors.add(new Pair<>(((Order) annotation).value(), (Interceptor) t.newInstance()));
+                        interceptors.add(new Pair<>(order.value(), (Interceptor) ClassUtils.getClass(t, beanPool)));
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                                 MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
@@ -472,7 +468,7 @@ public final class RequestMappingHandler {
     private class IOTask implements Callable<Boolean> {
         private String className;
 
-        public IOTask(String className) {
+        IOTask(String className) {
             this.className = className;
         }
 

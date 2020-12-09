@@ -137,7 +137,7 @@ public class IdWorker {
     }
 
     // all un-clearly-recognized letters are skiped.
-    static String defaultRange = "0123456789ABCDFGHKMNPRSTWXYZ";
+    private static String defaultRange = "0123456789ABCDFGHKMNPRSTWXYZ";
 
     public static String padLeft(String str, int size, char padChar) {
         if (str.length() == size) return str;

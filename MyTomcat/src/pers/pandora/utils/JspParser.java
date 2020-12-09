@@ -99,7 +99,7 @@ public final class JspParser {
             while (matcher.find()) {
                 javaCode = sb.toString().substring(matcher.start() + 2, matcher.end() - 2);
                 //写入Servlet类
-                sbuf.append(JSP.JSP_CODE_PRE + javaCode + HTTPStatus.CRLF);
+                sbuf.append(JSP.JSP_CODE_PRE).append(javaCode).append(HTTPStatus.CRLF);
                 matcher.appendReplacement(jspSrc, LOG.NO_CHAR);
             }
             matcher.appendTail(jspSrc);

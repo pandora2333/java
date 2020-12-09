@@ -443,7 +443,7 @@ public final class Request {
         List<Object> list;
         for (String str : temp) {
             kv = str.split(HTTPStatus.PARAM_KV_SPLITER);
-            if (kv != null && kv.length == 2) {
+            if (kv.length == 2) {
                 if (kv[0].equals(HTTPStatus.SESSION_MARK) && session == null) {
                     buildSession(kv[1], null);
                 }

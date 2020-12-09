@@ -29,7 +29,7 @@ public final class AIOServer extends Server {
         beanPool.init("pers.pandora.test","pers.pandora.servlet");
         //init mvc-config file
         RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
-        requestMappingHandler.init("pers.pandora.controller");
+        requestMappingHandler.init("pers.pandora.controller","pers.pandora.interceptor");
         requestMappingHandler.setBeanPool(beanPool);
         AIOServer server = new AIOServer();
         //set session serializer and deserializer
@@ -102,6 +102,7 @@ public final class AIOServer extends Server {
                     newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
                     //long connection or short connection
                     if (getKeepClients().size() < getMaxKeepClients()) {
+                        assert clientAddr != null;
                         addClients(clientAddr.toString(), newAtt);
                     }
                     slavePool.submit(() -> {

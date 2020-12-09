@@ -38,6 +38,7 @@ public class CodeUtils {
         } catch (NoSuchAlgorithmException e) {
             logger.error(LOG.LOG_PRE + "hashEncode" + LOG.LOG_POS, CodeUtils.class.getName(), LOG.EXCEPTION_DESC, e);
         }
+        assert secretBytes != null;
         String md5code = new BigInteger(1, secretBytes).toString(16);
         for (int i = 0; i < 32 - md5code.length(); i++) {
             md5code = ZERO + md5code;
