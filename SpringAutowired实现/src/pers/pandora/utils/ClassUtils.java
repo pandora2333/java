@@ -47,16 +47,16 @@ public final class ClassUtils {
         if(tClass == null){
             return null;
         }
-        Object bean = objectMap.get(tClass.getName());
+        T bean = (T)objectMap.get(tClass.getName());
         if(bean != null){
-            return (T)bean;
+            return bean;
         }
         bean = beanPool != null ? beanPool.getBeanByType(tClass) : null;
         if(bean == null){
             bean = tClass.newInstance();
         }
         objectMap.put(tClass.getName(),bean);
-        return (T)bean;
+        return bean;
     }
 
     private static boolean checkType(Class<?> aClass, Class<?> type) {
