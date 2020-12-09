@@ -356,7 +356,9 @@ public final class BeanPool {
         try {
             File source = new File(ROOTPATH + file);
             if (source.exists()) {
-                prop.get().load(new FileInputStream(source));
+                FileInputStream inputStream = new FileInputStream(source);
+                prop.get().load(inputStream);
+                inputStream.close();
             }
             for (Field field : tClass.getDeclaredFields()) {
                 field.setAccessible(true);

@@ -4,6 +4,8 @@ import pers.pandora.bean.TaskBean;
 import pers.pandora.core.BeanPool;
 import pers.pandora.core.JavassistAOPProxyFactory;
 
+import java.util.Objects;
+
 @Deprecated
 public class TestBean {
 
@@ -16,9 +18,9 @@ public class TestBean {
         beanPool.init(BeanPool.ROOTPATH);
         TaskBean taskBean = beanPool.getBean("taskBean");
         assert taskBean != null;
-        taskBean.error();
+//        taskBean.error();
 //        System.out.println(Objects.requireNonNull(taskBean).toString());
-//        System.out.println(Objects.requireNonNull(beanPool.getBean("user")).toString());
+        System.out.println(Objects.requireNonNull(beanPool.getBean("user")).toString());
 //        System.out.println(Objects.requireNonNull(beanPool.getBean("b")).toString());
     }
 }

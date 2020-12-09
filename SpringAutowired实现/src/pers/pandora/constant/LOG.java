@@ -15,4 +15,6 @@ public class LOG {
     public static final String NO_CHAR = "";
 
     public static final String CLASS_NAME_SPLITER = "_";
+
+    public static final String DEFAULTENCODING = "utf-8";
 }
