@@ -35,21 +35,21 @@ import java.util.concurrent.*;
  */
 public final class RequestMappingHandler {
 
-    private static Logger logger = LogManager.getLogger(RequestMappingHandler.class);
+    private static final Logger logger = LogManager.getLogger(RequestMappingHandler.class);
     //for @Controller
     //url - method
-    private Map<String, Method> mappings = new ConcurrentHashMap<>(16);
+    private final Map<String, Method> mappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
-    private Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
+    private final Map<Method, Object> controllers = new ConcurrentHashMap<>(16);
     //restful-param-path
-    private Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
+    private final Map<String, Method> regexMappings = new ConcurrentHashMap<>(16);
     //single controller
-    private Map<String, Object> objectMap = new ConcurrentHashMap<>();
+    private final Map<String, Object> objectMap = new ConcurrentHashMap<>(16);
     //for @WebSocket
     //url - method
-    private Map<String, Method> wsMappings = new ConcurrentHashMap<>(16);
+    private final Map<String, Method> wsMappings = new ConcurrentHashMap<>(16);
     //method - controller(singleton instance)
-    private Map<Method, Object> wsControllers = new ConcurrentHashMap<>(16);
+    private final Map<Method, Object> wsControllers = new ConcurrentHashMap<>(16);
     //Bean Pool
     private BeanPool beanPool;
 

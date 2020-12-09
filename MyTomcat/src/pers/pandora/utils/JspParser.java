@@ -12,6 +12,7 @@ import javax.tools.*;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +21,9 @@ import java.util.regex.Pattern;
  */
 public final class JspParser {
 
-    private static Logger logger = LogManager.getLogger(JspParser.class);
+    private static final Logger logger = LogManager.getLogger(JspParser.class);
+    //Caching generated servlet classes in non hot load mode,base on double check lock for lazy loading to save some memory
+    private static volatile Map<String,String> jspCahce;
 
     //Hash encoding needed to generate jsp servlet class name
     private String hashEncode;
@@ -51,7 +54,8 @@ public final class JspParser {
     }
 
     //It's lazy loading, no generation without access
-    public Tuple<String, String, String> parse(String jspFile) {
+    public Tuple<String, String, String> parse(String jspFile,boolean hotLoadJSP) {
+        //JSP source file
         File file = new File(jspFile);
         if (!file.exists()) {
             return null;
@@ -68,8 +72,29 @@ public final class JspParser {
             inputStream.close();
             inFifle.close();
             String jsp = buf.toString();
-            //Using file hash, duplicate classes are not generated again
-            String query = CodeUtils.hashEncode(jsp, SALT, null, null);
+            String query;
+            if(hotLoadJSP){
+                //Using file hash, duplicate classes are not generated again
+                query = CodeUtils.hashEncode(jsp, SALT, null, null);
+            }else{
+                //DCL
+                if(jspCahce == null){
+                    synchronized (logger){
+                        if(jspCahce == null){
+                            jspCahce = new ConcurrentHashMap<>(16);
+                        }
+                    }
+                }
+                //DCL
+                if(!jspCahce.containsKey(jsp)){
+                    synchronized (logger){
+                        if(!jspCahce.containsKey(jsp)){
+                            jspCahce.put(jsp,CodeUtils.hashEncode(jsp, SALT, null, null));
+                        }
+                    }
+                }
+                query = jspCahce.get(jsp);
+            }
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = servletName.substring(0, 1).toUpperCase() + servletName.substring(1);

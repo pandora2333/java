@@ -3,12 +3,13 @@ package pers.pandora.test;
 import pers.pandora.core.SerialSessionSupport;
 import pers.pandora.core.SerialSessionSupportSimpler;
 import pers.pandora.core.Session;
+import pers.pandora.core.StartUper;
 import pers.pandora.utils.IdWorker;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
+@Deprecated
 public class Client {
 
     private String testOM;
@@ -21,7 +22,7 @@ public class Client {
         return testOM;
     }
 
-    public static void main(String[] args) {
+    public static void testSerialSession(){
         //It tests session serialization
         try {
 //            Map<String, Session> map = new HashMap<>();
@@ -41,5 +42,19 @@ public class Client {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void testStartUper(){
+        //It gives two ways to init-servers:
+        //1.Absolute path
+        //2.Relative path:It is relative to the current project directory. If it is under SRC, it should be src/ + your path
+        StartUper startUper = new StartUper("src/Pandora_test_1.properties","src/Pandora_test_ws_1.properties");
+        startUper.start(true);
+
+    }
+
+    public static void main(String[] args) {
+//        testSerialSession();
+        testStartUper();
     }
 }

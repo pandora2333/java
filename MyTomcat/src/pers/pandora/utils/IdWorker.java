@@ -11,7 +11,7 @@ import java.util.*;
 
 public class IdWorker {
 
-    private static Logger logger = LogManager.getLogger(IdWorker.class);
+    private static final Logger logger = LogManager.getLogger(IdWorker.class);
     //snowflake revision
     protected long epoch = 1288834974657L;
 

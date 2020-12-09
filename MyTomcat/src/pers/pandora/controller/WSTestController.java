@@ -7,6 +7,7 @@ import pers.pandora.core.WebSocketSession;
 
 import java.nio.charset.Charset;
 import java.util.Map;
+@Deprecated
 @WebSocket("/ws")
 public class WSTestController {
 

@@ -9,6 +9,7 @@ import pers.pandora.core.JoinPoint;
 /**
  * Test AOP
  */
+@Deprecated
 @Aspect
 public class AopConfig {
 

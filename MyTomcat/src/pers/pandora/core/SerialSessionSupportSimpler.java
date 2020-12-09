@@ -17,7 +17,7 @@ import java.util.Set;
  */
 public class SerialSessionSupportSimpler extends SerialSessionSupport {
 
-    private static Logger logger = LogManager.getLogger(SerialSessionSupportSimpler.class);
+    private static final Logger logger = LogManager.getLogger(SerialSessionSupportSimpler.class);
 
     @Override
     public void serialSession(String serverName) throws IOException {

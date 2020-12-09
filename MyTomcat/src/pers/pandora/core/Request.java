@@ -20,7 +20,7 @@ import pers.pandora.utils.StringUtils;
 
 public final class Request {
 
-    private static Logger logger = LogManager.getLogger(Request.class);
+    private static final Logger logger = LogManager.getLogger(Request.class);
 
     private String method;
 
@@ -291,7 +291,7 @@ public final class Request {
             return RequestMappingHandler.MVC_CLASS;
         }
         if (reqUrl.contains(HTTPStatus.JSP)) {
-            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl);
+            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl,dispatcher.server.isHotLoadJSP());
             if (parse != null) {
                 dispatcher.addUrlMapping(parse.getK2(), parse.getV());
                 return parse.getK1();

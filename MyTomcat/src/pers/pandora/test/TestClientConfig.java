@@ -3,7 +3,7 @@ package pers.pandora.test;
 import pers.pandora.annotation.Bean;
 import pers.pandora.annotation.Configruation;
 import pers.pandora.servlet.TestServlet;
-
+@Deprecated
 @Configruation
 public class TestClientConfig {
 

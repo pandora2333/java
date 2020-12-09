@@ -16,11 +16,9 @@ import java.util.concurrent.ExecutorService;
 
 public abstract class Server {
 
-    protected static Logger logger = LogManager.getLogger(Server.class);
+    protected static final Logger logger = LogManager.getLogger(Server.class);
 
-    private boolean running;
-
-    private int port;
+    private int port = 8080;
 
     private String rootPath = "./WebRoot";
 
@@ -31,12 +29,16 @@ public abstract class Server {
     public String requestFileDir = resourceRootPath + "files/";
     //serer name，it use logs,session file,etc
     private String serverName = "PandoraWeb" + System.currentTimeMillis();
-
-    private int poolSize = Runtime.getRuntime().availableProcessors() + 1;
+    //main thread pool size
+    private int mainPoolSize = Runtime.getRuntime().availableProcessors() + 1;
+    //slave thread pool size
+    private int slavePoolSize = 2 * mainPoolSize + 1;
     //up file buffer size (byte)
     private int capcity = 10 * 1024 * 1024;
 
     private static final String HOST = "127.0.0.1";
+    //hot load JSP default true
+    private boolean hotLoadJSP = true;
     //download resource buffer size（byte）
     private int responseBuffer = capcity / 10;
     //server receive buffer size, it should greater than or equal to capcity
@@ -53,12 +55,58 @@ public abstract class Server {
     private Map<String, String> context;
     //browser build the tcps
     private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
-
-    private int maxKeepClients;
+    //max keep connections
+    private int maxKeepClients = 250;
 
     protected ExecutorService mainPool;
 
     protected ExecutorService slavePool;
+
+    private long expelTime = 1000;
+
+    private long gcTime = 30000;
+
+    private long waitReceivedTime = 80;
+
+    public long getWaitReceivedTime() {
+        return waitReceivedTime;
+    }
+
+    public void setWaitReceivedTime(long waitReceivedTime) {
+        this.waitReceivedTime = waitReceivedTime;
+    }
+
+    public long getGcTime() {
+        return gcTime;
+    }
+
+    public void setGcTime(long gcTime) {
+        this.gcTime = gcTime;
+    }
+
+    public long getExpelTime() {
+        return expelTime;
+    }
+
+    public void setExpelTime(long expelTime) {
+        this.expelTime = expelTime;
+    }
+
+    public int getSlavePoolSize() {
+        return slavePoolSize;
+    }
+
+    public void setSlavePoolSize(int slavePoolSize) {
+        this.slavePoolSize = slavePoolSize;
+    }
+
+    public boolean isHotLoadJSP() {
+        return hotLoadJSP;
+    }
+
+    public void setHotLoadJSP(boolean hotLoadJSP) {
+        this.hotLoadJSP = hotLoadJSP;
+    }
 
     public void addClients(String ip, Attachment attachment) {
         if (StringUtils.isNotEmpty(ip) && attachment != null && attachment.isKeepAlive()) {
@@ -135,20 +183,12 @@ public abstract class Server {
         this.serialSessionSupport = serialSessionSupport;
     }
 
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
-
-    public boolean isRunning() {
-        return running;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public int getPoolSize() {
-        return poolSize;
+    public int getMainPoolSize() {
+        return mainPoolSize;
     }
 
     public void setCapcity(int capcity) {
@@ -171,8 +211,8 @@ public abstract class Server {
         this.port = port;
     }
 
-    public void setPoolSize(int poolSize) {
-        this.poolSize = poolSize;
+    public void setMainPoolSize(int mainPoolSize) {
+        this.mainPoolSize = mainPoolSize;
     }
 
     public void setResourceRootPath(String resourceRootPath) {
@@ -236,9 +276,9 @@ public abstract class Server {
 
     public abstract void start();
 
-    public abstract void start(int port, int capcity, int maxKeepClients, long expelTime, long gcTime, long waitReceivedTime);
+    public abstract void start(int port);
 
-    protected void execExpelThread(long expelTime) {
+    protected void execExpelThread() {
         final List<String> invalidKey = new ArrayList<>();
         final List<String> validKey = new ArrayList<>();
         Thread invalidResourceExecutor = new Thread(() -> {
@@ -279,7 +319,7 @@ public abstract class Server {
         invalidResourceExecutor.start();
     }
 
-    public void gc(long gcTime) {
+    public void gc() {
         Thread invalidClientExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
