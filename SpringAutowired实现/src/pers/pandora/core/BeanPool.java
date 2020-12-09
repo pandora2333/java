@@ -403,7 +403,7 @@ public final class BeanPool {
 
         private boolean aop;
 
-        public IOTask(String className, boolean aop) {
+        IOTask(String className, boolean aop) {
             this.aop = aop;
             this.className = className;
         }
