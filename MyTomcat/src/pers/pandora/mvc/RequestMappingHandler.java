@@ -79,7 +79,7 @@ public final class RequestMappingHandler {
     //Thread idle time unit
     private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     //Timeout waiting for class loading time
-    private long timeout = 5;
+    private long timeOut = 5;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
 //    static {
@@ -103,7 +103,39 @@ public final class RequestMappingHandler {
         this.keepAlive = keepAlive;
         this.timeUnit = timeUnit;
         this.timeOutUnit = timeOutUnit;
-        this.timeout = timeout;
+        this.timeOut = timeout;
+    }
+
+    public int getMinCore() {
+        return minCore;
+    }
+
+    public void setMinCore(int minCore) {
+        this.minCore = minCore;
+    }
+
+    public int getMaxCore() {
+        return maxCore;
+    }
+
+    public void setMaxCore(int maxCore) {
+        this.maxCore = maxCore;
+    }
+
+    public long getKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(long keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    public long getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(long timeOut) {
+        this.timeOut = timeOut;
     }
 
     public BeanPool getBeanPool() {
@@ -495,20 +527,9 @@ public final class RequestMappingHandler {
         interceptors = Collections.synchronizedSortedSet(new TreeSet<>(CMP));
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         for (String path : paths) {
-            if (!path.startsWith(BeanPool.ROOTPATH)) {
-                path = BeanPool.ROOTPATH + path;
-            }
-            path = path.replaceAll(BeanPool.FILE_REGEX_SPLITER, String.valueOf(BeanPool.PATH_SEPARATOR));
-            scanFile(path);
+            scanFile(BeanPool.checkPath(path));
         }
-        for (Future future : result) {
-            try {
-                future.get(timeout, timeOutUnit);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                logger.error(LOG.LOG_PRE + "init" + LOG.LOG_POS,
-                        MVC_CLASS, LOG.EXCEPTION_DESC, e);
-            }
-        }
+        BeanPool.waitFutures(result,timeOut,timeOutUnit);
         executor.shutdown();
         executor = null;
         result = null;

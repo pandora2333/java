@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
+import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
@@ -67,6 +68,16 @@ public abstract class Server {
     private long gcTime = 30000;
 
     private long waitReceivedTime = 80;
+    //SessionId Generator
+    private IdWorker idWorker;
+
+    public IdWorker getIdWorker() {
+        return idWorker;
+    }
+
+    public void setIdWorker(IdWorker idWorker) {
+        this.idWorker = idWorker;
+    }
 
     public long getWaitReceivedTime() {
         return waitReceivedTime;

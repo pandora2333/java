@@ -52,7 +52,7 @@ public final class BeanPool {
     //Thread idle time unit
     private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     //Timeout waiting for class loading time
-    private long timeout = 5;
+    private long timeOut = 5;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
     //AOP Config for @Aspect
@@ -117,7 +117,39 @@ public final class BeanPool {
         this.keepAlive = keepAlive;
         this.timeUnit = timeUnit;
         this.timeOutUnit = timeOutUnit;
-        this.timeout = timeout;
+        this.timeOut = timeout;
+    }
+
+    public int getMinCore() {
+        return minCore;
+    }
+
+    public void setMinCore(int minCore) {
+        this.minCore = minCore;
+    }
+
+    public int getMaxCore() {
+        return maxCore;
+    }
+
+    public void setMaxCore(int maxCore) {
+        this.maxCore = maxCore;
+    }
+
+    public long getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(long timeOut) {
+        this.timeOut = timeOut;
+    }
+
+    public long getKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(long keepAlive) {
+        this.keepAlive = keepAlive;
     }
 
     //all paths should exists in SRC,it's not supported for regex pattern
@@ -135,33 +167,30 @@ public final class BeanPool {
                 scanFile(checkPath(path), true);
             }
         }
-        for (Future future : result) {
-            try {
-                future.get(timeout, timeOutUnit);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                logger.error("init" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-            }
-        }
+        waitFutures(result, timeOut, timeOutUnit);
         result.clear();
         //init bean
         for (String path : paths) {
             scanFile(checkPath(path), false);
         }
-        for (Future future : result) {
-            try {
-                future.get(timeout, timeOutUnit);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                logger.error("init" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-            }
-        }
+        waitFutures(result, timeOut, timeOutUnit);
         executor.shutdownNow();
         injectValueForAutowired();
         executor = null;
-        result.clear();
         result = null;
     }
 
-    private String checkPath(String path) {
+    public static void waitFutures(List<Future<Boolean>> result, long timeOut, TimeUnit timeOutUnit) {
+        for (Future future : result) {
+            try {
+                future.get(timeOut, timeOutUnit);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                logger.error("waitFutures" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            }
+        }
+    }
+
+    public static String checkPath(String path) {
         if (!path.startsWith(ROOTPATH)) {
             path = ROOTPATH + path;
         }
@@ -197,9 +226,7 @@ public final class BeanPool {
 
     public <T> T getBean(String beanName) {
         if (StringUtils.isNotEmpty(beanName)) {
-            if (beans.get(beanName) != null) {
-                return (T) beans.get(beanName);
-            }
+            return (T) beans.get(beanName);
         }
         return null;
     }

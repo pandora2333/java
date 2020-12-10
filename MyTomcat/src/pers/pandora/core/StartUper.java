@@ -7,6 +7,7 @@ import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.ClassUtils;
+import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.*;
@@ -75,6 +76,16 @@ public final class StartUper {
 
     public static final String CHARSET = "charset";
 
+    public static final String LOADMINCORE = "loadMinCore";
+
+    public static final String LOADMAXCORE = "loadMaxCore";
+
+    public static final String LOADKEEPALIVE = "loadKeepAlive";
+
+    public static final String LOADTIMEOUT = "loadTimeout";
+
+    public static final String SESSIONIDGENERATOR = "sessionIDGenerator";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -141,6 +152,16 @@ public final class StartUper {
                     return null;
                 }
             }
+            value = properties.getProperty(SESSIONIDGENERATOR, null);
+            if (StringUtils.isNotEmpty(value)) {
+                try {
+                    IdWorker idWoker = ClassUtils.getClass(value, null);
+                    server.setIdWorker(idWoker);
+                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+                    logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                    return null;
+                }
+            }
             value = properties.getProperty(HOTLOADJSP, null);
             if (StringUtils.isNotEmpty(value)) {
                 server.setHotLoadJSP(Boolean.valueOf(value));
@@ -175,15 +196,15 @@ public final class StartUper {
             }
             value = properties.getProperty(BUSYTIME, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer)server).setBusyTime(Long.valueOf(value));
+                ((WebSocketServer) server).setBusyTime(Long.valueOf(value));
             }
             value = properties.getProperty(MAXBITS, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer)server).setMaxWSBits(Integer.valueOf(value));
+                ((WebSocketServer) server).setMaxWSBits(Integer.valueOf(value));
             }
             value = properties.getProperty(CHARSET, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer)server).setCharset(value);
+                ((WebSocketServer) server).setCharset(value);
             }
         }
         //common configs
@@ -192,6 +213,7 @@ public final class StartUper {
             SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
         }
         BeanPool beanPool = new BeanPool();
+        RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
         value = properties.getProperty(AOPPATHS, null);
         String separator = String.valueOf(JSP.JAVA_SPLITER);
         if (StringUtils.isNotEmpty(value)) {
@@ -206,13 +228,36 @@ public final class StartUper {
                 return null;
             }
         }
+        value = properties.getProperty(LOADMINCORE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            int minCore = Integer.valueOf(value);
+            requestMappingHandler.setMinCore(minCore);
+            beanPool.setMinCore(minCore);
+        }
+        value = properties.getProperty(LOADMAXCORE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            int maxCore = Integer.valueOf(value);
+            requestMappingHandler.setMaxCore(maxCore);
+            beanPool.setMaxCore(maxCore);
+        }
+        value = properties.getProperty(LOADKEEPALIVE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            long keepAlive = Long.valueOf(value);
+            requestMappingHandler.setKeepAlive(keepAlive);
+            beanPool.setKeepAlive(keepAlive);
+        }
+        value = properties.getProperty(LOADTIMEOUT, null);
+        if (StringUtils.isNotEmpty(value)) {
+            long timeOut = Long.valueOf(value);
+            requestMappingHandler.setTimeOut(timeOut);
+            beanPool.setTimeOut(timeOut);
+        }
         value = properties.getProperty(DIPATHS, null);
         if (StringUtils.isNotEmpty(value)) {
             beanPool.init(value.split(separator, -1));
         }
         value = properties.getProperty(MVCPATHS, null);
         if (StringUtils.isNotEmpty(value)) {
-            RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
             requestMappingHandler.init(value.split(separator, -1));
             requestMappingHandler.setBeanPool(beanPool);
             server.setRequestMappingHandler(requestMappingHandler);

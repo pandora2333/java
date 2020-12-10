@@ -10,44 +10,49 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b40112f9-10b9-4501-a594-242d905eb537" name="Default Changelist" comment="1.请求头/响应头支持自定义&#10;2.带表单数据的多文件上传(支持所有数据格式)&#10;3.拦截器改进，支持方法前后，HTTP解析前后拦截&#10;4.支持cookie和session">
-      <change afterPath="$PROJECT_DIR$/src/pers/pandora/test/AopConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/core/AOPProxyFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/core/JavassistAOPProxyFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/core/JoinPoint.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/test/TestAOP_1.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/test/TestAOP_2.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/vo/Pair.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/log4j2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/ENTITY.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/LOG.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/SQL.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/XML.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/Dom4JUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/IgnoreDTDEntityResolver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/MBGUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/StringUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/TypeConverter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/pandora.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/MyBatisX.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/MyBatisX.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/dbpool.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/dbpool.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Column.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Column.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Id.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Id.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Table.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/bean/Entity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/bean/Entity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/bean/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/bean/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/Configuration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/DBPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/DBPool.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/MapperProxyClass.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/MapperProxyClass.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/utils/Dom4JUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/utils/IgnoreDTDEntityResolver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/utils/MBGUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/utils/PropUtils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/utils/TypeConverter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/mbg/JavaGetSetter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/mbg/JavaGetSetter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/testMyBatisX.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/testMyBatisX.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MyTomcat.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/Controller.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/annotation/Controller.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestBody.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestBody.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestMapping.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestMapping.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestParam.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/annotation/RequestParam.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/ResponseBody.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/annotation/ResponseBody.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/controller/TestController.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/controller/TestController.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/pers/pandora/mvc/RequestMappingHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/mvc/RequestMappingHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/servlet/TestServlet.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/servlet/TestServlet.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/utils/ClassUtils.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/pers/pandora/utils/JspParser$StringJavaObject.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/utils/JspParser$StringJavaObject.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/pers/pandora/utils/JspParser.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/utils/JspParser.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Order.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/annotation/Order.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/utils/XMLFactory.class" beforeDir="false" afterPath="$PROJECT_DIR$/bin/pers/pandora/utils/XMLFactory.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Pandora_test_1.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/Pandora_test_1.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Pandora_test_ws_1.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/Pandora_test_ws_1.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/Request.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/Request.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/Response.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/Response.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupport.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupport.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/interceptor/Interceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/interceptor/Interceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/Session.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/Session.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/StartUper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/core/StartUper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/servlet/Servlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/servlet/Servlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/ClassUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/utils/ClassUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/vo/Pair.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/vo/Tuple.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/vo/Tuple.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/IdWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/utils/IdWorker.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/META-INF/SerialAndFullCopy.kotlin_module" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.class" afterDir="false" />
@@ -57,21 +62,9 @@
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/pojo/A.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/pojo/A.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/SpringAutowired.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/annotation/ConfigureScan.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/bean/TaskBean.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/bean/TaskBean.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/bean/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/bean/User.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/config/SpringConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/config/SpringConfig.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/test/TestBean.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/test/TestBean.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/bin/pers/pandora/util/BeanUtils.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/annotation/Aspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/annotation/Aspect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/bean/TaskBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/bean/TaskBean.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/constant/LOG.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/constant/LOG.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/core/BeanPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/core/BeanPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/test/TestBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SpringAutowired实现/src/pers/pandora/test/TestBean.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -154,10 +147,11 @@
     <session id="762619045">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="41" />
-          <entry key="project.open.time.0" value="13" />
-          <entry key="project.open.time.1" value="2" />
+          <entry key="project.closed" value="51" />
+          <entry key="project.open.time.0" value="20" />
+          <entry key="project.open.time.1" value="4" />
           <entry key="project.open.time.11" value="1" />
+          <entry key="project.open.time.12" value="1" />
           <entry key="project.open.time.16" value="1" />
           <entry key="project.open.time.27" value="1" />
           <entry key="project.open.time.29" value="1" />
@@ -175,34 +169,34 @@
           <entry key="project.open.time.40" value="2" />
           <entry key="project.open.time.44" value="2" />
           <entry key="project.open.time.49" value="1" />
-          <entry key="project.opened" value="46" />
+          <entry key="project.opened" value="56" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="class" value="71" />
+          <entry key="class" value="84" />
           <entry key="html" value="17" />
-          <entry key="java" value="936" />
+          <entry key="java" value="1039" />
           <entry key="jpg" value="85" />
           <entry key="jsp" value="15" />
-          <entry key="log" value="3" />
+          <entry key="log" value="4" />
           <entry key="png" value="59" />
-          <entry key="properties" value="8" />
+          <entry key="properties" value="18" />
           <entry key="txt" value="32" />
           <entry key="xml" value="15" />
-          <entry key="开发日志" value="23" />
+          <entry key="开发日志" value="24" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="CLASS" value="71" />
+          <entry key="CLASS" value="84" />
           <entry key="HTML" value="17" />
           <entry key="Image" value="144" />
-          <entry key="JAVA" value="936" />
+          <entry key="JAVA" value="1039" />
           <entry key="JSP" value="15" />
-          <entry key="Log" value="1" />
-          <entry key="PLAIN_TEXT" value="57" />
-          <entry key="Properties" value="8" />
+          <entry key="Log" value="2" />
+          <entry key="PLAIN_TEXT" value="58" />
+          <entry key="Properties" value="18" />
           <entry key="XML" value="15" />
         </counts>
       </usages-collector>
@@ -210,21 +204,21 @@
         <counts>
           <entry key="dummy" value="63" />
           <entry key="html" value="105" />
-          <entry key="java" value="77961" />
+          <entry key="java" value="83712" />
           <entry key="jsp" value="33" />
-          <entry key="properties" value="57" />
-          <entry key="txt" value="899" />
+          <entry key="properties" value="967" />
+          <entry key="txt" value="981" />
           <entry key="xml" value="19" />
-          <entry key="开发日志" value="1661" />
+          <entry key="开发日志" value="1747" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="HTML" value="105" />
-          <entry key="JAVA" value="77960" />
+          <entry key="JAVA" value="83711" />
           <entry key="JSP" value="33" />
-          <entry key="PLAIN_TEXT" value="2623" />
-          <entry key="Properties" value="57" />
+          <entry key="PLAIN_TEXT" value="2791" />
+          <entry key="Properties" value="967" />
           <entry key="RegExp" value="1" />
           <entry key="XML" value="19" />
         </counts>
@@ -269,38 +263,7 @@
     <favorites_list name="MyTomcat" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="416">
-              <caret line="26" column="33" selection-start-line="26" selection-start-column="33" selection-end-line="26" selection-end-column="33" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/AopConfig.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="256">
-              <caret line="16" column="41" selection-start-line="16" selection-start-column="41" selection-end-line="16" selection-end-column="41" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#359#360#0" expanded="true" />
-                <element signature="e#417#418#0" expanded="true" />
-                <element signature="e#504#505#0" expanded="true" />
-                <element signature="e#561#562#0" expanded="true" />
-                <element signature="e#652#653#0" expanded="true" />
-                <element signature="e#713#714#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -343,30 +306,18 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupportSimpler.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/Session.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/mvc/ModelAndView.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/utils/IdWorker.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/utils/XMLFactory.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/utils/FileUtil.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/interceptor/TestInterceptor_2.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/interceptor/TestInterceptor_1.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/controller/TestController.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/vo/Attachment.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/core/Attachment.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/vo/TextWSData.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/vo/BinaryWSData.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/vo/WSData.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/utils/CodeUtils.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/core/WebSocketSession.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/utils/CollectionUtil.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/controller/WSTestController.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/constant/WS.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/annotation/ResponseBody.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/test/Client.java" />
         <option value="$PROJECT_DIR$/src/TestServlet.properties" />
         <option value="$PROJECT_DIR$/src/pers/pandora/servlet/TestServlet.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/test/TestClientConfig.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/constant/JSP.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/constant/LOG.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/constant/HTTPStatus.java" />
@@ -379,21 +330,33 @@
         <option value="$PROJECT_DIR$/src/pers/pandora/annotation/RequestParam.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/annotation/WebSocket.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/core/AIOServerlDispatcher.java" />
-        <option value="$PROJECT_DIR$/开发日志" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupport.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/Server.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/Response.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/utils/ClassUtils.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/Request.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/annotation/Order.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/interceptor/Interceptor.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/servlet/Servlet.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/utils/CodeUtils.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/utils/FileUtil.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/Response.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupportSimpler.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/utils/XMLFactory.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/controller/WSTestController.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/test/AopConfig.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/test/Client.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/test/TestClientConfig.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java" />
+        <option value="$PROJECT_DIR$/开发日志" />
+        <option value="$PROJECT_DIR$/src/Pandora_test_ws_1.properties" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/Server.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/Session.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/Request.java" />
+        <option value="$PROJECT_DIR$/src/Pandora_test_1.properties" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/utils/IdWorker.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/core/StartUper.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java" />
       </list>
     </option>
   </component>
@@ -551,7 +514,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1606975332091" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="project.structure.last.edited" value="Modules" />
@@ -582,7 +545,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.AIOServer">
+  <component name="RunManager" selected="Application.Client">
     <configuration name="AIOServer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="pers.pandora.core.AIOServer" />
       <module name="PandoraWeb" />
@@ -609,12 +572,25 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="FileUtil" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="pers.pandora.utils.FileUtil" />
+    <configuration name="IdWorker" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="pers.pandora.utils.IdWorker" />
       <module name="PandoraWeb" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="pers.pandora.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="StartUper" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="pers.pandora.core.StartUper" />
+      <module name="PandoraWeb" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="pers.pandora.core.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -635,33 +611,20 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="WebSocketSession" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="pers.pandora.core.WebSocketSession" />
-      <module name="PandoraWeb" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="pers.pandora.core.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <list>
       <item itemvalue="Application.AIOServer" />
-      <item itemvalue="Application.Client" />
-      <item itemvalue="Application.FileUtil" />
       <item itemvalue="Application.WebSocketServer" />
-      <item itemvalue="Application.WebSocketSession" />
+      <item itemvalue="Application.StartUper" />
+      <item itemvalue="Application.Client" />
+      <item itemvalue="Application.IdWorker" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.AIOServer" />
-        <item itemvalue="Application.WebSocketServer" />
-        <item itemvalue="Application.WebSocketSession" />
-        <item itemvalue="Application.FileUtil" />
         <item itemvalue="Application.Client" />
+        <item itemvalue="Application.IdWorker" />
+        <item itemvalue="Application.WebSocketServer" />
+        <item itemvalue="Application.StartUper" />
+        <item itemvalue="Application.AIOServer" />
       </list>
     </recent_temporary>
   </component>
@@ -735,7 +698,17 @@
       <workItem from="1607405708991" duration="589000" />
       <workItem from="1607406692293" duration="696000" />
       <workItem from="1607409909560" duration="225000" />
-      <workItem from="1607413999341" duration="2921000" />
+      <workItem from="1607413999341" duration="3173000" />
+      <workItem from="1607478025267" duration="2642000" />
+      <workItem from="1607482420012" duration="131000" />
+      <workItem from="1607485486926" duration="13631000" />
+      <workItem from="1607501998977" duration="113000" />
+      <workItem from="1607507599966" duration="116000" />
+      <workItem from="1607563676227" duration="1037000" />
+      <workItem from="1607565049166" duration="169000" />
+      <workItem from="1607565228798" duration="2394000" />
+      <workItem from="1607584955520" duration="413000" />
+      <workItem from="1607588229975" duration="19000" />
     </task>
     <task id="LOCAL-00001" summary="新增加AIO 异步IO web服务器,实现基于AIO的单个文件上传">
       <created>1606134377875</created>
@@ -835,7 +808,28 @@
       <option name="project" value="LOCAL" />
       <updated>1607330768739</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="整合PandoraOM">
+      <created>1607418329718</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1607418329718</updated>
+    </task>
+    <task id="LOCAL-00016" summary="remove some useless codes and fix">
+      <created>1607480681987</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1607480681987</updated>
+    </task>
+    <task id="LOCAL-00017" summary="1.JSP生成支持开发与上线环境，对于线上运行，只在每次启动时候对同一类生成一次,默认开启热加载&#10;2.支持配置式和声明式启动">
+      <created>1607507687778</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1607507687778</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -871,7 +865,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="476170000" />
+    <option name="totallyTimeSpent" value="497087000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -884,9 +878,8 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="878" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49292454" visible="true" weight="0.20509383" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49292454" visible="true" weight="0.23257373" />
       <window_info id="Structure" order="1" sideWeight="0.5070755" side_tool="true" weight="0.2613941" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -917,8 +910,8 @@
       <window_info anchor="right" id="Maven Projects" order="9" weight="0.3297587" />
     </layout>
     <layout-to-restore>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49601594" visible="true" weight="0.19839142" />
-      <window_info id="Structure" order="1" sideWeight="0.50398403" side_tool="true" weight="0.22855228" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49292454" visible="true" weight="0.21045576" />
+      <window_info id="Structure" order="1" sideWeight="0.5070755" side_tool="true" weight="0.2613941" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
       <window_info id="UI Designer" order="4" />
@@ -926,8 +919,8 @@
       <window_info id="Favorites" order="6" sideWeight="0.5021097" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32885906" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49932975" weight="0.3395973" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.3704698" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49932975" weight="0.4590604" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.43087247" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32885906" />
@@ -944,8 +937,8 @@
       <window_info anchor="right" id="Database" order="5" />
       <window_info anchor="right" id="Theme Preview" order="6" />
       <window_info anchor="right" id="Palette&#9;" order="7" />
-      <window_info anchor="right" id="Maven Projects" order="8" />
-      <window_info anchor="right" id="SciView" order="9" />
+      <window_info anchor="right" id="SciView" order="8" />
+      <window_info anchor="right" id="Maven Projects" order="9" weight="0.3297587" />
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -969,7 +962,10 @@
     <MESSAGE value="1.去掉@Inherited&#10;2.修复服务器端请求转发死循环问题" />
     <MESSAGE value="fix description" />
     <MESSAGE value="结构调整与PandoraOM对接" />
-    <option name="LAST_COMMIT_MESSAGE" value="结构调整与PandoraOM对接" />
+    <MESSAGE value="整合PandoraOM" />
+    <MESSAGE value="remove some useless codes and fix" />
+    <MESSAGE value="1.JSP生成支持开发与上线环境，对于线上运行，只在每次启动时候对同一类生成一次,默认开启热加载&#10;2.支持配置式和声明式启动" />
+    <option name="LAST_COMMIT_MESSAGE" value="1.JSP生成支持开发与上线环境，对于线上运行，只在每次启动时候对同一类生成一次,默认开启热加载&#10;2.支持配置式和声明式启动" />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="breakpointCondition">
@@ -990,6 +986,16 @@
       </expression>
     </expressions>
     <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>new File(configPaths[0]).exists()</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>new File(configPaths[0]).getAbsolutePath()</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>BeanPool.getBeanByType(tClass)</expression-string>
         <language-id>JAVA</language-id>
@@ -1026,226 +1032,11 @@
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
-      <expression>
-        <expression-string>new String(datas)</expression-string>
-        <language-id>JAVA</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>obj.toString()</expression-string>
-        <language-id>JAVA</language-id>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Collections.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="455">
-          <caret line="2427" lean-forward="true" selection-start-line="2427" selection-end-line="2427" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/ResponseBody.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="80">
-          <caret line="5" column="35" selection-start-line="5" selection-start-column="35" selection-end-line="5" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/mvc/ModelAndView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/annotation/PropertySource.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="14" column="18" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/TestServlet.properties">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="16" selection-start-column="16" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/lang/Class.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="239">
-          <caret line="118" column="19" selection-start-line="118" selection-start-column="19" selection-end-line="118" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Map.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="132">
-          <caret line="211" column="6" selection-start-line="211" selection-start-column="6" selection-end-line="211" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/controller/TestController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="32" selection-start-line="32" selection-end-line="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/servlet/TestServlet.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="80">
-          <caret line="13" column="39" selection-start-line="13" selection-start-column="39" selection-end-line="13" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/constant/LOG.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/constant/LOG.java" />
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/constant/JSP.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="4" column="70" selection-start-line="4" selection-start-column="70" selection-end-line="4" selection-end-column="70" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/PathVariable.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/RequestMapping.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32">
-          <caret line="2" column="40" selection-start-line="2" selection-start-column="40" selection-end-line="2" selection-end-column="40" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/RequestParam.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/WebSocket.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/RequestBody.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="8" column="18" selection-start-line="8" selection-start-column="18" selection-end-line="8" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/annotation/WebSocketMethod.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="8" column="18" selection-start-line="8" selection-start-column="18" selection-end-line="8" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupportSimpler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="112">
-          <caret line="17" column="13" selection-start-line="17" selection-start-column="13" selection-end-line="17" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/WebSocketSession.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="192">
-          <caret line="12" column="26" lean-forward="true" selection-start-line="12" selection-start-column="26" selection-end-line="12" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/Client.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/StringUtils.java" />
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/XMLFactory.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="815">
-          <caret line="51" column="31" selection-start-line="51" selection-start-column="31" selection-end-line="51" selection-end-column="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/开发日志">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="512">
-          <caret line="32" column="1" selection-start-line="32" selection-start-column="1" selection-end-line="32" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Cookie.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32">
-          <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Attachment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="9" column="14" selection-start-line="9" selection-start-column="14" selection-end-line="9" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="447">
-          <caret line="100" column="105" selection-start-line="100" selection-start-column="105" selection-end-line="100" selection-end-column="105" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/AIOServerlDispatcher.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="47" column="22" selection-start-line="47" selection-start-column="22" selection-end-line="47" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WebRoot/static/files/3186423ae739d28ca47dc8ec8d314443.jpg" />
     <entry file="file://$PROJECT_DIR$/WebRoot/static/files/59521621.png" />
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupport.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="26" selection-start-column="26" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/core/BeanPool.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="131">
-          <caret line="157" column="17" selection-start-line="157" selection-start-column="17" selection-end-line="157" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="406">
-          <caret line="50" column="51" selection-start-line="50" selection-start-column="51" selection-end-line="50" selection-end-column="51" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WebRoot/test.jsp">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -1261,42 +1052,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Response.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3152">
-          <caret line="223" column="134" selection-start-line="223" selection-start-column="134" selection-end-line="223" selection-end-column="134" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Server.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="800">
-          <caret line="50" column="56" selection-start-line="50" selection-start-column="56" selection-end-line="50" selection-end-column="56" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="49">
-          <caret line="67" column="32" selection-start-line="67" selection-start-column="32" selection-end-line="67" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/ClassUtils.java" />
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Request.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="295">
-          <caret line="414" column="13" lean-forward="true" selection-start-line="414" selection-start-column="13" selection-end-line="414" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/interceptor/TestInterceptor_1.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="96">
-          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/interceptor/TestInterceptor_2.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="80">
@@ -1318,13 +1074,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/interceptor/Interceptor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/servlet/Servlet.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="128">
@@ -1332,46 +1081,314 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java">
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/CodeUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="494" column="42" lean-forward="true" selection-start-line="494" selection-start-column="42" selection-end-line="494" selection-end-column="42" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="231">
+          <caret line="42" column="57" lean-forward="true" selection-start-line="42" selection-start-column="57" selection-end-line="42" selection-end-column="57" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestClientConfig.java">
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/FileUtil.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="12" column="26" selection-start-line="12" selection-start-column="26" selection-end-line="12" selection-end-column="26" />
+        <state relative-caret-position="527">
+          <caret line="37" column="5" lean-forward="true" selection-start-line="37" selection-start-column="5" selection-end-line="37" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java">
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/interceptor/Interceptor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="26" column="33" selection-start-line="26" selection-start-column="33" selection-end-line="26" selection-end-column="33" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state relative-caret-position="240">
+          <caret line="18" column="4" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/interceptor/TestInterceptor_1.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/AIOServerlDispatcher.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="320">
+          <caret line="33" column="28" lean-forward="true" selection-start-line="33" selection-start-column="28" selection-end-line="33" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Attachment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="9" column="14" selection-start-line="9" selection-start-column="14" selection-end-line="9" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Cookie.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="32">
+          <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Response.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="18" column="24" selection-start-line="18" selection-start-column="24" selection-end-line="18" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupport.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="176">
+          <caret line="15" column="22" selection-start-line="15" selection-start-column="22" selection-end-line="15" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/SerialSessionSupportSimpler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="144">
+          <caret line="19" column="25" selection-start-line="19" selection-start-column="25" selection-end-line="19" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/XMLFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="19" column="24" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Dispatcher.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="41" column="38" selection-start-line="41" selection-start-column="38" selection-end-line="41" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Properties.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="147" column="11" selection-start-line="147" selection-start-column="11" selection-end-line="147" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/io/FileInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="239">
+          <caret line="91" column="11" selection-start-line="91" selection-start-column="11" selection-end-line="91" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/io/FileReader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="57" column="30" selection-start-line="57" selection-start-column="30" selection-end-line="57" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/constant/JSP.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="4" column="70" selection-start-line="4" selection-start-column="70" selection-end-line="4" selection-end-column="70" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/utils/ClassUtils.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="23" column="24" selection-start-line="23" selection-start-column="24" selection-end-line="23" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/core/BeanPool.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="176">
+          <caret line="126" column="16" selection-start-line="126" selection-start-column="16" selection-end-line="126" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/core/JavassistAOPProxyFactory.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar!/pers/pandora/constant/LOG.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/controller/WSTestController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="32">
+          <caret line="9" column="11" selection-start-line="9" selection-start-column="11" selection-end-line="9" selection-end-column="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/AopConfig.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="256">
-          <caret line="16" column="41" selection-start-line="16" selection-start-column="41" selection-end-line="16" selection-end-column="41" />
+        <state relative-caret-position="112">
+          <caret line="11" column="11" selection-start-line="11" selection-start-column="11" selection-end-line="11" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/Client.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="11" column="11" selection-start-line="11" selection-start-column="11" selection-end-line="11" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/test/TestClientConfig.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="5" column="11" selection-start-line="5" selection-start-column="11" selection-end-line="5" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/nio/ByteBuffer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="578" column="31" selection-start-line="578" selection-start-column="31" selection-end-line="578" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/log/SERVER.log">
+      <provider selected="true" editor-type-id="LogFileEditorProvider" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/WebSocketServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="639">
+          <caret line="123" column="45" lean-forward="true" selection-start-line="123" selection-start-column="45" selection-end-line="123" selection-end-column="45" />
+          <folding>
+            <element signature="e#2234#2235#0" expanded="true" />
+            <element signature="e#2265#2266#0" expanded="true" />
+            <element signature="e#2311#2312#0" expanded="true" />
+            <element signature="e#2351#2352#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/开发日志">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="544">
+          <caret line="34" column="4" selection-start-line="34" selection-start-column="4" selection-end-line="34" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Pandora_test_ws_1.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="17" column="38" selection-start-line="17" selection-start-column="38" selection-end-line="17" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/security/SecureRandomSpi.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="431">
+          <caret line="62" column="28" selection-start-line="62" selection-start-column="28" selection-end-line="62" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/security/SecureRandom.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="467" column="33" lean-forward="true" selection-start-line="467" selection-start-column="33" selection-end-line="467" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/UUID.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="140" column="23" selection-start-line="140" selection-start-column="23" selection-end-line="140" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Session.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="20" column="48" selection-start-line="20" selection-start-column="48" selection-end-line="20" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Request.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="423" column="54" lean-forward="true" selection-start-line="423" selection-start-column="54" selection-end-line="423" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/JspParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="512">
+          <caret line="98" selection-start-line="98" selection-end-line="98" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/utils/IdWorker.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="14" column="78" selection-start-line="14" selection-start-column="78" selection-end-line="14" selection-end-column="78" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/AIOServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="320">
+          <caret line="33" column="26" selection-start-line="33" selection-start-column="26" selection-end-line="33" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/StartUper.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="311">
+          <caret line="147" column="21" lean-forward="true" selection-start-line="147" selection-start-column="21" selection-end-line="147" selection-end-column="21" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#359#360#0" expanded="true" />
-            <element signature="e#417#418#0" expanded="true" />
-            <element signature="e#504#505#0" expanded="true" />
-            <element signature="e#561#562#0" expanded="true" />
-            <element signature="e#652#653#0" expanded="true" />
-            <element signature="e#713#714#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Pandora_test_1.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="271">
+          <caret line="20" column="34" lean-forward="true" selection-start-line="20" selection-start-column="34" selection-end-line="20" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/mvc/RequestMappingHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="523" column="19" lean-forward="true" selection-start-line="523" selection-start-column="19" selection-end-line="523" selection-end-column="19" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#3944#3945#0" expanded="true" />
+            <element signature="e#3974#3975#0" expanded="true" />
+            <element signature="e#4017#4018#0" expanded="true" />
+            <element signature="e#4055#4056#0" expanded="true" />
+            <element signature="e#4086#4087#0" expanded="true" />
+            <element signature="e#4116#4117#0" expanded="true" />
+            <element signature="e#4159#4160#0" expanded="true" />
+            <element signature="e#4197#4198#0" expanded="true" />
+            <element signature="e#4231#4232#0" expanded="true" />
+            <element signature="e#4263#4264#0" expanded="true" />
+            <element signature="e#4311#4312#0" expanded="true" />
+            <element signature="e#4353#4354#0" expanded="true" />
+            <element signature="e#4385#4386#0" expanded="true" />
+            <element signature="e#4415#4416#0" expanded="true" />
+            <element signature="e#4459#4460#0" expanded="true" />
+            <element signature="e#4497#4498#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/core/Server.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="519">
+          <caret line="362" column="30" lean-forward="true" selection-start-line="362" selection-start-column="30" selection-end-line="362" selection-end-column="30" />
         </state>
       </provider>
     </entry>

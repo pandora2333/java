@@ -2,6 +2,7 @@ package pers.pandora.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.LOG;
 
 import java.security.SecureRandom;
@@ -95,8 +96,8 @@ public class IdWorker {
 
     /**
      * one day have max-millisecond-value is 86400000，The maximum occupied 27 bits
-     * 27+10+11=48 The maximum is 281474976710655(15 Char)，YK0XXHZ827(10 Char)
-     * 6(YYMMDD)+15 = 21
+     * 27+10+11=48 The maximum is 281474976710655(15 Char)，yk0xxhz827(10 Char)
+     * 6(yyMMdd)+15 = 21
      *
      * @return Fixed 21 digit string
      */
@@ -137,15 +138,16 @@ public class IdWorker {
     }
 
     // all un-clearly-recognized letters are skiped.
-    private static String defaultRange = "0123456789ABCDFGHKMNPRSTWXYZ";
+    private static String defaultRange = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     public static String padLeft(String str, int size, char padChar) {
         if (str.length() == size) return str;
         StringBuilder s = new StringBuilder();
         if (str.length() > size) {
+            Random random = new Random();
             s.append(str);
-            for (int i = str.length() - size, j = 0; i > 0; i--) {
-                int k = new Random().nextInt(s.length() - j++);
+            for (int i = str.length() - size, j = 0, k; i > 0; i--) {
+                k = random.nextInt(s.length() - j++);
                 s.delete(k, k + 1);
             }
         } else {
@@ -158,12 +160,9 @@ public class IdWorker {
         return s.toString();
     }
 
-    //SessionID(53位:16+1+36(32+4)) 750+ ms delay time,it means the browser firstly access the web server should have 750 ms+ delay time
+    //SessionID(53位:16+1+36(32+4)) 710+ ms delay time,it means the browser firstly access the web server should have 710 ms+ delay time
     public String nextSessionID() {
-//        long start = System.currentTimeMillis();
-        return nextShort() + "_" + UUID.randomUUID().toString().toUpperCase();
-//        long end = System.currentTimeMillis();
-//        System.out.println(head+"_"+tail+":"+(end-start)+"ms");
+        return nextShort() + HTTPStatus.TRANSVERSE + UUID.randomUUID().toString();
     }
 
 }

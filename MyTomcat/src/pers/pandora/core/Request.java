@@ -332,7 +332,7 @@ public final class Request {
     }
 
     private void initSession() {
-        session = new Session();
+        session = new Session(dispatcher.server.getIdWorker());
         Cookie cookie = new Cookie();
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
@@ -423,7 +423,7 @@ public final class Request {
         } else {
             //it's lazy to delete the session just now
             dispatcher.server.getSessionMap().remove(sessionID);
-            session = new Session();
+            session = new Session(dispatcher.server.getIdWorker());
             sessionID = session.getSessionID();
             dispatcher.server.addSessionMap(sessionID, session);
             if (cookie != null) {

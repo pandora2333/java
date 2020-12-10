@@ -17,12 +17,11 @@ public final class Session implements Serializable {
     private String sessionID;
     //expire time after max_age,default time is session level
     private Instant max_age = null;
-    //Session-Id Generator
-    private static final IdWorker idWorker = new IdWorker();
 
     private static final String DEFAULTFORMAT = "yyyy-MM-dd HH:mm:ss";
 
-    public Session() {
+    public Session(IdWorker idWorker) {
+        assert idWorker != null;
         sessionID = idWorker.nextSessionID();
     }
 
