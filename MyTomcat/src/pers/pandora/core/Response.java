@@ -128,7 +128,7 @@ public final class Response {
         return servlet;
     }
 
-    private byte[] createHeadInfo(List<Cookie> cookies) {
+    private byte[] createHeadInfo(List<Cookie> cookies,boolean options) {
         StringBuilder headInfo = new StringBuilder();
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
@@ -158,8 +158,14 @@ public final class Response {
         //2.build response head
         headInfo.append(HTTPStatus.SERVER).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.DATE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
-        headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER).append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER)
+                .append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
+        if(options){
+            headInfo.append(HTTPStatus.ALLOW).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.GET).append(HTTPStatus.COMMA)
+                    .append(HTTPStatus.POST).append(HTTPStatus.COMMA).append(HTTPStatus.PUT).append(HTTPStatus.COMMA).append(HTTPStatus.DELETE)
+                    .append(HTTPStatus.CRLF);
+        }
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
@@ -204,8 +210,12 @@ public final class Response {
 
     public byte[] handle(String method, Request request) {
         //OPTIONS is HTTP pre-request，just return ok signal or other bad request
-        if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || (StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS))) {
-            return createHeadInfo(null);
+        boolean options = StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS);
+        if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || options) {
+            if(options) {
+                code = HTTPStatus.CODE_200;
+            }
+            return createHeadInfo(null,options);
         }
         handlePre(request);
         try {
@@ -256,7 +266,7 @@ public final class Response {
         }
         handleAfter(request);
         assert request != null;
-        byte[] heads = createHeadInfo(request.getCookies());
+        byte[] heads = createHeadInfo(request.getCookies(),false);
         byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
         if (content != null) {

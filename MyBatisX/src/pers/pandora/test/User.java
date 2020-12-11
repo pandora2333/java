@@ -1,117 +1,111 @@
 package pers.pandora.test;
-
 import pers.pandora.annotation.*;
-/**
-*author by pandora
-*date 2018/11/24
-*version 1.3
-*适用范围：针对主键自增，无联合主键的数据表使用
-*/
+
 @Table
 public class User{
-
 	@Id
-	private  Integer  id;
-	public Integer  getId(){
+	private Integer id;
+	public Integer getId(){
 		return id;
 	}
-	public void  setId(Integer field){
+	public void setId(Integer field){
 		this.id= field;
 	}
 	@Column
-	private  String  userName;
-	public String  getUserName(){
+	private String userName;
+	public String getUserName(){
 		return userName;
 	}
-	public void  setUserName(String field){
+	public void setUserName(String field){
 		this.userName= field;
 	}
 	@Column
-	private  Integer  stars;
-	public Integer  getStars(){
+	private Integer stars;
+	public Integer getStars(){
 		return stars;
 	}
-	public void  setStars(Integer field){
+	public void setStars(Integer field){
 		this.stars= field;
 	}
 	@Column
-	private  Integer  forbid;
-	public Integer  getForbid(){
+	private Integer forbid;
+	public Integer getForbid(){
 		return forbid;
 	}
-	public void  setForbid(Integer field){
+	public void setForbid(Integer field){
 		this.forbid= field;
 	}
 	@Column
-	private  String  msg;
-	public String  getMsg(){
+	private String msg;
+	public String getMsg(){
 		return msg;
 	}
-	public void  setMsg(String field){
+	public void setMsg(String field){
 		this.msg= field;
 	}
 	@Column
-	private  String  address;
-	public String  getAddress(){
+	private String address;
+	public String getAddress(){
 		return address;
 	}
-	public void  setAddress(String field){
+	public void setAddress(String field){
 		this.address= field;
 	}
 	@Column
-	private  String  pd;
-	public String  getPd(){
+	private String pd;
+	public String getPd(){
 		return pd;
 	}
-	public void  setPd(String field){
+	public void setPd(String field){
 		this.pd= field;
 	}
 	@Column
-	private  String  img;
-	public String  getImg(){
+	private String img;
+	public String getImg(){
 		return img;
 	}
-	public void  setImg(String field){
+	public void setImg(String field){
 		this.img= field;
 	}
 	@Column
-	private  java.sql.Timestamp  cdate;
-	public java.sql.Timestamp  getCdate(){
+	private java.sql.Timestamp cdate;
+	public java.sql.Timestamp getCdate(){
 		return cdate;
 	}
-	public void  setCdate(java.sql.Timestamp field){
+	public void setCdate(java.sql.Timestamp field){
 		this.cdate= field;
 	}
 	@Column
-	private  String  follow;
-	public String  getFollow(){
+	private String follow;
+	public String getFollow(){
 		return follow;
 	}
-	public void  setFollow(String field){
+	public void setFollow(String field){
 		this.follow= field;
 	}
 	@Column
-	private  String  collect;
-	public String  getCollect(){
+	private String collect;
+	public String getCollect(){
 		return collect;
 	}
-	public void  setCollect(String field){
+	public void setCollect(String field){
 		this.collect= field;
 	}
 	@Column
-	private  Integer  active;
-	public Integer  getActive(){
+	private Integer active;
+	public Integer getActive(){
 		return active;
 	}
-	public void  setActive(Integer field){
+	public void setActive(Integer field){
 		this.active= field;
 	}
 	@Column
-	private  Integer  sex;
-	public Integer  getSex(){
+	private Integer sex;
+	public Integer getSex(){
 		return sex;
 	}
-	public void  setSex(Integer field){
+	public void setSex(Integer field){
 		this.sex= field;
 	}
+
 }

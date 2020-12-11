@@ -1,17 +1,17 @@
 <MyMapper namespace="pers.pandora.test.mapper.UserMapper">
-	<!--可以使用lt,gt,le,ge表示大小关系，配合返回值为List使用-->
+	<!--You can use {lt, gt, le, ge} to indicate the size relationship, and use it with the return value of list-->
 	<!--如gt #{id} and deptno lt #{no}-->
-	<!--注意:mapper中定义参数若为实体类，则#{no}对应参数实体类中属性名,否则随意取名-->
+	<!--Note: if the parameter defined in the mapper is an entity class, then #{no} corresponds to the attribute name in the parameter entity class. Otherwise, it can be named arbitrarily-->
 	<select id="queryForOne" resultType="pers.pandora.test.User">
-		select * from user where id = #{id}
-  	</select>
-	<insert id="insert">
+		select * from user where id=#{id}
+ 	</select>
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
 		insert into user value(null,#{userName},#{stars},#{forbid},#{msg},#{address},#{pd},#{img},#{cdate},#{follow},#{collect},#{active},#{sex})
 	</insert>
 	<delete id="deleteById">
-		delete from user where id in (#{id1})
+		delete from user where id=#{id}
 	</delete>
 	<update id="update">
-		update user set userName=#{userName},stars=#{stars},forbid=#{forbid},msg=#{msg},address=#{address},pd=#{pd},img=#{img},cdate=#{cdate},follow=#{follow},collect=#{collect},active=#{active},sex=#{sex} where id = #{id}
+		update user set userName=#{userName},stars=#{stars},forbid=#{forbid},msg=#{msg},address=#{address},pd=#{pd},img=#{img},cdate=#{cdate},follow=#{follow},collect=#{collect},active=#{active},sex=#{sex} where id=#{id}
 	</update>
 </MyMapper>

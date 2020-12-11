@@ -1,16 +1,40 @@
 package pers.pandora.core;
-//动态绑定sql
+//Dynamic binding SQL
 public class DynamicSql {
+
     private String method;
-    private String id;//方法标识id
+    //Method id
+    private String id;
+
     private String resultType;
+
     private String sql;
+
+    private boolean useGeneratedKey;
+
+    private String pkName;
 
     public DynamicSql(String method, String id, String resultType, String sql) {
         this.method = method;
         this.id = id;
         this.resultType = resultType;
         this.sql = sql;
+    }
+
+    public void setUseGeneratedKey(boolean useGeneratedKey) {
+        this.useGeneratedKey = useGeneratedKey;
+    }
+
+    public void setPkName(String pkName) {
+        this.pkName = pkName;
+    }
+
+    public String getPkName() {
+        return pkName;
+    }
+
+    public boolean isUseGeneratedKey() {
+        return useGeneratedKey;
     }
 
     public String getSql() {

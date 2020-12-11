@@ -2,7 +2,16 @@ package pers.pandora.core;
 
 public class SqlSessionFactory {
 
-    public static  SqlSession createSqlSession(String mapper){
-        return new SqlSession(mapper);
+    private Configuration configuration;
+
+    public SqlSessionFactory(Configuration configuration) {
+        this.configuration = configuration;
+    }
+
+    public SqlSession createSqlSession(String mapper) {
+        MapperProxyClass mapperProxyClass = new MapperProxyClass();
+        mapperProxyClass.setConfiguration(configuration);
+        mapperProxyClass.setDbPool(new DBPool(configuration.getDbPoolProperties()));
+        return new SqlSession(mapper, mapperProxyClass);
     }
 }

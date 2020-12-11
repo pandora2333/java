@@ -1,11 +1,12 @@
 package pers.pandora.mbg;
 
 /**
- * 记录表中字段
+ * Field in record table
  */
 public class ColumnInfo {
 
     private String columnName;
+
     private String dataType;
 
     public boolean isPrimaryKeyId() {
@@ -17,6 +18,7 @@ public class ColumnInfo {
     }
 
     private boolean primaryKeyId;
+
     public String getColumnName() {
         return columnName;
     }
@@ -33,7 +35,7 @@ public class ColumnInfo {
         this.dataType = dataType;
     }
 
-    public ColumnInfo(String columnName, String dataType,boolean primaryKeyId) {
+    public ColumnInfo(String columnName, String dataType, boolean primaryKeyId) {
         this.columnName = columnName;
         this.dataType = dataType;
         this.primaryKeyId = primaryKeyId;

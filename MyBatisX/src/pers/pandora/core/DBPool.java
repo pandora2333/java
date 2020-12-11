@@ -1,125 +1,170 @@
 package pers.pandora.core;
 
-import pers.pandora.core.utils.PropUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.ENTITY;
+import pers.pandora.constant.LOG;
+import pers.pandora.utils.StringUtils;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Properties;
 
-/**
- * author:by pandora
- * version 1.1
- * up date:2018//11/20
- * encoding:utf8
- *
- */
 public class DBPool {
-   private int initalSize;//连接池初始化连接数
-   private int maxSize;//数据库连接池最大连接数
-   private long timeout;//连接获取超时阀值
-   private String url;//数据库连接uri标识
-   private String user;//用户名
-   private String password;//密码
-   private String driver;//数据库驱动
-   private volatile PoolConnection[] connections;//维护连接池
-   private volatile int request;//请求数判定，扩容判定
-   private static DBPool dbpool = new DBPool();//单例模式，懒汉式
-   private DBPool() {
-      try {
-         initalSize = Integer.valueOf(PropUtils.parse("initalSize"));
-         maxSize = Integer.valueOf(PropUtils.parse("maxSize"));
-         timeout = Long.valueOf(PropUtils.parse("timeout"));
-         url = PropUtils.parse("url");
-         user = PropUtils.parse("user");
-         password = PropUtils.parse("password");
-         driver = PropUtils.parse("driver");
-      } catch (NumberFormatException e) {
-         System.out.println("配置文件数值有误!");
-      }
-      if(initalSize<=0||maxSize<=0||maxSize<initalSize||timeout<=0){
-         throw  new RuntimeException("配置文件数值有误!");
-      }
-      connections = new PoolConnection[initalSize];
-      try {
-         Class.forName(driver);
-         for (int i = 0;i<connections.length;i++){
-            if(connections[i]==null){
-               connections[i] = new PoolConnection();
-               connections[i].setConnection(DriverManager.getConnection(url,user,password));
-               connections[i].setBusy(false);
+
+    private static Logger logger = LogManager.getLogger(DBPool.class);
+    //Connection pool initialization connections
+    private int initalSize;
+    //Database connection pool maximum connections
+    private int maxSize;
+    //Connection get timeOut threshold
+    private long timeOut;
+    //Database connection URI identifier
+    private String url;
+    private String user;
+    private String password;
+    //Database driven
+    private String driver;
+    //Maintain connection pool
+    private PoolConnection[] connections;
+    //Request number determination, capacity expansion decision
+    private int threshold;
+
+    public static final String INITALSIZE = "initalSize";
+
+    public static final String MAXSIZE = "maxSize";
+
+    public static final String TIMEOUT = "timeOut";
+
+    public static final String URL = "url";
+
+    public static final String USER = "user";
+
+    public static final String PASSWORD = "password";
+
+    public static final String DRIVER = "driver";
+
+    private final Properties properties = new Properties();
+
+    public DBPool(String file) {
+        assert StringUtils.isNotEmpty(file);
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(file);
+            properties.load(inputStream);
+        } catch (IOException e) {
+            logger.error("config file" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+        }
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                //ignore
             }
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-   }
-   //非阻塞获取
-   public PoolConnection getConnection() throws SQLException {
-      return getConnection(timeout);
-   }
-   //阻塞获取，直到超时
-   public synchronized PoolConnection getConnection(long millis) throws SQLException {
-      if(initalSize<=0){
-         rePool();
-      }
-      final long first = new Date().getTime();
-      PoolConnection connection = null;
-      request++;
-      while(new Date().getTime()-first<=millis){
-         for(int i = 0;i<connections.length;i++){
-            if(connections[i]!=null&&connections[i].getConnection()!=null&&!connections[i].getConnection().isClosed()&&!connections[i].isBusy()){
-               initalSize--;
-               connection = connections[i];
-               connections[i].setBusy(true);
-               break;
+        }
+        try {
+            initalSize = Integer.valueOf(properties.getProperty(INITALSIZE, null));
+            maxSize = Integer.valueOf(properties.getProperty(MAXSIZE, null));
+            timeOut = Long.valueOf(properties.getProperty(TIMEOUT));
+            url = properties.getProperty(URL);
+            user = properties.getProperty(USER);
+            password = properties.getProperty(PASSWORD);
+            driver = properties.getProperty(DRIVER);
+        } catch (NumberFormatException e) {
+            logger.error("format number" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+        }
+        if (initalSize <= 0 || maxSize <= 0 || maxSize < initalSize || timeOut <= 0) {
+            logger.error("file config number" + LOG.LOG_POS, LOG.ERROR_DESC);
+            return;
+        }
+        connections = new PoolConnection[initalSize];
+        try {
+            Class.forName(driver);
+            for (int i = 0; i < connections.length; i++) {
+                if (connections[i] == null) {
+                    connections[i] = new PoolConnection();
+                    assert url != null;
+                    connections[i].setConnection(DriverManager.getConnection(url, user, password));
+                    connections[i].setBusy(false);
+                }
             }
-         }
-      }
-      return connection;
-   }
-   private void rePool() throws SQLException {
-      if(maxSize-connections.length>=0 && request>connections.length<<1){
-         PoolConnection[] temp =null;
-         if((connections.length<<1+1)<maxSize){
-            maxSize -= connections.length<<1+1;
-            temp = new PoolConnection[connections.length<<1+1];
-         }else{
-            temp = new PoolConnection[maxSize];
-         }
-         if(temp!=null){
+        } catch (Exception e) {
+            logger.error("init-connection" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+        }
+    }
+
+    public PoolConnection getConnection() throws SQLException {
+        return getConnection(timeOut);
+    }
+
+    //Block acquisition until timeout
+    public synchronized PoolConnection getConnection(long millis) throws SQLException {
+        if (initalSize <= 0) {
+            rePool();
+        }
+        long first = new Date().getTime();
+        PoolConnection connection = null;
+        threshold++;
+        while (new Date().getTime() - first <= millis) {
+            for (PoolConnection tcursor : connections) {
+                if (tcursor != null && tcursor.getConnection() != null
+                        && !tcursor.getConnection().isClosed() && !tcursor.isBusy()) {
+                    initalSize--;
+                    connection = tcursor;
+                    tcursor.setBusy(true);
+                    break;
+                }
+            }
+        }
+        return connection;
+    }
+
+    private void rePool() throws SQLException {
+        int upSize = connections.length << 1;
+        if (maxSize - connections.length >= 0 && threshold > upSize) {
+            PoolConnection[] temp;
+            upSize++;
+            if (upSize < maxSize) {
+                maxSize -= upSize;
+                temp = new PoolConnection[upSize];
+            } else {
+                temp = new PoolConnection[maxSize];
+            }
             int cursor = 0;
-            for (PoolConnection connection:connections){
-               if(connection!=null&&connection.getConnection()!=null&&!connection.getConnection().isClosed()){
-                  temp[cursor] = connection;
-               }else{
-                  temp[cursor] = new PoolConnection();
-                  temp[cursor].setConnection(DriverManager.getConnection(url,user,password));
-                  temp[cursor].setBusy(false);
-               }
-               cursor++;
+            for (PoolConnection connection : connections) {
+                if (connection != null && connection.getConnection() != null && !connection.getConnection().isClosed()) {
+                    temp[cursor] = connection;
+                } else {
+                    temp[cursor] = new PoolConnection();
+                    temp[cursor].setConnection(DriverManager.getConnection(url, user, password));
+                    temp[cursor].setBusy(false);
+                }
+                cursor++;
             }
             connections = temp;
-         }
-      }
-   }
+        }
+    }
 
-   public synchronized void close() throws SQLException {
-      for(PoolConnection connection:connections){
-         connection.getConnection().close();
-      }
-      connections = null;
-      System.gc();
-   }
-   public static DBPool getDBPool(){
-      return dbpool;
-   }
-   public void commit(PoolConnection connection) throws SQLException {//每次完成sql操作后要提交
-      if (connection!=null) {
-         if (!connection.getConnection().isClosed()&& connection.isBusy()){
-            connection.setBusy(false);
-         }else if(connection.getConnection().isClosed()){
-            connection.setConnection(null);
-         }
-      }
-   }
+    public synchronized void close() throws SQLException {
+        if (connections != null) {
+            for (PoolConnection connection : connections) {
+                connection.getConnection().close();
+            }
+            connections = null;
+        }
+    }
+
+    public void commit(PoolConnection connection) throws SQLException {
+        if (connection != null) {
+            if (!connection.getConnection().isClosed() && connection.isBusy()) {
+                connection.setBusy(false);
+            } else if (connection.getConnection().isClosed()) {
+                connection.setConnection(null);
+            }
+        }
+    }
 }

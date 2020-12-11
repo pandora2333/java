@@ -23,7 +23,7 @@ public final class JspParser {
 
     private static final Logger logger = LogManager.getLogger(JspParser.class);
     //Caching generated servlet classes in non hot load mode,base on double check lock for lazy loading to save some memory
-    private static volatile Map<String,String> jspCahce;
+    private static volatile Map<String, String> jspCahce;
 
     //Hash encoding needed to generate jsp servlet class name
     private String hashEncode;
@@ -54,7 +54,7 @@ public final class JspParser {
     }
 
     //It's lazy loading, no generation without access
-    public Tuple<String, String, String> parse(String jspFile,boolean hotLoadJSP) {
+    public Tuple<String, String, String> parse(String jspFile, boolean hotLoadJSP) {
         //JSP source file
         File file = new File(jspFile);
         if (!file.exists()) {
@@ -73,23 +73,23 @@ public final class JspParser {
             inFifle.close();
             String jsp = buf.toString();
             String query;
-            if(hotLoadJSP){
+            if (hotLoadJSP) {
                 //Using file hash, duplicate classes are not generated again
                 query = CodeUtils.hashEncode(jsp, SALT, null, null);
-            }else{
+            } else {
                 //DCL
-                if(jspCahce == null){
-                    synchronized (logger){
-                        if(jspCahce == null){
+                if (jspCahce == null) {
+                    synchronized (logger) {
+                        if (jspCahce == null) {
                             jspCahce = new ConcurrentHashMap<>(16);
                         }
                     }
                 }
                 //DCL
-                if(!jspCahce.containsKey(jsp)){
-                    synchronized (logger){
-                        if(!jspCahce.containsKey(jsp)){
-                            jspCahce.put(jsp,CodeUtils.hashEncode(jsp, SALT, null, null));
+                if (!jspCahce.containsKey(jsp)) {
+                    synchronized (logger) {
+                        if (!jspCahce.containsKey(jsp)) {
+                            jspCahce.put(jsp, CodeUtils.hashEncode(jsp, SALT, null, null));
                         }
                     }
                 }
@@ -97,7 +97,7 @@ public final class JspParser {
             }
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
-            String className = servletName.substring(0, 1).toUpperCase() + servletName.substring(1);
+            String className = Character.toUpperCase(servletName.charAt(0)) + servletName.substring(1);
             className = className + LOG.CLASS_NAME_SPLITER + query;
             file = new File(CLASSDIR + PATH_SPLITER + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
             className = JSP_PACKAGE + PACKAGE_SPLITER + className;

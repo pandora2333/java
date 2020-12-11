@@ -1,6 +1,4 @@
 package pers.pandora.core;
-
-import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.Serializable;
@@ -20,9 +18,8 @@ public final class Session implements Serializable {
 
     private static final String DEFAULTFORMAT = "yyyy-MM-dd HH:mm:ss";
 
-    public Session(IdWorker idWorker) {
-        assert idWorker != null;
-        sessionID = idWorker.nextSessionID();
+    public Session(String sessionID) {
+        this.sessionID = sessionID;
     }
 
     private Map<String, Object> attrbuites = new ConcurrentHashMap<>();

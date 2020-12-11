@@ -1,210 +1,249 @@
 package pers.pandora.core;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.Column;
 import pers.pandora.annotation.Id;
 import pers.pandora.annotation.Table;
-import pers.pandora.core.utils.Dom4JUtil;
-
+import pers.pandora.constant.ENTITY;
+import pers.pandora.constant.LOG;
+import pers.pandora.utils.StringUtils;
 
 import java.io.File;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-//Mapper注解注入类
-public class Configuration {
-	private static   Map<String ,Object>beans = new ConcurrentHashMap<>(16);
-	private static Map<String,String> alias = new ConcurrentHashMap<>(16);//实体类及属性对应表与字段别名关联
-	private static Map<String,Class> poClassTableMap =new ConcurrentHashMap<>();//实体类与数据表关联
-	private static String table;//table键名
-	public  static Map<String, String> getAlias() {
-		return alias;
-	}
+import java.util.*;
+import java.util.concurrent.*;
 
-	public static Map<String, Class> getPoClassTableMap() {
-		return poClassTableMap;
-	}
+//Mapper annotation injection class
+public final class Configuration {
 
-	static {
-		//初始化当前工作的目录
-		scanFile("src/");
-	}
-	//返回代理mapper
-	public static synchronized  <T> T createMapperProxy(String file,Class<T> template) throws Exception {
-		Document doc = Dom4JUtil.getDocument("src/"+file);
-		String proxyClass= doc.getRootElement().attributeValue("namespace");
-		/**
-		 * CRUD集合
-		 */
-		List<Element> select = doc.getRootElement().elements("select");
-		List<Element> insert = doc.getRootElement().elements("insert");
-		List<Element> update = doc.getRootElement().elements("update");
-		List<Element> delete = doc.getRootElement().elements("delete");
-		List<DynamicSql> proxys = new LinkedList<>();
-		/**
-		 * CRUD的对应sql放入
-		 */
-		for(Element ele:select) {
-			String proxyMethod = ele.attributeValue("id");
-			String resultType = ele.attributeValue("resultType");
-			String sql = ele.getTextTrim();
-			DynamicSql dynamicSql = null;
-			if(sql!=null&&!sql.equals("")) {
-				dynamicSql = new DynamicSql("select", proxyMethod, resultType, sql);
-			}
-			if(dynamicSql!=null) {
-				proxys.add(dynamicSql);
-			}
-		}
-		for(Element ele:insert) {
-			String proxyMethod = ele.attributeValue("id");
-			String sql = ele.getTextTrim();
-			DynamicSql dynamicSql = null;
-			if(sql!=null&&!sql.equals("")) {
-				dynamicSql = new DynamicSql("insert", proxyMethod,null, sql);
-			}
-			if(dynamicSql!=null) {
-				proxys.add(dynamicSql);
-			}
-		}
-		for(Element ele:delete) {
-			String proxyMethod = ele.attributeValue("id");
-			String sql = ele.getTextTrim();
-			DynamicSql dynamicSql = null;
-			if(sql!=null&&!sql.equals("")) {
-				dynamicSql = new DynamicSql("delete", proxyMethod,null, sql);
-			}
-			if(dynamicSql!=null) {
-				proxys.add(dynamicSql);
-			}
-		}
-		for(Element ele:update) {
-			String proxyMethod = ele.attributeValue("id");
-			String sql = ele.getTextTrim();
-			DynamicSql dynamicSql = null;
-			if(sql!=null&&!sql.equals("")) {
-				dynamicSql = new DynamicSql("update", proxyMethod,null, sql);
-			}
-			if(dynamicSql!=null) {
-				proxys.add(dynamicSql);
-			}
-		}
-		/**
-		 * Mapper代理生成
-		 */
-		try {
-			List<DynamicSql> makeMethod = new LinkedList<>();
-			Class clazz = Class.forName(proxyClass);
-			if(clazz.isInterface()){
-				for(Method method:clazz.getDeclaredMethods()){
-					for(DynamicSql dynamicSql:proxys){
-						if(dynamicSql.getId().equals(method.getName())){
-							makeMethod.add(dynamicSql);
-						}
-					}
-				}
-				return (T) MapperProxyClass.parseMethod(makeMethod,template);
-			}else{
-				System.out.println("mapper配置文件异常!");
-			}
-		} catch (ClassNotFoundException e) {
-			System.out.println(e);
-		}
-		return null;
-	}
-	//返回实体
-	public static <T> T getBean(String beanName,Class<T> clazz){
-		if(beanName!=null&&!beanName.equals("")) {
-			if (beans.get(beanName) != null) {
-				return (T) beans.get(beanName);
-			}
-		}
-		return null;
-	}
-	//路径下文件扫描
-	private static void scanFile(String path){
-		File files = new File(path);
-		if(files!=null) {
-			if(files.isDirectory()) {
-				for(File file:files.listFiles()){
-					scanFile(file.getPath());
-				}
+    private static Logger logger = LogManager.getLogger(Configuration.class);
 
-			}else{
-				if(files.getPath().endsWith(".java")){
-					path = 	files.getPath();
-					try {
-						scanBean(Class.forName(path.substring(4).replace(".java","").replace("\\","."))
-								,null, Table.class);
-					} catch (Exception e) {
-						System.out.println("缺少空构造器!");
-					}
-				}
-			}
-		}
-	}
+    private Map<String, Class<?>> beans = new ConcurrentHashMap<>(16);
+    //Entity class and attribute corresponding table associated with field alias
+    private Map<String, String> alias = new ConcurrentHashMap<>(16);
+    //Entity class associated with data table
+    private Map<String, Class> poClassTableMap = new ConcurrentHashMap<>(16);
 
-	//实体扫描
-	private static  <T> void  scanBean(Class<T> t,Field field,Class template) throws Exception {
-		  if(template ==Table.class){
-				    for(Annotation annotation:t.getDeclaredAnnotations()) {
-				    	if(annotation instanceof Table) {
-				    		  table = ((Table)annotation).value();
-				    		if(table.equals("")){
-				    			table = t.getSimpleName().substring(0,1).toLowerCase()+t.getSimpleName().substring(1);
-							}
-							beans.put(table,t.newInstance());
-				    		poClassTableMap.put(table,t);
-							scanField(t);
-					}
-					}
-			    }else if(template ==Id.class||template == Column.class) {
-				if (field != null) {
-					try {
-						String fieldValue = "";
-						if(template ==Id.class) {
-							Id id = field.getAnnotation(Id.class);
-							if (id != null) {
-								fieldValue = id.value();
-								if (fieldValue .equals("")) {
-									fieldValue = field.getName();
-								}
-							}
-						}else {
-							Column column = field.getAnnotation(Column.class);
-							if (column != null) {
-								fieldValue = column.value();
-								if (fieldValue.equals("")) {
-									fieldValue = field.getName();
-								}
-							}
-						}
-						alias.put(fieldValue,field.getName());
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-	}
-	//实体类字段扫描
-	private static void scanField(Class clazz){
-		try {
-			for(Field field:clazz.getDeclaredFields()){
-				field.setAccessible(true);
-				if(field.isAnnotationPresent(Id.class)){
-					scanBean(clazz, field, Id.class);
-				}else if(field.isAnnotationPresent(Column.class)){
-					scanBean(clazz, field, Column.class);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    private ThreadPoolExecutor executor;
+
+    private List<Future<Boolean>> result;
+    //Thread pool minimum number of cores
+    private int minCore = Runtime.getRuntime().availableProcessors();
+    //Thread pool maximum number of cores
+    private int maxCore = minCore + 5;
+    //Thread idle time
+    private long keepAlive = 50;
+    //Thread idle time unit
+    private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+    //Timeout waiting for class loading time
+    private long timeOut = 5;
+    //Timeout wait class load time unit
+    private TimeUnit timeOutUnit = TimeUnit.SECONDS;
+    //db config file
+    private String dbPoolProperties;
+
+    private static final String CONFIGURATION_CLASS = "pers.pandora.core.Configuration";
+
+    public Map<String, String> getAlias() {
+        return alias;
+    }
+
+    public Map<String, Class> getPoClassTableMap() {
+        return poClassTableMap;
+    }
+
+    public String getDbPoolProperties() {
+        return dbPoolProperties;
+    }
+
+    public void setDbPoolProperties(String dbPoolProperties) {
+        this.dbPoolProperties = dbPoolProperties;
+    }
+
+    public void initThreadPool(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
+        this.minCore = minCore;
+        this.maxCore = maxCore;
+        this.keepAlive = keepAlive;
+        this.timeUnit = timeUnit;
+        this.timeOutUnit = timeOutUnit;
+        this.timeOut = timeout;
+    }
+
+    public int getMinCore() {
+        return minCore;
+    }
+
+    public void setMinCore(int minCore) {
+        this.minCore = minCore;
+    }
+
+    public int getMaxCore() {
+        return maxCore;
+    }
+
+    public void setMaxCore(int maxCore) {
+        this.maxCore = maxCore;
+    }
+
+    public long getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(long timeOut) {
+        this.timeOut = timeOut;
+    }
+
+    public long getKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(long keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    public void init(String... paths) {
+        if (paths == null || paths.length == 0) {
+            logger.warn("No path loaded");
+            return;
+        }
+        executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
+        result = new ArrayList<>();
+        for (String path : paths) {
+            scanFile(checkPath(path));
+        }
+        waitFutures(result, timeOut, timeOutUnit);
+        executor.shutdownNow();
+        executor = null;
+        result = null;
+    }
+
+    private void waitFutures(List<Future<Boolean>> result, long timeOut, TimeUnit timeOutUnit) {
+        for (Future future : result) {
+            try {
+                future.get(timeOut, timeOutUnit);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                logger.error("waitFutures" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            }
+        }
+    }
+
+    private String checkPath(String path) {
+        if (!path.startsWith(ENTITY.ROOTPATH)) {
+            path = ENTITY.ROOTPATH + path;
+        }
+        return path.replaceAll(ENTITY.FILE_REGEX_SPLITER, String.valueOf(ENTITY.SLASH));
+    }
+
+    public <T> T getTableObject(String tableName) {
+        if (StringUtils.isNotEmpty(tableName)) {
+            try {
+                return (T) Objects.requireNonNull(getTableObjectType(tableName)).newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                logger.error("getTableObject" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            }
+        }
+        return null;
+    }
+
+    public Class<?> getTableObjectType(String tableName) {
+        return beans.get(tableName);
+    }
+
+    private void scanFile(String path) {
+        File files = new File(path);
+        if (files.exists()) {
+            if (files.isDirectory()) {
+                for (File file : Objects.requireNonNull(files.listFiles())) {
+                    scanFile(file.getPath());
+                }
+            } else {
+                if (files.getPath().endsWith(ENTITY.POINT + ENTITY.FILE_POS_MARK)) {
+                    String className = files.getPath().substring(4).replace(ENTITY.POINT + ENTITY.FILE_POS_MARK, LOG.NO_CHAR)
+                            .replace(ENTITY.PATH_SPLITER_PATTERN, ENTITY.POINT);
+                    if (!className.equals(CONFIGURATION_CLASS)) {
+                        result.add(executor.submit(new IOTask(className)));
+                    }
+                }
+            }
+        }
+    }
+
+    private <T> void scanBean(Class<T> t, Field field, Class template) {
+        if (template == Table.class) {
+            for (Annotation annotation : t.getDeclaredAnnotations()) {
+                if (annotation instanceof Table) {
+                    String table = ((Table) annotation).value();
+                    if (!StringUtils.isNotEmpty(table)) {
+                        table = t.getSimpleName().substring(0, 1).toLowerCase() + t.getSimpleName().substring(1);
+                    }
+                    beans.put(table, t);
+                    poClassTableMap.put(table, t);
+                    scanField(t);
+                }
+            }
+        } else if (template == Id.class || template == Column.class) {
+            if (field != null) {
+                try {
+                    String fieldValue = null;
+                    if (template == Id.class) {
+                        Id id = field.getAnnotation(Id.class);
+                        fieldValue = id.value();
+                        if (!StringUtils.isNotEmpty(fieldValue)) {
+                            fieldValue = field.getName();
+                        }
+                    } else {
+                        Column column = field.getAnnotation(Column.class);
+                        if (column != null) {
+                            fieldValue = column.value();
+                            if (!StringUtils.isNotEmpty(fieldValue)) {
+                                fieldValue = field.getName();
+                            }
+                        }
+                    }
+                    alias.put(fieldValue, field.getName());
+                } catch (Exception e) {
+                    logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                }
+            }
+        }
+    }
+
+    private void scanField(Class tClass) {
+        try {
+            for (Field field : tClass.getDeclaredFields()) {
+                field.setAccessible(true);
+                if (field.isAnnotationPresent(Id.class)) {
+                    scanBean(tClass, field, Id.class);
+                } else if (field.isAnnotationPresent(Column.class)) {
+                    scanBean(tClass, field, Column.class);
+                }
+            }
+        } catch (Exception e) {
+            //ignore
+        }
+    }
+
+    private class IOTask implements Callable<Boolean> {
+
+        private String className;
+
+        IOTask(String className) {
+            this.className = className;
+        }
+
+        @Override
+        public Boolean call() {
+            try {
+                scanBean(Class.forName(className, true, Thread.currentThread().getContextClassLoader()), null, Table.class);
+            } catch (Exception e) {
+                logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
+                        this, className, LOG.EXCEPTION_DESC, e);
+                return false;
+            }
+            return true;
+        }
+    }
 }

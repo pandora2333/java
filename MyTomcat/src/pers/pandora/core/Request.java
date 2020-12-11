@@ -332,7 +332,7 @@ public final class Request {
     }
 
     private void initSession() {
-        session = new Session(dispatcher.server.getIdWorker());
+        session = new Session(getSessionID());
         Cookie cookie = new Cookie();
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
@@ -341,6 +341,14 @@ public final class Request {
         cookie.setPath(String.valueOf(HTTPStatus.SLASH));
         dispatcher.server.addSessionMap(session.getSessionID(), session);
         cookies.add(cookie);
+    }
+    //It ensures that the sessionID is never duplicated
+    private String getSessionID() {
+        String sessionID;
+        do {
+            sessionID = dispatcher.server.getIdWorker().nextSessionID();
+        }while(dispatcher.server.getSessionMap().containsKey(sessionID));
+        return sessionID;
     }
 
     private void initCookies(String cookie_str) {
@@ -421,10 +429,10 @@ public final class Request {
         if (checkSessionInvalid(sessionID)) {
             session = dispatcher.server.getSessionMap().get(sessionID);
         } else {
-            //it's lazy to delete the session just now
+            //It's lazy to delete the session just now
             dispatcher.server.getSessionMap().remove(sessionID);
-            session = new Session(dispatcher.server.getIdWorker());
-            sessionID = session.getSessionID();
+            sessionID = getSessionID();
+            session = new Session(sessionID);
             dispatcher.server.addSessionMap(sessionID, session);
             if (cookie != null) {
                 cookie.setNeedUpdate(true);

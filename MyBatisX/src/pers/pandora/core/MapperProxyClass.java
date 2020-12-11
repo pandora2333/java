@@ -1,5 +1,13 @@
 package pers.pandora.core;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.ENTITY;
+import pers.pandora.constant.LOG;
+import pers.pandora.constant.SQL;
+import pers.pandora.constant.XML;
+import pers.pandora.utils.StringUtils;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -7,237 +15,280 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 代理Mapper生成器，代理实现所有mapper接口方法
- * 使用jdk自带的动态代理，移植性强
+ * 1.The proxy mapper generator implements all mapper interface methods
+ * 2.Using the dynamic proxy provided by JDK has strong portability
  */
-public class MapperProxyClass{
-    private static  List<DynamicSql> sqls;//sql语句存储
-    private static DBPool dbPool = DBPool.getDBPool();//获取dbpool连接池
-    private static  List<Object> list = new LinkedList();//数据库关联对象存储
-    private static  boolean flag;//记录返回的是list还是单一entity
+public final class MapperProxyClass {
 
-    /**
-     * MapperProxyClass类总入口方法，实现对xml文件sql解析，处理，实体类赋值一系列处理过程
-     * @param dynamicSqls
-     * @param proxy
-     * @param <T>
-     * @return mapper代理实现对象
-     * @throws Exception
-     */
-    public  static  <T> T parseMethod(List<DynamicSql> dynamicSqls,Class<T> proxy) throws Exception {
-        sqls = dynamicSqls;
-        return (T) Proxy.newProxyInstance(proxy.getClassLoader(),new Class[]{proxy},new MyHandler());
+    private static Logger logger = LogManager.getLogger(MapperProxyClass.class);
+    //SQL statement storage
+    private List<DynamicSql> sqls = new CopyOnWriteArrayList<>();
+    //Get dbpool connection pool
+    private DBPool dbPool;
+    //Database associated object storage
+    private List<Object> list = new CopyOnWriteArrayList<>();
+    //Does the record return a list or a single entity
+    private boolean notUnique;
+
+    private Configuration configuration;
+
+    public DBPool getDbPool() {
+        return dbPool;
+    }
+
+    public void setDbPool(DBPool dbPool) {
+        this.dbPool = dbPool;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     /**
-     * jdk动态代理的方法处理器，对mapper接口方法增强实现
+     * The implementation of XML file SQL parsing, processing, entity class assignment a series of processing procedures
+     *
+     * @param dynamicSqls
+     * @param proxy
+     * @param <T>
+     * @return Mapper proxy implementation object
+     * @throws Exception
      */
-    static class MyHandler implements InvocationHandler {
+    public <T> T parseMethod(List<DynamicSql> dynamicSqls, Class<T> proxy) throws Exception {
+        sqls = dynamicSqls;
+        return (T) Proxy.newProxyInstance(proxy.getClassLoader(), new Class[]{proxy}, new ProxyHandler());
+    }
+
+    /**
+     * JDK dynamic proxy method processor to enhance the implementation of mapper interface methods
+     */
+    private class ProxyHandler implements InvocationHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            handleSQL(method,args);
-            if(list.size()==0){
+            handleSQL(method, args);
+            if (list.size() == 0) {
                 return null;
             }
-            return flag?list:list.get(0);
+            return notUnique ? list : list.get(0);
         }
 
         /**
-         * 处理select sql语句对实体类赋值问题，具体赋值在invokeSet方法
+         * This paper deals with the assignment of entity class by select SQL statement. The specific assignment is in the invoke set method
+         * Note: Property assignment of setter method based on JavaBean
+         *
          * @param rs
-         * @param t
+         * @param target
          */
-        private static void handleField(ResultSet rs,Object t){
-            ResultSetMetaData metaData = null;
+        private void handleField(ResultSet rs, Object target) {
+            ResultSetMetaData metaData;
+            assert configuration != null;
+            Map<String, String> alias = configuration.getAlias();
             try {
                 metaData = rs.getMetaData();
-                Map<String,String> alias = Configuration.getAlias();
-                while(rs.next()){
-                    Object rowObj = t.getClass().newInstance();
-                    //调用javabean的无参构造器
-                    //多列 selet usdername ,pwd,age from user where id>? and salary>?
-                    for(int i=0;i<metaData.getColumnCount();i++){
-                        String columnName=metaData.getColumnLabel(i+1);//该方法可以得到别名，如username'name'
-                        Object columnValue=rs.getObject(i+1);
-                        if(alias.get(columnName)!=null){
+                while (rs.next()) {
+                    Object rowObj = target.getClass().newInstance();
+                    for (int i = 0; i < metaData.getColumnCount(); i++) {
+                        String columnName = metaData.getColumnLabel(i + 1);
+                        Object columnValue = rs.getObject(i + 1);
+                        if (alias.get(columnName) != null) {
                             columnName = alias.get(columnName);
                         }
-                        //调用rowobj对象的setusername方法
-                        invokeSet(rowObj,columnName,columnValue);
+                        invokeSet(rowObj, columnName, columnValue);
                     }
                     list.add(rowObj);
                 }
-                close(null,rs);
+                close(null, rs);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("handleField" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
             }
         }
 
         /**
-         * 根据sql语句执行结果为对应实体类赋值，目标select语句
+         * According to the execution result of SQL statement, assign value to the corresponding entity class, and select the target statement
+         *
          * @param obj
          * @param columnName
          * @param columnValue
          */
-        private static  void invokeSet(Object obj,String columnName,Object columnValue){
+        private void invokeSet(Object obj, String columnName, Object columnValue) {
             Method m;
             try {
-                if(columnValue!=null){
-//                    System.out.println(columnValue.getClass());
-                    if(columnValue.getClass() == Long.class||columnValue.getClass() == Integer.class){
-                        m = obj.getClass().getDeclaredMethod("set"+columnName.substring(0,1).toUpperCase()+columnName.substring(1),Integer.class);//对于自增主键映射过来是Long型
+                if (columnValue != null) {
+                    if (columnValue.getClass() == Long.class || columnValue.getClass() == Integer.class) {
+                        m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
+                                + columnName.substring(1), Integer.class);
                         columnValue = Integer.valueOf(String.valueOf(columnValue));
-                    }else {
-                        m = obj.getClass().getDeclaredMethod("set" + columnName.substring(0, 1).toUpperCase() + columnName.substring(1), columnValue.getClass());
+                    } else {
+                        m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
+                                + columnName.substring(1), columnValue.getClass());
                     }
                     m.invoke(obj, columnValue);
                 }
             } catch (Exception e) {
-//                System.out.println(e);
-//                System.out.println("参数封装出错！参数类型或方法名出错!");
+                //ignore
             }
         }
 
         /**
-         * 处理sql语句，select，insert等
+         * Handle methods for select, insert, etc
+         *
          * @param method
          * @param args
          * @throws Exception
          */
         private void handleSQL(Method method, Object[] args) throws Exception {
             list.clear();
-            for(DynamicSql dynamicSql:sqls) {
-//                System.out.println("sql:"+dynamicSql.getMethod());
-                if (method.getName().equals(dynamicSql.getId())) {
-                    String sql = dynamicSql.getSql();
-                    System.out.println("DEBUG SQL:"+sql);
-                    PoolConnection connection = dbPool.getConnection();
-                    sql = tokenSpec(connection,sql,args);
-                    Statement st = connection.getConnection().createStatement();
-                    if (dynamicSql.getMethod().equals("select")) {
-//                        ResultSet rs = connection.queryForDB(sql);//不能有效释放资源，废弃
-                        ResultSet rs = st.executeQuery(sql);
-                        String table = sql.substring(sql.indexOf("from") + 4).trim();
-                        if (table.contains("where")) {
-                            table = table.replace(table.substring(table.indexOf("where")), "").trim();
-                        }
-                        Object t = Configuration.getBean(table,Class.forName(dynamicSql.getResultType()));
-                        handleField(rs,t);
-                        close(st,rs);
-                        dbPool.commit(connection);
-                        break;
-                    }else if(dynamicSql.getMethod().equals("insert")||dynamicSql.getMethod().equals("update")||dynamicSql.getMethod().equals("delete")) {
-                        st.execute(sql);
-                        close(st,null);
-                        dbPool.commit(connection);
-                        break;
-                    }
+            DynamicSql dynamicSql = sqls.stream().filter(sql -> method.getName().equals(sql.getId())).findFirst().get();
+            String sql = dynamicSql.getSql();
+            logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
+            PoolConnection connection = dbPool.getConnection();
+            sql = tokenSpec(connection, sql, args);
+            Statement st = connection.getConnection().createStatement();
+            ResultSet rs = null;
+            if (dynamicSql.getMethod().equals(SQL.SELECT)) {
+                rs = st.executeQuery(sql);
+                Object t = configuration.getTableObject(getTableName(sql, SQL.FROM, XML.WHERE));
+                handleField(rs, t);
+            } else if (dynamicSql.getMethod().equals(SQL.INSERT) || dynamicSql.getMethod().equals(SQL.UPDATE)
+                    || dynamicSql.getMethod().equals(SQL.DELETE)) {
+                st.execute(sql);
+                //get pk value
+                if (dynamicSql.getMethod().equals(SQL.INSERT) && dynamicSql.isUseGeneratedKey() && StringUtils.isNotEmpty(dynamicSql.getPkName())) {
+                    String tableName = getTableName(sql, XML.INTO, XML.VALUE);
+                    rs = st.executeQuery(SQL.SELECT + XML.BLANK + SQL.MAX + ENTITY.LEFT_BRACKET + dynamicSql.getPkName()
+                            + ENTITY.RIGHT_BRACKET + XML.BLANK + SQL.FROM + XML.BLANK + tableName);
+                    rs.next();
+                    Object value = rs.getObject(1);
+                    args[0].getClass().getDeclaredMethod(ENTITY.SET + Character.toUpperCase(dynamicSql.getPkName().charAt(0))
+                            + dynamicSql.getPkName().substring(1), value.getClass()).invoke(args[0], value);
                 }
             }
+            close(st, rs);
+            dbPool.commit(connection);
+        }
+
+        private String getTableName(String sql, String condition1, String condition2) {
+            String table = sql.substring(sql.indexOf(condition1) + 4).trim();
+            int index = table.indexOf(condition2);
+            if (index > 0) {
+                table = table.replace(table.substring(index), LOG.NO_CHAR).trim();
+            }
+            return table;
+        }
+
+        private boolean checkPKType(Class<?> returnType) {
+            return returnType == Integer.class || returnType == int.class ||
+                    returnType == Long.class || returnType == long.class;
         }
     }
 
     /**
-     * 解析xml文件表达式的特殊字符，如#{}，le等
-     * @param conn
+     * Parsing special characters of XML file expression, such as #{}, le, etc
+     *
+     * @param con
      * @param sql
      * @param args
      * @param <T>
      * @return
      * @throws SQLException
      */
-    private static <T> String tokenSpec(PoolConnection conn,String sql,Object[] args) throws SQLException {
-        List<Class<T>> tClass = new LinkedList<>();
-        Map poClassMap = Configuration.getPoClassTableMap();
-        ResultSet tableRet=conn.getConnection()
-                .getMetaData().getTables(null, "%", "%", new String[]{"TABLE"});
+    private <T> String tokenSpec(PoolConnection con, String sql, Object[] args) throws SQLException {
+        List<Class<T>> tClass = new ArrayList<>();
+        Map poClassMap = configuration.getPoClassTableMap();
+        String percent = String.valueOf(SQL.PERCENT);
+        ResultSet tableRet = con.getConnection()
+                .getMetaData().getTables(null, percent, percent, new String[]{SQL.TABLE});
         while (tableRet.next()) {
-            String tableName = (String) tableRet.getObject("TABLE_NAME");
-            if(poClassMap.containsKey(tableName)){
+            String tableName = (String) tableRet.getObject(SQL.TABLE_NAME);
+            if (poClassMap.containsKey(tableName)) {
                 tClass.add((Class<T>) poClassMap.get(tableName));
             }
         }
-        close(null,tableRet);
-        final Pattern pattern = Pattern.compile("\\#\\{.*?\\}");//匹配#{}解析字段
-//      final  Pattern pattern = Pattern.compile("-?[0-9]+\\.?[0-9]*");//匹配数字
+        close(null, tableRet);
+        final Pattern pattern = Pattern.compile(XML.VAR_REGEX_PATTERN);
         if (sql != null) {
-            if (sql.contains("#{")) {
-                // sql = sql.replaceFirst("\\#\\{.*?\\}", "" + args[0]);
+            String var_mark = String.valueOf(XML.VAR_MARK) + ENTITY.LEFT_CURLY_BRACKET;
+            if (sql.contains(var_mark)) {
                 Matcher matcher = pattern.matcher(sql);
                 StringBuffer sb = new StringBuffer();
                 int cursor = 0;
                 Object param = null;
+                String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
+                String quotation = String.valueOf(SQL.QUOTATION);
                 while (matcher.find()) {
-                    if(tClass.contains(args[0].getClass())){
-                        T temp = (T)args[0];
-                        String paramTemp = matcher.group().replace("#{","").replace("}","");
+                    if (tClass.contains(args[0].getClass())) {
+                        T temp = (T) args[0];
+                        String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
                         try {
-                            param = temp.getClass().getDeclaredMethod("get"+paramTemp.substring(0,1).toUpperCase()+paramTemp.substring(1)).invoke(temp);
-                            if(param==null){//对于实体的属性参数不是全部赋有有效值的处理
-                                param="0";//数据库任何类型均可使用
+                            param = temp.getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(0)) + paramTemp.substring(1)).invoke(temp);
+                            //Not all attribute parameters of an entity are assigned valid values
+                            if (param == null) {
+                                //Any type of database can be used
+                                param = SQL.ZERO;
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            logger.error("tokenSpec" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
                         }
                     }
-                    if(param!=null){
-                        matcher.appendReplacement(sb, "'" + param+"'");
-                    }else{
-                        matcher.appendReplacement(sb, "'" + args[cursor] + "'");
+                    if (param != null) {
+                        matcher.appendReplacement(sb, quotation + param + quotation);
+                    } else {
+                        matcher.appendReplacement(sb, quotation + args[cursor] + quotation);
                     }
                     cursor++;
                 }
                 sql = matcher.appendTail(sb).toString();
-                flag = false;
+                notUnique = false;
             }
-            if (sql.contains(" lt ")) {
-                sql = sql.replace(" lt ", " < ");
-                flag = true;
+            if (sql.contains(XML.BLANK + XML.LT + XML.BLANK)) {
+                sql = sql.replace(XML.BLANK + XML.LT + XML.BLANK, XML.BLANK + ENTITY.LT + XML.BLANK);
+                notUnique = true;
             }
-            if (sql.contains(" gt ")) {
-                sql = sql.replace(" gt ", " > ");
-                flag = true;
+            if (sql.contains(XML.BLANK + XML.GT + XML.BLANK)) {
+                sql = sql.replace(XML.BLANK + XML.GT + XML.BLANK, XML.BLANK + ENTITY.GT + XML.BLANK);
+                notUnique = true;
             }
-            if (sql.contains(" le ")) {
-                sql = sql.replace(" le ", " <= ");
-                flag = true;
+            if (sql.contains(XML.BLANK + XML.LE + XML.BLANK)) {
+                sql = sql.replace(XML.BLANK + XML.LE + XML.BLANK, XML.BLANK + ENTITY.LE + XML.BLANK);
+                notUnique = true;
             }
-            if (sql.contains(" ge ")) {
-                sql = sql.replace(" lt ", " >= ");
-                flag = true;
+            if (sql.contains(XML.BLANK + XML.GE + XML.BLANK)) {
+                sql = sql.replace(XML.BLANK + XML.GE + XML.BLANK, XML.BLANK + ENTITY.GE + XML.BLANK);
+                notUnique = true;
             }
-            if(sql.contains(" in")){
-                flag = true;
+            if (sql.contains(XML.BLANK + XML.IN + XML.BLANK)) {
+                notUnique = true;
             }
         }
-        return  sql;
+        return sql;
     }
 
-    /**
-     * 关闭流资源
-     */
-    private static void close(Statement st,ResultSet rs){
-        if(rs!=null){
+    private static void close(Statement st, ResultSet rs) {
+        if (rs != null) {
             try {
                 rs.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                //ignore
             }
         }
-        if(st!=null) {
+        if (st != null) {
             try {
                 st.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                //ignore
             }
         }
     }
- }
+}

@@ -68,6 +68,8 @@ public class HTTPStatus {
 
     public static final char TRANSVERSE = '_';
 
+    public static final char COMMA = ',';
+
     public static final String DEFAULTENCODING = "utf-8";
 
     public static final String HTML_MARK = ".html";
@@ -136,4 +138,6 @@ public class HTTPStatus {
     public static final String PATH = "Path";
 
     public static final String SECURE = "secure";
+
+    public static final String ALLOW = "Allow";
 }
