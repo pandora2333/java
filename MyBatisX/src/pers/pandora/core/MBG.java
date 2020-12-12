@@ -34,6 +34,21 @@ public class MBG {
     //The table name is key and the table information object is value
     private final Map<String, TableInfo> tables = new HashMap<>(16);
 
+    public MBG(String dbProperties) {
+        dbPool = new DBPool(dbProperties);
+    }
+
+
+    public DataBaseCoder getDataBaseCoder() {
+        return dbPool != null ?  dbPool.getDataBaseCoder() : null;
+    }
+
+    public void setDataBaseCoder(DataBaseCoder dataBaseCoder) {
+        if(dbPool != null){
+            dbPool.setDataBaseCoder(dataBaseCoder);
+        }
+    }
+
     public Map<String, TableInfo> getTables() {//对外提供使用
         return tables;
     }
@@ -42,9 +57,6 @@ public class MBG {
         return dbPool;
     }
 
-    public MBG(String dbProperties) {
-        dbPool = new DBPool(dbProperties);
-    }
 
     /**
      * Parse the database table and persist it into the corresponding Java entity class
@@ -301,6 +313,8 @@ public class MBG {
      * @param xmlPath
      */
     public void parseXML(String xmlPath) throws DocumentException {
+        assert dbPool != null;
+        dbPool.init();
         Document doc = Dom4JUtil.getDocument(xmlPath);
         Element rootElement = doc.getRootElement();
         String poPackage = rootElement.element(XML.POPACKAGE).getTextTrim();

@@ -99,4 +99,6 @@ public class ENTITY {
     public static final String COLUMN = "@Column";
 
     public static final String PRIVATE = "private";
+
+    public static final String DECIMAL = "java.math.BigDecimal";
 }

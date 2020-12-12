@@ -2,9 +2,7 @@ package pers.pandora.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pers.pandora.annotation.Column;
-import pers.pandora.annotation.Id;
-import pers.pandora.annotation.Table;
+import pers.pandora.annotation.*;
 import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtils;
@@ -13,6 +11,7 @@ import java.io.File;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -21,11 +20,15 @@ public final class Configuration {
 
     private static Logger logger = LogManager.getLogger(Configuration.class);
 
-    private Map<String, Class<?>> beans = new ConcurrentHashMap<>(16);
+    private final Map<String, Class<?>> beans = new ConcurrentHashMap<>(16);
     //Entity class and attribute corresponding table associated with field alias
-    private Map<String, String> alias = new ConcurrentHashMap<>(16);
+    private final Map<String, String> alias = new ConcurrentHashMap<>(16);
     //Entity class associated with data table
-    private Map<String, Class> poClassTableMap = new ConcurrentHashMap<>(16);
+    private final Map<String, Class> poClassTableMap = new ConcurrentHashMap<>(16);
+    //Transaction Proxy Factory
+    private TransactionProxyFactory transactionProxyFactory;
+    //Transactional Class
+    private final Map<Class<?>, Object> transactions = new ConcurrentHashMap<>(16);
 
     private ThreadPoolExecutor executor;
 
@@ -42,8 +45,8 @@ public final class Configuration {
     private long timeOut = 5;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
-    //db config file
-    private String dbPoolProperties;
+    //DBPool
+    private DBPool dbPool;
 
     private static final String CONFIGURATION_CLASS = "pers.pandora.core.Configuration";
 
@@ -56,11 +59,37 @@ public final class Configuration {
     }
 
     public String getDbPoolProperties() {
-        return dbPoolProperties;
+        return dbPool != null ? dbPool.getDbProperties() : null;
+    }
+
+    public DataBaseCoder getDataBaseCoder() {
+        return dbPool != null ? dbPool.getDataBaseCoder() : null;
+    }
+
+    public void setDataBaseCoder(DataBaseCoder dataBaseCoder) {
+        if (dbPool != null) {
+            dbPool.setDataBaseCoder(dataBaseCoder);
+        }
+    }
+
+    public Map<Class<?>, Object> getTransactions() {
+        return transactions;
+    }
+
+    DBPool getDbPool() {
+        return dbPool;
     }
 
     public void setDbPoolProperties(String dbPoolProperties) {
-        this.dbPoolProperties = dbPoolProperties;
+        this.dbPool = new DBPool(dbPoolProperties);
+    }
+
+    public TransactionProxyFactory getTransactionProxyFactory() {
+        return transactionProxyFactory;
+    }
+
+    public void setTransactionProxyFactory(TransactionProxyFactory transactionProxyFactory) {
+        this.transactionProxyFactory = transactionProxyFactory;
     }
 
     public void initThreadPool(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
@@ -109,6 +138,8 @@ public final class Configuration {
             logger.warn("No path loaded");
             return;
         }
+        assert dbPool != null;
+        dbPool.init();
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         result = new ArrayList<>();
         for (String path : paths) {
@@ -237,7 +268,11 @@ public final class Configuration {
         @Override
         public Boolean call() {
             try {
-                scanBean(Class.forName(className, true, Thread.currentThread().getContextClassLoader()), null, Table.class);
+                Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+                scanBean(tClass, null, Table.class);
+                if (transactionProxyFactory != null) {
+                    scanTransaction(tClass);
+                }
             } catch (Exception e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                         this, className, LOG.EXCEPTION_DESC, e);
@@ -245,5 +280,15 @@ public final class Configuration {
             }
             return true;
         }
+    }
+
+    private void scanTransaction(Class<?> tClass) {
+        if (tClass.isAnnotationPresent(Transaction.class) && tClass.getInterfaces().length == 1) {
+            transactions.put(tClass.getInterfaces()[0], transactionProxyFactory.createProxyClass(tClass, dbPool));
+        }
+    }
+
+    public <T> T getTransactionProxyByType(Class<T> tClass) {
+        return (T) transactions.get(tClass);
     }
 }

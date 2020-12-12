@@ -24,17 +24,17 @@ import pers.pandora.vo.Tuple;
 
 public final class BeanPool {
 
-    private static Logger logger = LogManager.getLogger(BeanPool.class);
+    private static final Logger logger = LogManager.getLogger(BeanPool.class);
 
-    private ThreadLocal<Properties> prop;
+    private static final ThreadLocal<Properties> prop = ThreadLocal.withInitial(Properties::new);
 
-    private ThreadLocal singleton;
+    private static final ThreadLocal singleton = ThreadLocal.withInitial(() -> null);
 
-    private Map<String, Object> beans = new ConcurrentHashMap<>(16);
+    private final Map<String, Object> beans = new ConcurrentHashMap<>(16);
 
-    private Map<Class<?>, List<Object>> typeBeans = new ConcurrentHashMap<>(16);
+    private final Map<Class<?>, List<Object>> typeBeans = new ConcurrentHashMap<>(16);
 
-    private Map<Object, List<Field>> unBeanInjectMap = new ConcurrentHashMap<>(16);
+    private final Map<Object, List<Field>> unBeanInjectMap = new ConcurrentHashMap<>(16);
 
     private ThreadPoolExecutor executor;
 
@@ -75,21 +75,6 @@ public final class BeanPool {
     public static final String PROPERTIES = "properties";
 
     private static final String BEAN_POOL_CLASS = "pers.pandora.core.BeanPool";
-
-    {
-        singleton = new ThreadLocal() {
-            @Override
-            protected Object initialValue() {
-                return null;
-            }
-        };
-        prop = new ThreadLocal<Properties>() {
-            @Override
-            protected Properties initialValue() {
-                return new Properties();
-            }
-        };
-    }
 
     public AOPProxyFactory getAopProxyFactory() {
         return aopProxyFactory;

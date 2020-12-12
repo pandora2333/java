@@ -14,7 +14,7 @@ import java.util.Set;
 
 public class JavassistAOPProxyFactory implements AOPProxyFactory {
 
-    private static Logger logger = LogManager.getLogger(JavassistAOPProxyFactory.class);
+    private static final Logger logger = LogManager.getLogger(JavassistAOPProxyFactory.class);
 
     private static final char METHOD_SEPARATOR = '#';
 

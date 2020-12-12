@@ -84,8 +84,6 @@ public class XML {
 
     public static final String GE = "ge";
 
-    public static final String IN = "in";
-
     public static final String USEGENERATEDKKEYS = "useGeneratedKeys";
 
     public static final String KEPPROPERTY = "keyProperty";

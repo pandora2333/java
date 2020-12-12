@@ -1,12 +1,11 @@
-package pers.pandora;
+package pers.pandora.test;
 
 import org.dom4j.DocumentException;
 
-import pers.pandora.core.Configuration;
-import pers.pandora.core.MBG;
-import pers.pandora.core.SqlSession;
-import pers.pandora.core.SqlSessionFactory;
-import pers.pandora.test.mapper.ArticleMapper;
+import pers.pandora.core.*;
+import pers.pandora.test.dd.TestTransaction;
+import pers.pandora.test.dd.TestTransactionImpl;
+import pers.pandora.test.dd.mapper.TestMapper;
 import pers.pandora.test.mapper.UserMapper;
 
 
@@ -15,30 +14,12 @@ import java.sql.Timestamp;
 /**
  * Federated primary keys are not supported
  */
+@Deprecated
 public class testMyBatisX {
-//    @Test
-//    public void test(){//测试自定义mapper,xml,entity类
-//        SqlSession sqlSession = SqlSessionFactory.createSqlSession("EntityMapper.xml");
-//        System.out.println(sqlSession.createMapper(EntityMapper.class).queryForOne(3));
-////        System.out.println(sqlSession.createMapper(EntityMapper.class).queryForList(1,3));
-////        sqlSession.createMapper(EntityMapper.class).insert("aaa","bbb");
-////        sqlSession.createMapper(EntityMapper.class).delete(8,9);
-////        sqlSession.createMapper(EntityMapper.class).update("delete",10);
-//        Entity entity = new Entity();
-//        entity.setId(1);
-//        entity.setFilename("acgp56217297.jpg");
-//        System.out.println(sqlSession.createMapper(EntityMapper.class).queryForEntity(entity));
-//        SqlSession sqlSession2 = SqlSessionFactory.createSqlSession("UserMapper.xml");
-//        sqlSession.createMapper(EntityMapper.class).updateD(entity);
-//        User user = new User();
-//        user.setId(2);
-//        user.setUsername("EntityX");
-//        System.out.println(sqlSession2.createMapper(UserMapper.class).queryForUser(user));
-//        sqlSession2.createMapper(UserMapper.class).updateD(user);
-//    }
 
     public static void test02(){
-        MBG mbg = new MBG("src/dbpool.properties");
+        MBG mbg = new MBG("src/dd_test.properties");
+        mbg.setDataBaseCoder(new PBEDataBaseCoder());
         try {
             mbg.parseXML("src/mbg.xml");
         } catch (DocumentException e) {
@@ -48,6 +29,7 @@ public class testMyBatisX {
 
     public static void test03(){
         Configuration configuration = new Configuration();
+        configuration.setDataBaseCoder(new PBEDataBaseCoder());
         configuration.setDbPoolProperties("src/dbpool.properties");
         configuration.init("pers.pandora.test");
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactory(configuration);
@@ -73,6 +55,23 @@ public class testMyBatisX {
 
     public static void main(String[] args) {
 //        test02();
-        test03();
+//        test03();
+        test04();
+    }
+
+    private static void test04() {
+        Configuration configuration = new Configuration();
+        //firstly, set dbProperties file
+        configuration.setDbPoolProperties("src/dd_test.properties");
+        //secondly, set DataBaseCoder
+        configuration.setDataBaseCoder(new PBEDataBaseCoder());
+        configuration.setTransactionProxyFactory(new JDKTransactionProxyFactory());
+        configuration.init("pers.pandora.test.dd");
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactory(configuration);
+        SqlSession sqlSession = sqlSessionFactory.createSqlSession("test/dd/mapper/TestMapper.xml");
+        TestMapper mapper = sqlSession.createMapper(TestMapper.class);
+        //System.out.println(mapper.queryForOne(3));
+        TestTransaction proxy = configuration.getTransactionProxyByType(TestTransaction.class);
+        proxy.test(3,mapper);
     }
 }

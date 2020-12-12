@@ -19,8 +19,8 @@ public class TestBean {
         TaskBean taskBean = beanPool.getBean("taskBean");
         assert taskBean != null;
 //        taskBean.error();
-//        System.out.println(Objects.requireNonNull(taskBean).toString());
+        System.out.println(Objects.requireNonNull(taskBean).toString());
         System.out.println(Objects.requireNonNull(beanPool.getBean("user")).toString());
-//        System.out.println(Objects.requireNonNull(beanPool.getBean("b")).toString());
+        System.out.println(Objects.requireNonNull(beanPool.getBean("b")).toString());
     }
 }

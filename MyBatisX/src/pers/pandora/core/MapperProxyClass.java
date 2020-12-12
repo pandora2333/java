@@ -18,7 +18,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,25 +27,9 @@ import java.util.regex.Pattern;
  */
 public final class MapperProxyClass {
 
-    private static Logger logger = LogManager.getLogger(MapperProxyClass.class);
-    //SQL statement storage
-    private List<DynamicSql> sqls = new CopyOnWriteArrayList<>();
-    //Get dbpool connection pool
-    private DBPool dbPool;
-    //Database associated object storage
-    private List<Object> list = new CopyOnWriteArrayList<>();
-    //Does the record return a list or a single entity
-    private boolean notUnique;
+    private static final Logger logger = LogManager.getLogger(MapperProxyClass.class);
 
-    private Configuration configuration;
-
-    public DBPool getDbPool() {
-        return dbPool;
-    }
-
-    public void setDbPool(DBPool dbPool) {
-        this.dbPool = dbPool;
-    }
+    private volatile Configuration configuration;
 
     public Configuration getConfiguration() {
         return configuration;
@@ -65,19 +48,28 @@ public final class MapperProxyClass {
      * @return Mapper proxy implementation object
      * @throws Exception
      */
-    public <T> T parseMethod(List<DynamicSql> dynamicSqls, Class<T> proxy) throws Exception {
-        sqls = dynamicSqls;
-        return (T) Proxy.newProxyInstance(proxy.getClassLoader(), new Class[]{proxy}, new ProxyHandler());
+    public <T> T parseMethod(List<DynamicSql> dynamicSqls, Class<T> proxy) {
+        SQLProxyHandler sqlProxyHandler = new SQLProxyHandler();
+        sqlProxyHandler.setSqls(dynamicSqls);
+        return (T) Proxy.newProxyInstance(proxy.getClassLoader(), new Class[]{proxy}, sqlProxyHandler);
     }
 
     /**
      * JDK dynamic proxy method processor to enhance the implementation of mapper interface methods
      */
-    private class ProxyHandler implements InvocationHandler {
+    private class SQLProxyHandler implements InvocationHandler {
+
+        //SQL statement storage
+        private List<DynamicSql> sqls;
+
+        public void setSqls(List<DynamicSql> sqls) {
+            this.sqls = sqls;
+        }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            handleSQL(method, args);
+            List<Object> list = new ArrayList<>();
+            boolean notUnique = handleSQL(method, args, list);
             if (list.size() == 0) {
                 return null;
             }
@@ -90,8 +82,9 @@ public final class MapperProxyClass {
          *
          * @param rs
          * @param target
+         * @param list
          */
-        private void handleField(ResultSet rs, Object target) {
+        private void handleField(ResultSet rs, Object target, List<Object> list) {
             ResultSetMetaData metaData;
             assert configuration != null;
             Map<String, String> alias = configuration.getAlias();
@@ -146,21 +139,29 @@ public final class MapperProxyClass {
          *
          * @param method
          * @param args
+         * @param list
+         * @return
          * @throws Exception
          */
-        private void handleSQL(Method method, Object[] args) throws Exception {
-            list.clear();
+        private boolean handleSQL(Method method, Object[] args, List<Object> list) throws Exception {
+            assert configuration != null;
             DynamicSql dynamicSql = sqls.stream().filter(sql -> method.getName().equals(sql.getId())).findFirst().get();
             String sql = dynamicSql.getSql();
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
-            PoolConnection connection = dbPool.getConnection();
+            PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();
+            boolean transation = false;
+            if (connection == null) {
+                connection = configuration.getDbPool().getConnection();
+            }else{
+                transation = true;
+            }
             sql = tokenSpec(connection, sql, args);
             Statement st = connection.getConnection().createStatement();
             ResultSet rs = null;
             if (dynamicSql.getMethod().equals(SQL.SELECT)) {
                 rs = st.executeQuery(sql);
                 Object t = configuration.getTableObject(getTableName(sql, SQL.FROM, XML.WHERE));
-                handleField(rs, t);
+                handleField(rs, t, list);
             } else if (dynamicSql.getMethod().equals(SQL.INSERT) || dynamicSql.getMethod().equals(SQL.UPDATE)
                     || dynamicSql.getMethod().equals(SQL.DELETE)) {
                 st.execute(sql);
@@ -176,7 +177,10 @@ public final class MapperProxyClass {
                 }
             }
             close(st, rs);
-            dbPool.commit(connection);
+            if(!transation){
+                configuration.getDbPool().commit(connection);
+            }
+            return method.getReturnType() == List.class;
         }
 
         private String getTableName(String sql, String condition1, String condition2) {
@@ -250,26 +254,18 @@ public final class MapperProxyClass {
                     cursor++;
                 }
                 sql = matcher.appendTail(sb).toString();
-                notUnique = false;
             }
             if (sql.contains(XML.BLANK + XML.LT + XML.BLANK)) {
                 sql = sql.replace(XML.BLANK + XML.LT + XML.BLANK, XML.BLANK + ENTITY.LT + XML.BLANK);
-                notUnique = true;
             }
             if (sql.contains(XML.BLANK + XML.GT + XML.BLANK)) {
                 sql = sql.replace(XML.BLANK + XML.GT + XML.BLANK, XML.BLANK + ENTITY.GT + XML.BLANK);
-                notUnique = true;
             }
             if (sql.contains(XML.BLANK + XML.LE + XML.BLANK)) {
                 sql = sql.replace(XML.BLANK + XML.LE + XML.BLANK, XML.BLANK + ENTITY.LE + XML.BLANK);
-                notUnique = true;
             }
             if (sql.contains(XML.BLANK + XML.GE + XML.BLANK)) {
                 sql = sql.replace(XML.BLANK + XML.GE + XML.BLANK, XML.BLANK + ENTITY.GE + XML.BLANK);
-                notUnique = true;
-            }
-            if (sql.contains(XML.BLANK + XML.IN + XML.BLANK)) {
-                notUnique = true;
             }
         }
         return sql;

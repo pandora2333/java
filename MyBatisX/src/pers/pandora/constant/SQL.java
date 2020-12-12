@@ -63,4 +63,8 @@ public class SQL {
     public static final char QUOTATION = '\'';
 
     public static final String MAX = "max";
+
+    public static final String DECIMAL = "decimal";
+
+    public static final String JSON = "json";
 }

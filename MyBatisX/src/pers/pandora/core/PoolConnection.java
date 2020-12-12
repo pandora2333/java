@@ -7,23 +7,23 @@ import java.sql.Statement;
 
 public class PoolConnection {
 
-	private boolean isBusy;
+    private boolean isBusy;
 
-	private Connection connection;
+    private Connection connection;
 
-	public boolean isBusy() {
-		return isBusy;
-	}
+    public boolean isBusy() {
+        return isBusy;
+    }
 
-	public void setBusy(boolean isBusy) {
-		this.isBusy = isBusy;
-	}
+    public void setBusy(boolean isBusy) {
+        this.isBusy = isBusy;
+    }
 
-	public Connection getConnection() {
-		return connection;
-	}
+    public Connection getConnection() {
+        return connection;
+    }
 
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-	}
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
 }

@@ -17,9 +17,9 @@ import java.util.Properties;
 public class DBPool {
 
     private static Logger logger = LogManager.getLogger(DBPool.class);
-    //Connection pool initialization connections
+    //Connection pool initialization CONNECTIONS
     private int initalSize;
-    //Database connection pool maximum connections
+    //Database connection pool maximum CONNECTIONS
     private int maxSize;
     //Connection get timeOut threshold
     private long timeOut;
@@ -50,11 +50,28 @@ public class DBPool {
 
     private final Properties properties = new Properties();
 
-    public DBPool(String file) {
-        assert StringUtils.isNotEmpty(file);
+    private DataBaseCoder dataBaseCoder;
+
+    private String dbProperties;
+
+    public DataBaseCoder getDataBaseCoder() {
+        return dataBaseCoder;
+    }
+
+    public void setDataBaseCoder(DataBaseCoder dataBaseCoder) {
+        this.dataBaseCoder = dataBaseCoder;
+    }
+
+    public String getDbProperties() {
+        return dbProperties;
+    }
+
+    public DBPool(String dbProperties) {
+        assert StringUtils.isNotEmpty(dbProperties);
+        this.dbProperties = dbProperties;
         InputStream inputStream = null;
         try {
-            inputStream = new FileInputStream(file);
+            inputStream = new FileInputStream(dbProperties);
             properties.load(inputStream);
         } catch (IOException e) {
             logger.error("config file" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
@@ -66,6 +83,9 @@ public class DBPool {
                 //ignore
             }
         }
+    }
+
+    public boolean init(){
         try {
             initalSize = Integer.valueOf(properties.getProperty(INITALSIZE, null));
             maxSize = Integer.valueOf(properties.getProperty(MAXSIZE, null));
@@ -73,13 +93,18 @@ public class DBPool {
             url = properties.getProperty(URL);
             user = properties.getProperty(USER);
             password = properties.getProperty(PASSWORD);
+            if(dataBaseCoder != null){
+                url = dataBaseCoder.decodeUrl(url);
+                user = dataBaseCoder.decodeUserName(user);
+                password = dataBaseCoder.decodePassword(password);
+            }
             driver = properties.getProperty(DRIVER);
         } catch (NumberFormatException e) {
             logger.error("format number" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
         }
         if (initalSize <= 0 || maxSize <= 0 || maxSize < initalSize || timeOut <= 0) {
             logger.error("file config number" + LOG.LOG_POS, LOG.ERROR_DESC);
-            return;
+            return false;
         }
         connections = new PoolConnection[initalSize];
         try {
@@ -94,7 +119,9 @@ public class DBPool {
             }
         } catch (Exception e) {
             logger.error("init-connection" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            return false;
         }
+        return true;
     }
 
     public PoolConnection getConnection() throws SQLException {

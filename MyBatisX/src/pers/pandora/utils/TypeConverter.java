@@ -11,7 +11,8 @@ public class TypeConverter {
     public static String databaseType2JavaType(String columnType) {
         //varchar-->string
         if (SQL.VARCHAR.equalsIgnoreCase(columnType) || SQL.CHAR.equalsIgnoreCase(columnType)
-                || SQL.TEXT.equalsIgnoreCase(columnType) || SQL.TINYEXT.equalsIgnoreCase(columnType)) {
+                || SQL.TEXT.equalsIgnoreCase(columnType) || SQL.TINYEXT.equalsIgnoreCase(columnType)
+                || SQL.JSON.equalsIgnoreCase(columnType)) {
             return ENTITY.STRING;
         } else if (SQL.INT.equalsIgnoreCase(columnType) || SQL.TINYINT.equalsIgnoreCase(columnType) ||
                 SQL.SMALLINT.equalsIgnoreCase(columnType) || SQL.INTEGER.equalsIgnoreCase(columnType)) {
@@ -32,6 +33,8 @@ public class TypeConverter {
             return ENTITY.TIME;
         } else if (SQL.TIMESTAMP.equalsIgnoreCase(columnType) || SQL.DATETIME.equalsIgnoreCase(columnType)) {
             return ENTITY.TIMESTAMP;
+        } else if (SQL.DECIMAL.equalsIgnoreCase(columnType)) {
+            return ENTITY.DECIMAL;
         }
         return null;
     }
