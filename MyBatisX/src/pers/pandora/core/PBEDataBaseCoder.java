@@ -99,15 +99,15 @@ public class PBEDataBaseCoder implements DataBaseCoder {
     }
 
 //    public static void main(String[] args) {
-//        long start = System.currentTimeMillis();
+////        long start = System.currentTimeMillis();
 //        //UQOoRbubgUQ=
 //        PBEDataBaseCoder coder = new PBEDataBaseCoder();
 ////        System.out.println("user:" + coder.encode("root"));
-//        System.out.println("user:"+ coder.decode(coder.encode("root")));
+////        System.out.println("user:"+ coder.decode(coder.encode("root")));
 ////        System.out.println("password:" + coder.encode("123456"));
-//        System.out.println("password:"+coder.decode(coder.encode("123456")));
-////        System.out.println("url:" + coder.encode("jdbc:mysql://localhost:3306/dd?characterEncoding=utf-8&useSSL=true"));
-//        System.out.println("url:"+coder.decode(coder.encode("jdbc:mysql://localhost:3306/dd?characterEncoding=utf-8&useSSL=true")));
-//        System.out.println("spend time: " + (System.currentTimeMillis() - start) + " ms");
+////        System.out.println("password:"+coder.decode(coder.encode("123456")));
+//        System.out.println("url:" + coder.encode("jdbc:mysql://localhost:3306/bbs?characterEncoding=utf-8&useSSL=true"));
+////        System.out.println("url:"+coder.decode(coder.encode("jdbc:mysql://localhost:3306/dd?characterEncoding=utf-8&useSSL=true")));
+////        System.out.println("spend time: " + (System.currentTimeMillis() - start) + " ms");
 //    }
 }

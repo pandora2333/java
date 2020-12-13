@@ -150,9 +150,12 @@ public final class MapperProxyClass {
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
             PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();
             boolean transation = false;
-            if (connection == null) {
+            if (connection == null || connection.getTransNew() > 0) {
                 connection = configuration.getDbPool().getConnection();
-            }else{
+            } else {
+                if (connection.getTransNew() == 0) {
+                    connection.setTransNew(1);
+                }
                 transation = true;
             }
             sql = tokenSpec(connection, sql, args);
@@ -177,7 +180,7 @@ public final class MapperProxyClass {
                 }
             }
             close(st, rs);
-            if(!transation){
+            if (!transation) {
                 configuration.getDbPool().commit(connection);
             }
             return method.getReturnType() == List.class;

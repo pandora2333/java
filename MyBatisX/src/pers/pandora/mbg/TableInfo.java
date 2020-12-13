@@ -1,5 +1,6 @@
 package pers.pandora.mbg;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,19 +12,19 @@ public class TableInfo {
 
     private List<ColumnInfo> columnInfos;
 
-    private ColumnInfo pk;
+    private List<ColumnInfo> pks = new ArrayList<>(1);
 
     public TableInfo(String tableName, List<ColumnInfo> columnInfos) {
         this.tableName = tableName;
         this.columnInfos = columnInfos;
     }
 
-    public ColumnInfo getPk() {
-        return pk;
+    public List<ColumnInfo> getPks() {
+        return pks;
     }
 
-    public void setPk(ColumnInfo pk) {
-        this.pk = pk;
+    public void addPk(ColumnInfo pk) {
+        this.pks.add(pk);
     }
 
     public String getTableName() {

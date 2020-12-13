@@ -11,6 +11,16 @@ public class PoolConnection {
 
     private Connection connection;
 
+    private int transNew = -1;
+
+    public int getTransNew() {
+        return transNew;
+    }
+
+    public void setTransNew(int transNew) {
+        this.transNew = transNew;
+    }
+
     public boolean isBusy() {
         return isBusy;
     }

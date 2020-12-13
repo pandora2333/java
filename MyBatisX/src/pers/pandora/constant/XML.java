@@ -90,4 +90,6 @@ public class XML {
 
     public static final String TRUE = "true";
 
+    public static final String AND = "and";
+
 }
