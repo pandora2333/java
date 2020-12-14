@@ -11,7 +11,6 @@ import java.io.File;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -23,8 +22,6 @@ public final class Configuration {
     private final Map<String, Class<?>> beans = new ConcurrentHashMap<>(16);
     //Entity class and attribute corresponding table associated with field alias
     private final Map<String, String> alias = new ConcurrentHashMap<>(16);
-    //Entity class associated with data table
-    private final Map<String, Class> poClassTableMap = new ConcurrentHashMap<>(16);
     //Transaction Proxy Factory
     private TransactionProxyFactory transactionProxyFactory;
     //Transactional Class
@@ -52,10 +49,6 @@ public final class Configuration {
 
     public Map<String, String> getAlias() {
         return alias;
-    }
-
-    public Map<String, Class> getPoClassTableMap() {
-        return poClassTableMap;
     }
 
     public String getDbPoolProperties() {
@@ -211,7 +204,6 @@ public final class Configuration {
                         table = t.getSimpleName().substring(0, 1).toLowerCase() + t.getSimpleName().substring(1);
                     }
                     beans.put(table, t);
-                    poClassTableMap.put(table, t);
                     scanField(t);
                 }
             }

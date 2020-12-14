@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/MyBatisX.iml" filepath="$PROJECT_DIR$/.idea/MyBatisX.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/PandoraORM.iml" filepath="$PROJECT_DIR$/.idea/PandoraORM.iml" />
     </modules>
   </component>
 </project>

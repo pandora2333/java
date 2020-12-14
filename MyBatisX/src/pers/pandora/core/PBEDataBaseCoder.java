@@ -23,13 +23,11 @@ public class PBEDataBaseCoder implements DataBaseCoder {
 
     private static Cipher decoder;
 
-    private static Key key;
-
     static {
         try {
             PBEKeySpec pbeKeySpec = new PBEKeySpec(PASSWORD);
             SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE);
-            key = factory.generateSecret(pbeKeySpec);
+            Key key = factory.generateSecret(pbeKeySpec);
             //new SecureRandom().generateSeed(8);
             PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(new byte[]{12, 23, -63, -23, -86, -87, 33, -9}, 100);
             encoder = Cipher.getInstance(PBE);
@@ -97,17 +95,4 @@ public class PBEDataBaseCoder implements DataBaseCoder {
     public String decodeUrl(String encode) {
         return decode(encode);
     }
-
-//    public static void main(String[] args) {
-////        long start = System.currentTimeMillis();
-//        //UQOoRbubgUQ=
-//        PBEDataBaseCoder coder = new PBEDataBaseCoder();
-////        System.out.println("user:" + coder.encode("root"));
-////        System.out.println("user:"+ coder.decode(coder.encode("root")));
-////        System.out.println("password:" + coder.encode("123456"));
-////        System.out.println("password:"+coder.decode(coder.encode("123456")));
-//        System.out.println("url:" + coder.encode("jdbc:mysql://localhost:3306/bbs?characterEncoding=utf-8&useSSL=true"));
-////        System.out.println("url:"+coder.decode(coder.encode("jdbc:mysql://localhost:3306/dd?characterEncoding=utf-8&useSSL=true")));
-////        System.out.println("spend time: " + (System.currentTimeMillis() - start) + " ms");
-//    }
 }

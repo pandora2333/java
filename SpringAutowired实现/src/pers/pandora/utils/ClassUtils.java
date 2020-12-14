@@ -113,13 +113,10 @@ public final class ClassUtils {
 
     //It determines whether it is a basic data type or a string type or a wrapper type
     public static boolean checkBasicClass(Class t) {
-        if (t == Integer.class || t == Character.class || t == Long.class || t == String.class ||
+        return t == Integer.class || t == Character.class || t == Long.class || t == String.class ||
                 t == int.class || t == boolean.class || t == byte.class || t == Double.class ||
                 t == Float.class || t == short.class || t == Boolean.class || t == Byte.class ||
-                t == char.class || t == long.class || t == double.class) {
-            return true;
-        }
-        return false;
+                t == char.class || t == long.class || t == double.class;
     }
 
     public static <T> T copy(Class<?> tClass,T t,T ret) {

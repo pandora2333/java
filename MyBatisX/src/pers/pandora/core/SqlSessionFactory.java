@@ -4,15 +4,19 @@ public class SqlSessionFactory {
 
     private Configuration configuration;
 
-    private MapperProxyClass mapperProxyClass;
+    private MapperProxyHandler mapperProxyHandler;
+
+    public void setCacheFactory(CacheFactory cacheFactory) {
+        mapperProxyHandler.setCacheFactory(cacheFactory);
+    }
 
     public SqlSessionFactory(Configuration configuration) {
         this.configuration = configuration;
-        mapperProxyClass  = new MapperProxyClass();
-        mapperProxyClass.setConfiguration(configuration);
+        mapperProxyHandler = new MapperProxyHandler();
+        mapperProxyHandler.setConfiguration(configuration);
     }
 
     public SqlSession createSqlSession(String mapper) {
-        return new SqlSession(mapper, mapperProxyClass);
+        return new SqlSession(mapper, mapperProxyHandler);
     }
 }

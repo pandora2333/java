@@ -58,8 +58,6 @@ public class SQL {
 
     public static final String FROM = "from";
 
-    public static final char ZERO = '0';
-
     public static final char QUOTATION = '\'';
 
     public static final String MAX = "max";
@@ -67,4 +65,6 @@ public class SQL {
     public static final String DECIMAL = "decimal";
 
     public static final String JSON = "json";
+
+    public static final char QUESTION_MARK = '?';
 }

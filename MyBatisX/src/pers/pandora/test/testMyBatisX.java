@@ -35,14 +35,22 @@ public class testMyBatisX {
 //        Configuration configuration = new Configuration();
 //        configuration.setDataBaseCoder(new PBEDataBaseCoder());
 //        configuration.setDbPoolProperties("src/dbpool.properties");
+//        configuration.setDataBaseCoder(new PBEDataBaseCoder());
+//        configuration.setTransactionProxyFactory(new JDKTransactionProxyFactory());
 //        configuration.init("pers.pandora.test");
 //        SqlSessionFactory sqlSessionFactory = new SqlSessionFactory(configuration);
+//        //use cache
+//        sqlSessionFactory.setCacheFactory(new SimpleMapCacheFactory());
 ////        SqlSession sqlSession2 = sqlSessionFactory.createSqlSession("test/mapper/DownloadMapper.xml");
 ////        System.out.println(sqlSession2.createMapper(DownloadMapper.class).queryForOne(3));
-//        SqlSession sqlSession = sqlSessionFactory.createSqlSession("test/mapper/UserMapper.xml");
-////        System.out.println(sqlSession.createMapper(pers.pandora.test.mapper.UserMapper.class).queryForOne(17));
+//        SqlSession sqlSession = sqlSessionFactory.createSqlSession("test/dd//mapper/UserMapper.xml");
+////        User user = new User();
+////        user.setId(17);
+////        UserMapper mapper = sqlSession.createMapper(UserMapper.class);
+////        System.out.println(mapper.query(user));
+////        System.out.println(mapper.query(user));
 ////        sqlSession.createMapper(pers.pandora.test.mapper.UserMapper.class).deleteById(10);
-//        pers.pandora.test.User user = new pers.pandora.test.User();
+//        User user = new User();
 //        user.setId(null);
 //        user.setUserName("尝试一次啊");
 //        user.setCdate(new Timestamp(1000000));

@@ -23,11 +23,11 @@ public class SqlSession {
 
     private String mapper;
 
-    private MapperProxyClass mapperProxyClass;
+    private MapperProxyHandler mapperProxyHandler;
 
-    public SqlSession(String mapper, MapperProxyClass mapperProxyClass) {
+    public SqlSession(String mapper, MapperProxyHandler mapperProxyHandler) {
         this.mapper = mapper;
-        this.mapperProxyClass = mapperProxyClass;
+        this.mapperProxyHandler = mapperProxyHandler;
     }
 
     public <T> T createMapper(Class<T> tClass) {
@@ -67,7 +67,7 @@ public class SqlSession {
             if (StringUtils.isNotEmpty(sql)) {
                 insertSql = new DynamicSql(SQL.INSERT, insert, null, sql);
                 String useAutoKey = element.attributeValue(XML.USEGENERATEDKKEYS);
-                if(StringUtils.isNotEmpty(useAutoKey)) {
+                if (StringUtils.isNotEmpty(useAutoKey)) {
                     insertSql.setUseGeneratedKey(Boolean.valueOf(useAutoKey));
                     insertSql.setPkName(element.attributeValue(XML.KEPPROPERTY));
                 }
@@ -109,7 +109,7 @@ public class SqlSession {
                         }
                     }
                 }
-                return mapperProxyClass.parseMethod(makeMethod, template);
+                return mapperProxyHandler.parseMethod(makeMethod, template);
             } else {
                 logger.warn("bad configuration file" + LOG.LOG_PRE, LOG.ERROR_DESC);
             }

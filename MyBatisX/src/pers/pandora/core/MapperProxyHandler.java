@@ -6,15 +6,14 @@ import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.SQL;
 import pers.pandora.constant.XML;
+import pers.pandora.utils.ClassUtils;
 import pers.pandora.utils.StringUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.math.BigDecimal;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,14 +24,16 @@ import java.util.regex.Pattern;
  * 1.The proxy mapper generator implements all mapper interface methods
  * 2.Using the dynamic proxy provided by JDK has strong portability
  */
-public final class MapperProxyClass {
+public final class MapperProxyHandler {
 
-    private static final Logger logger = LogManager.getLogger(MapperProxyClass.class);
+    private static final Logger logger = LogManager.getLogger(MapperProxyHandler.class);
 
     private volatile Configuration configuration;
 
-    public Configuration getConfiguration() {
-        return configuration;
+    private CacheFactory cacheFactory;
+
+    public void setCacheFactory(CacheFactory cacheFactory) {
+        this.cacheFactory = cacheFactory;
     }
 
     public void setConfiguration(Configuration configuration) {
@@ -147,6 +148,17 @@ public final class MapperProxyClass {
             assert configuration != null;
             DynamicSql dynamicSql = sqls.stream().filter(sql -> method.getName().equals(sql.getId())).findFirst().get();
             String sql = dynamicSql.getSql();
+            assert StringUtils.isNotEmpty(sql);
+            List<Object> params = new ArrayList<>();
+            String cacheSql = tokenSpec(sql, args, params);
+            String tableName = getTableName(cacheSql, SQL.FROM, XML.WHERE);
+            String key = cacheFactory != null ? cacheFactory.createKey(tableName, cacheSql) : null;
+            Object cacheObject;
+            //query cache
+            if (cacheFactory != null && (cacheObject = cacheFactory.get(key)) != null) {
+                list.add(cacheObject);
+                return method.getReturnType() == List.class;
+            }
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
             PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();
             boolean transation = false;
@@ -158,19 +170,20 @@ public final class MapperProxyClass {
                 }
                 transation = true;
             }
-            sql = tokenSpec(connection, sql, args);
-            Statement st = connection.getConnection().createStatement();
+            //SQL uses precompiled mode,SQL execution process is divided into preparation, optimization and execution
+            PreparedStatement st = connection.getConnection().prepareStatement((String) params.get(params.size() - 1));
+            //Assignment parameter
+            assignParams(st, params);
             ResultSet rs = null;
             if (dynamicSql.getMethod().equals(SQL.SELECT)) {
-                rs = st.executeQuery(sql);
-                Object t = configuration.getTableObject(getTableName(sql, SQL.FROM, XML.WHERE));
-                handleField(rs, t, list);
+                rs = st.executeQuery();
+                handleField(rs, configuration.getTableObject(tableName), list);
             } else if (dynamicSql.getMethod().equals(SQL.INSERT) || dynamicSql.getMethod().equals(SQL.UPDATE)
                     || dynamicSql.getMethod().equals(SQL.DELETE)) {
-                st.execute(sql);
+                st.execute();
                 //get pk value
                 if (dynamicSql.getMethod().equals(SQL.INSERT) && dynamicSql.isUseGeneratedKey() && StringUtils.isNotEmpty(dynamicSql.getPkName())) {
-                    String tableName = getTableName(sql, XML.INTO, XML.VALUE);
+                    tableName = getTableName(sql, XML.INTO, XML.VALUE);
                     rs = st.executeQuery(SQL.SELECT + XML.BLANK + SQL.MAX + ENTITY.LEFT_BRACKET + dynamicSql.getPkName()
                             + ENTITY.RIGHT_BRACKET + XML.BLANK + SQL.FROM + XML.BLANK + tableName);
                     rs.next();
@@ -183,7 +196,53 @@ public final class MapperProxyClass {
             if (!transation) {
                 configuration.getDbPool().commit(connection);
             }
+            if (cacheFactory != null) {
+                if (sql.startsWith(SQL.SELECT)) {
+                    cacheFactory.put(key, method.getReturnType() == List.class ? list : list.size() > 0 ? list.get(0) : null);
+                } else {
+                    cacheFactory.removeKey(key);
+                }
+            }
             return method.getReturnType() == List.class;
+        }
+
+        private void assignParams(PreparedStatement st, List<Object> params) {
+            Class<?> type;
+            for (int i = 0; i < params.size() - 1; i++) {
+                try {
+                    if (params.get(i) == null) {
+                        st.setObject(i + 1, null);
+                        continue;
+                    }
+                    type = params.get(i).getClass();
+                    if (type == Integer.class || type == int.class) {
+                        st.setInt(i + 1, (Integer) params.get(i));
+                    } else if (type == Long.class || type == long.class) {
+                        st.setLong(i + 1, (Long) params.get(i));
+                    } else if (type == Double.class || type == double.class) {
+                        st.setDouble(i + 1, (Double) params.get(i));
+                    } else if (type == Float.class || type == float.class) {
+                        st.setFloat(i + 1, (float) params.get(i));
+                    } else if (type == String.class) {
+                        st.setString(i + 1, (String) params.get(i));
+                    } else if (type == Clob.class) {
+                        st.setClob(i + 1, (Clob) params.get(i));
+                    } else if (type == Blob.class) {
+                        st.setBlob(i + 1, (Blob) params.get(i));
+                    } else if (type == Date.class) {
+                        st.setDate(i + 1, (Date) params.get(i));
+                    } else if (type == Time.class) {
+                        st.setTime(i + 1, (Time) params.get(i));
+                    } else if (type == Timestamp.class) {
+                        st.setTimestamp(i + 1, (Timestamp) params.get(i));
+                    } else if (type == BigDecimal.class) {
+                        st.setBigDecimal(i + 1, (BigDecimal) params.get(i));
+                    }
+
+                } catch (SQLException e) {
+                    logger.error("assignParams" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                }
+            }
         }
 
         private String getTableName(String sql, String condition1, String condition2) {
@@ -194,83 +253,68 @@ public final class MapperProxyClass {
             }
             return table;
         }
-
-        private boolean checkPKType(Class<?> returnType) {
-            return returnType == Integer.class || returnType == int.class ||
-                    returnType == Long.class || returnType == long.class;
-        }
     }
 
     /**
      * Parsing special characters of XML file expression, such as #{}, le, etc
      *
-     * @param con
      * @param sql
      * @param args
-     * @param <T>
+     * @param params
      * @return
      * @throws SQLException
      */
-    private <T> String tokenSpec(PoolConnection con, String sql, Object[] args) throws SQLException {
-        List<Class<T>> tClass = new ArrayList<>();
-        Map poClassMap = configuration.getPoClassTableMap();
-        String percent = String.valueOf(SQL.PERCENT);
-        ResultSet tableRet = con.getConnection()
-                .getMetaData().getTables(null, percent, percent, new String[]{SQL.TABLE});
-        while (tableRet.next()) {
-            String tableName = (String) tableRet.getObject(SQL.TABLE_NAME);
-            if (poClassMap.containsKey(tableName)) {
-                tClass.add((Class<T>) poClassMap.get(tableName));
-            }
+    private String tokenSpec(String sql, Object[] args, List<Object> params) {
+        String preSql = sql.replaceAll(XML.VAR_REGEX_PATTERN, String.valueOf(SQL.QUESTION_MARK));
+        if (args == null || args.length == 0) {
+            params.add(preSql);
+            return sql;
         }
-        close(null, tableRet);
         final Pattern pattern = Pattern.compile(XML.VAR_REGEX_PATTERN);
-        if (sql != null) {
-            String var_mark = String.valueOf(XML.VAR_MARK) + ENTITY.LEFT_CURLY_BRACKET;
-            if (sql.contains(var_mark)) {
-                Matcher matcher = pattern.matcher(sql);
-                StringBuffer sb = new StringBuffer();
-                int cursor = 0;
-                Object param = null;
-                String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
-                String quotation = String.valueOf(SQL.QUOTATION);
-                while (matcher.find()) {
-                    if (tClass.contains(args[0].getClass())) {
-                        T temp = (T) args[0];
-                        String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
-                        try {
-                            param = temp.getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(0)) + paramTemp.substring(1)).invoke(temp);
-                            //Not all attribute parameters of an entity are assigned valid values
-                            if (param == null) {
-                                //Any type of database can be used
-                                param = SQL.ZERO;
-                            }
-                        } catch (Exception e) {
-                            logger.error("tokenSpec" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-                        }
+        String var_mark = String.valueOf(XML.VAR_MARK) + ENTITY.LEFT_CURLY_BRACKET;
+        if (sql.contains(var_mark)) {
+            Matcher matcher = pattern.matcher(sql);
+            StringBuffer sb = new StringBuffer();
+            int cursor = 0;
+            Object param = null;
+            String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
+            String quotation = String.valueOf(SQL.QUOTATION);
+            boolean vo = !ClassUtils.checkBasicClass(args[0].getClass());
+            while (matcher.find()) {
+                if (vo) {
+                    String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
+                    try {
+                        param = args[0].getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(0)) + paramTemp.substring(1)).invoke(args[0]);
+                    } catch (Exception e) {
+                        logger.error("tokenSpec" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
                     }
-                    if (param != null) {
-                        matcher.appendReplacement(sb, quotation + param + quotation);
-                    } else {
-                        matcher.appendReplacement(sb, quotation + args[cursor] + quotation);
-                    }
-                    cursor++;
+                } else {
+                    param = args[cursor];
                 }
-                sql = matcher.appendTail(sb).toString();
+                matcher.appendReplacement(sb, quotation + param + quotation);
+                params.add(param);
+                cursor++;
             }
-            if (sql.contains(XML.BLANK + XML.LT + XML.BLANK)) {
-                sql = sql.replace(XML.BLANK + XML.LT + XML.BLANK, XML.BLANK + ENTITY.LT + XML.BLANK);
-            }
-            if (sql.contains(XML.BLANK + XML.GT + XML.BLANK)) {
-                sql = sql.replace(XML.BLANK + XML.GT + XML.BLANK, XML.BLANK + ENTITY.GT + XML.BLANK);
-            }
-            if (sql.contains(XML.BLANK + XML.LE + XML.BLANK)) {
-                sql = sql.replace(XML.BLANK + XML.LE + XML.BLANK, XML.BLANK + ENTITY.LE + XML.BLANK);
-            }
-            if (sql.contains(XML.BLANK + XML.GE + XML.BLANK)) {
-                sql = sql.replace(XML.BLANK + XML.GE + XML.BLANK, XML.BLANK + ENTITY.GE + XML.BLANK);
-            }
+            sql = matcher.appendTail(sb).toString();
         }
+        if (sql.contains(XML.BLANK + XML.LT + XML.BLANK)) {
+            sql = sql.replace(XML.BLANK + XML.LT + XML.BLANK, XML.BLANK + ENTITY.LT + XML.BLANK);
+            preSql = preSql.replace(XML.BLANK + XML.LT + XML.BLANK, XML.BLANK + ENTITY.LT + XML.BLANK);
+        }
+        if (sql.contains(XML.BLANK + XML.GT + XML.BLANK)) {
+            sql = sql.replace(XML.BLANK + XML.GT + XML.BLANK, XML.BLANK + ENTITY.GT + XML.BLANK);
+            preSql = preSql.replace(XML.BLANK + XML.GT + XML.BLANK, XML.BLANK + ENTITY.GT + XML.BLANK);
+        }
+        if (sql.contains(XML.BLANK + XML.LE + XML.BLANK)) {
+            sql = sql.replace(XML.BLANK + XML.LE + XML.BLANK, XML.BLANK + ENTITY.LE + XML.BLANK);
+            preSql = preSql.replace(XML.BLANK + XML.LE + XML.BLANK, XML.BLANK + ENTITY.LE + XML.BLANK);
+        }
+        if (sql.contains(XML.BLANK + XML.GE + XML.BLANK)) {
+            sql = sql.replace(XML.BLANK + XML.GE + XML.BLANK, XML.BLANK + ENTITY.GE + XML.BLANK);
+            preSql = preSql.replace(XML.BLANK + XML.GE + XML.BLANK, XML.BLANK + ENTITY.GE + XML.BLANK);
+        }
+        //add tail as pre-sql
+        params.add(preSql);
         return sql;
     }
 
