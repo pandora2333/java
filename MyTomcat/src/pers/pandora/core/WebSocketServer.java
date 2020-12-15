@@ -53,6 +53,26 @@ public class WebSocketServer extends Server {
 
     //Downtime when the maximum number of clients is maintained
     private long busyTime = 1000;
+    //retry count
+    private int retryCnt;
+    //retry interval time
+    private long retryTime;
+
+    public int getRetryCnt() {
+        return retryCnt;
+    }
+
+    public void setRetryCnt(int retryCnt) {
+        this.retryCnt = retryCnt;
+    }
+
+    public long getRetryTime() {
+        return retryTime;
+    }
+
+    public void setRetryTime(long retryTime) {
+        this.retryTime = retryTime;
+    }
 
     //Expose the interfaces, send tasks to the server regularly and push content to all clients
     public final Map<String, WebSocketSession> getClients() {
@@ -109,7 +129,7 @@ public class WebSocketServer extends Server {
             serverSocketChannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, WebSocketSession>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
-                    if(clients.size() < getMaxKeepClients()){
+                    if (clients.size() < getMaxKeepClients()) {
                         ByteBuffer byteBuffer = ByteBuffer.allocate(getCapcity());
                         WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
@@ -122,10 +142,29 @@ public class WebSocketServer extends Server {
                                 }
                                 //Avoid for concurrently reading in the same buffer by read-thread
                                 ByteBuffer tmp = ByteBuffer.allocate(msg.length);
-                                tmp.put(msg);
-                                //In multi-thread,it is easy to cause WritePending Exception,because of last one read or write operation was still running
-                                tmp.flip();
-                                attachment.getClient().write(tmp);
+                                try {
+                                    tmp.put(msg);
+                                    //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
+                                    tmp.flip();
+                                    attachment.getClient().write(tmp);
+                                } catch (Exception e) {
+                                    //ignore,retry again
+                                    boolean ok = false;
+                                    for(int i = 0;i < retryCnt && !ok;i++){
+                                        ok = true;
+                                        try {
+                                            Thread.sleep(retryTime);
+                                        } catch (InterruptedException ex) {
+                                            //ignore
+                                        }
+                                        try{
+                                            attachment.getClient().write(tmp);
+                                        }catch (Exception exx){
+                                            //ignore
+                                            ok = false;
+                                        }
+                                    }
+                                }
                             }
 
                             @Override
@@ -249,9 +288,9 @@ public class WebSocketServer extends Server {
                                 close(attachment, this);
                             }
                         });
-                    }else{
+                    } else {
                         try {
-                            Thread.sleep(getBusyTime());
+                            Thread.sleep(busyTime);
                         } catch (InterruptedException e) {
                             //ignore
                         }
@@ -291,14 +330,13 @@ public class WebSocketServer extends Server {
                         }
                     }
                     String accept = CodeUtils.sha1AndBase64(key + WS.WS_MAGIC_STR, null);
-                    StringBuilder headInfo = new StringBuilder();
-                    headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(WS.CODE_101).append(HTTPStatus.BLANK).
-                            append(WS.SWITCHING_PROTOCOLS).append(HTTPStatus.CRLF);
-                    headInfo.append(WS.CONNECTION_KEY).append(HTTPStatus.CRLF);
-                    headInfo.append(WS.UPGRADE_KEY).append(HTTPStatus.CRLF);
-                    headInfo.append(WS.SEC_WEBSOCKET_ACCPET).append(HTTPStatus.BLANK).append(accept).append(HTTPStatus.CRLF);
-                    headInfo.append(HTTPStatus.CRLF);
-                    return headInfo.toString().getBytes(Charset.forName(charset));
+                    String headInfo = HTTPStatus.HTTP1_1 + HTTPStatus.BLANK + WS.CODE_101 + HTTPStatus.BLANK +
+                            WS.SWITCHING_PROTOCOLS + HTTPStatus.CRLF +
+                            WS.CONNECTION_KEY + HTTPStatus.CRLF +
+                            WS.UPGRADE_KEY + HTTPStatus.CRLF +
+                            WS.SEC_WEBSOCKET_ACCPET + HTTPStatus.BLANK + accept + HTTPStatus.CRLF +
+                            HTTPStatus.CRLF;
+                    return headInfo.getBytes(Charset.forName(charset));
                 }
 
                 @Override

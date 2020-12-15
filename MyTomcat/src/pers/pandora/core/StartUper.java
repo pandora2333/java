@@ -88,6 +88,10 @@ public final class StartUper {
 
     public static final String JSONCLASS = "jsonClass";
 
+    public static final String RETRYTIME ="retryTime";
+
+    public static final String RETRYCNT ="retryCnt";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -256,6 +260,14 @@ public final class StartUper {
             value = properties.getProperty(CHARSET, null);
             if (StringUtils.isNotEmpty(value)) {
                 ((WebSocketServer) server).setCharset(value);
+            }
+            value = properties.getProperty(RETRYTIME, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setRetryTime(Long.valueOf(value));
+            }
+            value = properties.getProperty(RETRYCNT, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setRetryCnt(Integer.valueOf(value));
             }
         }
         //common configs
