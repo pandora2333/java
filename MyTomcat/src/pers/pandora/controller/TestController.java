@@ -7,14 +7,14 @@ import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 
 /**
- * 引入Spring MVC的@Controllert模式
+ * Introducing @Controller mode of springMVC
  */
 @Deprecated
 @Controller("/test")
 public class TestController {
     @RequestMapping(value = "/loginUser.do")
     public String login(Request request, @RequestBody User user, Response response) {
-        System.out.println("user登录:" + user);
+        System.out.println("user login:" + user);
         response.addHeads("test", "test response add head");
         return "/test.jsp";
     }
@@ -27,9 +27,12 @@ public class TestController {
 
     @ResponseBody
     @RequestMapping(value = "/haha/{username}/test/{password}/testHello.do",method = HTTPStatus.PUT)
-    public String testHello(@PathVariable("password")int pwd,@PathVariable("username")String username) {
-        System.out.println("user登录:" + username + ":" + pwd);
+    public User testHello(@PathVariable("password")int pwd,@PathVariable("username")String username) {
+        System.out.println("user login:" + username + ":" + pwd);
         System.out.println("restful api...");
-        return "Hello World!";
+        User user = new User();
+        user.setUsername("Hello World!");
+        user.setPassword("123");
+        return user;
     }
 }

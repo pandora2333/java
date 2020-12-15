@@ -86,6 +86,8 @@ public final class StartUper {
 
     public static final String SESSIONIDGENERATOR = "sessionIDGenerator";
 
+    public static final String JSONCLASS = "jsonClass";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -141,77 +143,6 @@ public final class StartUper {
     private Server buildServer(Properties properties, String serverName) {
         String pattern = properties.getProperty(WS, FALSE), value;
         Server server;
-        if (pattern.equals(FALSE)) {
-            server = new AIOServer();
-            value = properties.getProperty(SERIALSESSIONSUPPORT, null);
-            if (StringUtils.isNotEmpty(value)) {
-                try {
-                    server.setSerialSessionSupport(ClassUtils.getClass(value, null));
-                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-                    logger.error("buildServer serialSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
-                    return null;
-                }
-            }
-            value = properties.getProperty(SESSIONIDGENERATOR, null);
-            if (StringUtils.isNotEmpty(value)) {
-                try {
-                    IdWorker idWoker = ClassUtils.getClass(value, null);
-                    server.setIdWorker(idWoker);
-                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
-                    logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
-                    return null;
-                }
-            }
-            value = properties.getProperty(HOTLOADJSP, null);
-            if (StringUtils.isNotEmpty(value)) {
-                server.setHotLoadJSP(Boolean.valueOf(value));
-            }
-            value = properties.getProperty(ROOTPATH, null);
-            if (StringUtils.isNotEmpty(value)) {
-                server.setRootPath(value);
-            }
-            value = properties.getProperty(RESOURCEROOTPATH, null);
-            if (StringUtils.isNotEmpty(value)) {
-                server.setResourceRootPath(value);
-            }
-            value = properties.getProperty(WEBCONFIGPATH, null);
-            if (StringUtils.isNotEmpty(value)) {
-                server.setWebConfigPath(value);
-            }
-            value = properties.getProperty(REQUESTFILEDIR, null);
-            if (StringUtils.isNotEmpty(value)) {
-                server.setRequestFileDir(value);
-            }
-        } else {
-            value = properties.getProperty(WSCLASS, null);
-            if (StringUtils.isNotEmpty(value)) {
-                try {
-                    server = ClassUtils.getClass(value, null);
-                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-                    logger.error("buildServer wsClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
-                    return null;
-                }
-            } else {
-                server = new WebSocketServer();
-            }
-            value = properties.getProperty(BUSYTIME, null);
-            if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setBusyTime(Long.valueOf(value));
-            }
-            value = properties.getProperty(MAXBITS, null);
-            if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setMaxWSBits(Integer.valueOf(value));
-            }
-            value = properties.getProperty(CHARSET, null);
-            if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setCharset(value);
-            }
-        }
-        //common configs
-        server.setServerName(serverName);
-        if (server.getSerialSessionSupport() != null) {
-            SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
-        }
         BeanPool beanPool = new BeanPool();
         RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
         value = properties.getProperty(AOPPATHS, null);
@@ -260,7 +191,78 @@ public final class StartUper {
         if (StringUtils.isNotEmpty(value)) {
             requestMappingHandler.init(value.split(separator, -1));
             requestMappingHandler.setBeanPool(beanPool);
-            server.setRequestMappingHandler(requestMappingHandler);
+        }
+        if (pattern.equals(FALSE)) {
+            server = new AIOServer();
+            value = properties.getProperty(SERIALSESSIONSUPPORT, null);
+            if (StringUtils.isNotEmpty(value)) {
+                try {
+                    server.setSerialSessionSupport(ClassUtils.getClass(value, beanPool));
+                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+                    logger.error("buildServer serialSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                    return null;
+                }
+            }
+            value = properties.getProperty(SESSIONIDGENERATOR, null);
+            if (StringUtils.isNotEmpty(value)) {
+                try {
+                    IdWorker idWoker = ClassUtils.getClass(value, beanPool);
+                    server.setIdWorker(idWoker);
+                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+                    logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                    return null;
+                }
+            }
+            value = properties.getProperty(HOTLOADJSP, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setHotLoadJSP(Boolean.valueOf(value));
+            }
+            value = properties.getProperty(ROOTPATH, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setRootPath(value);
+            }
+            value = properties.getProperty(RESOURCEROOTPATH, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setResourceRootPath(value);
+            }
+            value = properties.getProperty(WEBCONFIGPATH, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setWebConfigPath(value);
+            }
+            value = properties.getProperty(REQUESTFILEDIR, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setRequestFileDir(value);
+            }
+        } else {
+            value = properties.getProperty(WSCLASS, null);
+            if (StringUtils.isNotEmpty(value)) {
+                try {
+                    server = ClassUtils.getClass(value, beanPool);
+                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+                    logger.error("buildServer wsClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                    return null;
+                }
+            } else {
+                server = new WebSocketServer();
+            }
+            value = properties.getProperty(BUSYTIME, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setBusyTime(Long.valueOf(value));
+            }
+            value = properties.getProperty(MAXBITS, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setMaxWSBits(Integer.valueOf(value));
+            }
+            value = properties.getProperty(CHARSET, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setCharset(value);
+            }
+        }
+        //common configs
+        server.setRequestMappingHandler(requestMappingHandler);
+        server.setServerName(serverName);
+        if (server.getSerialSessionSupport() != null) {
+            SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
         }
         value = properties.getProperty(PORT, null);
         if (StringUtils.isNotEmpty(value)) {
@@ -301,6 +303,15 @@ public final class StartUper {
         value = properties.getProperty(WAITRECEIVEDTIME, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setWaitReceivedTime(Long.valueOf(value));
+        }
+        value = properties.getProperty(JSONCLASS, null);
+        if (StringUtils.isNotEmpty(value)) {
+            try {
+                server.setJsonParser(ClassUtils.getClass(value,beanPool));
+            } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+                logger.error("buildServer jsonClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                return null;
+            }
         }
         return server;
     }

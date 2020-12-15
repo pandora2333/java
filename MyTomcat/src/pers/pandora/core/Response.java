@@ -29,6 +29,8 @@ public final class Response {
     private String type = HTTPStatus.TEXT_HTML;
     //the response is the static resoucre
     private boolean resource;
+    //PLAIN parser
+    private JSONParser jsonParser;
 
     private Dispatcher dispatcher;
     //response code
@@ -38,6 +40,13 @@ public final class Response {
 
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
 
+    public Dispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    public void setJsonParser(JSONParser jsonParser) {
+        this.jsonParser = jsonParser;
+    }
 
     public void setCode(int code) {
         this.code = code;
@@ -128,7 +137,7 @@ public final class Response {
         return servlet;
     }
 
-    private byte[] createHeadInfo(List<Cookie> cookies,boolean options) {
+    private byte[] createHeadInfo(List<Cookie> cookies, boolean options) {
         StringBuilder headInfo = new StringBuilder();
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
@@ -161,7 +170,7 @@ public final class Response {
         headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER)
                 .append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
-        if(options){
+        if (options) {
             headInfo.append(HTTPStatus.ALLOW).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.GET).append(HTTPStatus.COMMA)
                     .append(HTTPStatus.POST).append(HTTPStatus.COMMA).append(HTTPStatus.PUT).append(HTTPStatus.COMMA).append(HTTPStatus.DELETE)
                     .append(HTTPStatus.CRLF);
@@ -208,42 +217,46 @@ public final class Response {
         return headInfo.toString().getBytes(Charset.forName(charset));
     }
 
-    public byte[] handle(String method, Request request) {
+    public byte[] handle(String method, boolean interceptor) {
         //OPTIONS is HTTP pre-request，just return ok signal or other bad request
         boolean options = StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS);
         if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || options) {
-            if(options) {
+            if (options) {
                 code = HTTPStatus.CODE_200;
             }
-            return createHeadInfo(null,options);
+            return createHeadInfo(null, options);
         }
-        handlePre(request);
+        if (interceptor) {
+            dispatcher.handlePre();
+        }
         try {
-            if (request != null && request.getParams().containsKey(PLAIN)) {
+            if (dispatcher.request.getParams().containsKey(PLAIN)) {
                 type = HTTPStatus.PLAIN;
-                Object obj = request.getParams().get(PLAIN).get(0);
+                Object obj = dispatcher.request.getParams().get(PLAIN).get(0);
                 if (obj != null) {
+                    if (!(obj instanceof String)) {
+                        obj = jsonParser.getJson(obj);
+                    }
                     content = obj.toString().getBytes(Charset.forName(charset));
                     len = content.length;
                 }
                 code = HTTPStatus.CODE_200;
             } else if (StringUtils.isNotEmpty(servlet)) {
-                assert request != null;
-                Map<String, List<Object>> params = request.getParams();
+                Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
-                Servlet handler = ClassUtils.getClass(servlet,request.getDispatcher().server.getRequestMappingHandler().getBeanPool());
+                Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool());
                 //requestScope
                 ClassUtils.initWithParams(handler, params);
                 //sessionScope
-                ClassUtils.initWithParams(handler, request.getSession().getAttrbuites());
+                ClassUtils.initWithParams(handler, dispatcher.request.getSession().getAttrbuites());
                 //mvcScope
-                ClassUtils.initWithObjectList(handler, request.getObjectList());
+                ClassUtils.initWithObjectList(handler, dispatcher.request.getObjectList());
                 if (handler != null) {
                     String ret = null;
                     if (method.equals(HTTPStatus.GET)) {
-                        ret = handler.doGet(request, this);
+                        ret = handler.doGet(dispatcher.request, this);
                     } else if (method.equals(HTTPStatus.POST)) {
-                        ret = handler.doPost(request, this);
+                        ret = handler.doPost(dispatcher.request, this);
                     }
                     if (StringUtils.isNotEmpty(ret)) {
                         content = ret.getBytes(Charset.forName(charset));
@@ -264,31 +277,16 @@ public final class Response {
             logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, dispatcher.server.getServerName(), LOG.EXCEPTION_DESC, e);
             handle_500_SERVER_ERROR(e.getMessage());
         }
-        handleAfter(request);
-        assert request != null;
-        byte[] heads = createHeadInfo(request.getCookies(),false);
+        if (interceptor) {
+            dispatcher.handleAfter();
+        }
+        byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false);
         byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
         if (content != null) {
             System.arraycopy(content, 0, datas, heads.length, content.length);
         }
         return datas;
-    }
-
-    private void handleAfter(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
-            if (!interceptor.getV().afterMethod(request, this)) {
-                return;
-            }
-        }
-    }
-
-    private void handlePre(Request request) {
-        for (Pair<Integer, Interceptor> interceptor : dispatcher.server.getRequestMappingHandler().getInterceptors()) {
-            if (!interceptor.getV().preMethod(request, this)) {
-                return;
-            }
-        }
     }
 
     private void handle_500_SERVER_ERROR(String errorMessage) {
@@ -309,6 +307,7 @@ public final class Response {
         servlet = null;
         resource = false;
         content = null;
+        jsonParser = dispatcher.server.getJsonParser();
         len = 0;
         code = 0;
         if (CollectionUtil.isNotEmptry(heads)) {

@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
  * WebSocketServer server = new WebSocketServer();
  * server.setRequestMappingHandler(requestMappingHandler);
  * server.setServerName("WebSocket");
+ * setJsonParser(new SimpleJSONParser());
  * server.setPort(8000);
  * server.setCapcity(1024 * 1024);
  * server.start();

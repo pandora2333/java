@@ -54,7 +54,7 @@ public class HTTPStatus {
 
     public static final String DATE = "Date";
 
-    public static final String CONTENTTYPE = "Content-type";
+    public static final String CONTENTTYPE = "Content-Type";
 
     public static final String CONTENTLENGTH = "Content-Length";
 
@@ -140,4 +140,6 @@ public class HTTPStatus {
     public static final String SECURE = "secure";
 
     public static final String ALLOW = "Allow";
+
+    public static final String JSON = "application/json";
 }

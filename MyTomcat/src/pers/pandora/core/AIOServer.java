@@ -1,7 +1,6 @@
 package pers.pandora.core;
 
 import pers.pandora.constant.LOG;
-import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.XMLFactory;
 
 import java.io.IOException;
@@ -32,6 +31,7 @@ import java.util.concurrent.*;
  * server.setServerName("pandora_test_1");
  * server.setHotLoadJSP(false);
  * server.setIdWorker(new IdWorker());
+ * setJsonParser(new SimpleJSONParser());
  * server.setRequestMappingHandler(requestMappingHandler);
  * server.setSerialSessionSupport(new SerialSessionSupportSimpler());
  * SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());

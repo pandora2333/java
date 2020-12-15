@@ -1,6 +1,8 @@
 package pers.pandora.core;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
@@ -55,6 +57,22 @@ public final class Request {
     private String servlet;
     //reset flag
     private boolean flag;
+
+    private boolean json;
+
+    private JSONParser jsonParser;
+
+    public JSONParser getJsonParser() {
+        return jsonParser;
+    }
+
+    public void setJsonParser(JSONParser jsonParser) {
+        this.jsonParser = jsonParser;
+    }
+
+    public boolean isJson() {
+        return json;
+    }
 
     public void setFlag(boolean flag) {
         this.flag = flag;
@@ -251,22 +269,35 @@ public final class Request {
 
     public String handle(String msg) {
         flag = true;
+        if (msg.startsWith(HTTPStatus.OPTIONS)) {
+            method = HTTPStatus.OPTIONS;
+            return HTTPStatus.OPTIONS;
+        }
         //handle request head
         msg = handleHeadInfo(msg);
         String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
-        String tempStr = reqToken;
-        if (reqToken.contains(String.valueOf(HTTPStatus.GET_PARAMTER_MARK))) {
-            tempStr = tempStr.replace(tempStr.substring(reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK)), LOG.NO_CHAR);
+        json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON);
+        int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
+        if (index > 0) {
+            reqUrl = reqToken.substring(0, index);
+            if (json) {
+                try {
+                    addJSON(URLDecoder.decode(reqToken.substring(index + 1), charset));
+                } catch (UnsupportedEncodingException e) {
+                    dispatcher.response.setCode(HTTPStatus.CODE_400);
+                }
+            }
+        } else {
+            reqUrl = reqToken;
         }
         if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
-            if (!isMultipart) {
-                String param = msg.substring(msg.indexOf(HTTPStatus.CRLF)).trim();
-                parseParams(param, HTTPStatus.POST);
+            String param = msg.substring(msg.indexOf(HTTPStatus.CRLF)).trim();
+            if (json) {
+                addJSON(param);
+            } else if (!isMultipart) {
+                parseParams(param, false);
             }
-        } else if (msg.startsWith(HTTPStatus.OPTIONS)) {
-            method = HTTPStatus.OPTIONS;
-            return HTTPStatus.OPTIONS;
         } else if (msg.startsWith(HTTPStatus.GET)) {
             method = HTTPStatus.GET;
             String type = judgeStatic(reqToken);
@@ -274,24 +305,21 @@ public final class Request {
                 //static resource
                 return type + reqToken;
             }
-            parseParams(reqToken, HTTPStatus.GET);
         } else if (msg.startsWith(HTTPStatus.PUT)) {
             method = HTTPStatus.PUT;
-            parseParams(reqToken, HTTPStatus.GET);
         } else if (msg.startsWith(HTTPStatus.DELETE)) {
             method = HTTPStatus.DELETE;
-            parseParams(reqToken, HTTPStatus.GET);
         } else {
             logger.warn(HTTPStatus.CODE_400_BAD_REQUEST + LOG.LOG_PRE, msg);
             dispatcher.response.setCode(HTTPStatus.CODE_400);
             return null;
         }
-        reqUrl = tempStr;
+        parseParams(reqToken, true);
         if (isMVC(reqUrl)) {
             return RequestMappingHandler.MVC_CLASS;
         }
         if (reqUrl.contains(HTTPStatus.JSP)) {
-            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl,dispatcher.server.isHotLoadJSP());
+            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher.server.isHotLoadJSP());
             if (parse != null) {
                 dispatcher.addUrlMapping(parse.getK2(), parse.getV());
                 return parse.getK1();
@@ -301,6 +329,15 @@ public final class Request {
         }
         return dispatcher.server.getContext().get(reqUrl);
 
+    }
+
+    private void addJSON(String param) {
+        if (jsonParser == null || !StringUtils.isNotEmpty(param)) {
+            return;
+        }
+        List<Object> tmp = new ArrayList<>(1);
+        tmp.add(param);
+        params.put(HTTPStatus.JSON, tmp);
     }
 
     private String handleHeadInfo(String msg) {
@@ -342,12 +379,13 @@ public final class Request {
         dispatcher.server.addSessionMap(session.getSessionID(), session);
         cookies.add(cookie);
     }
+
     //It ensures that the sessionID is never duplicated
     private String getSessionID() {
         String sessionID;
         do {
             sessionID = dispatcher.server.getIdWorker().nextSessionID();
-        }while(dispatcher.server.getSessionMap().containsKey(sessionID));
+        } while (dispatcher.server.getSessionMap().containsKey(sessionID));
         return sessionID;
     }
 
@@ -385,7 +423,7 @@ public final class Request {
     }
 
     private String judgeStatic(String reqToken) {
-        if (reqToken.contains(dispatcher.server.getResourceRootPath())) {
+        if (reqToken.startsWith(dispatcher.server.getResourceRootPath())) {
             if (reqToken.endsWith(HTTPStatus.HTML_MARK) || reqToken.endsWith(HTTPStatus.HTM_MARK)) {
                 return HTTPStatus.TEXT_HTML + HTTPStatus.COLON;
             }
@@ -397,23 +435,25 @@ public final class Request {
         return null;
     }
 
-    private void parseParams(String reqToken, String method) {
-        String[] temp = null;
-        if (method.equals(HTTPStatus.GET)) {
-            int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
-            if (index > 0) {
-                temp = reqToken.substring(index + 1).split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+    private void parseParams(String reqToken, boolean isGet) {
+        if (StringUtils.isNotEmpty(reqToken)) {
+            String[] temp = null;
+            if (isGet) {
+                int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
+                if (index > 0) {
+                    temp = reqToken.substring(index + 1).split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+                } else {
+                    index = reqToken.length();
+                }
+                String path = reqToken.substring(0, index);
+                if (StringUtils.isNotEmpty(path)) {
+                    pathParams = Arrays.asList(path.split(String.valueOf(HTTPStatus.SLASH), -1));
+                }
             } else {
-                index = reqToken.length();
+                temp = reqToken.split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
             }
-            String path = reqToken.substring(0, index);
-            if (StringUtils.isNotEmpty(path)) {
-                pathParams = Arrays.asList(path.split(String.valueOf(HTTPStatus.SLASH), -1));
-            }
-        } else if (method.equals(HTTPStatus.POST)) {
-            temp = reqToken.split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+            handleData(temp);
         }
-        handleData(temp);
     }
 
     private boolean isMVC(String reqUrl) {
@@ -457,7 +497,7 @@ public final class Request {
                 }
                 list = params.get(kv[0]);
                 if (list == null) {
-                    list = new ArrayList<>();
+                    list = new ArrayList<>(1);
                     list.add(kv[1]);
                     params.put(kv[0], list);
                 } else {
@@ -473,6 +513,8 @@ public final class Request {
         reqUrl = null;
         fileDesc = null;
         servlet = null;
+        json = false;
+        jsonParser = dispatcher.server.getJsonParser();
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
         }
@@ -498,5 +540,28 @@ public final class Request {
         pathParams = null;
         session = null;
         charset = HTTPStatus.DEFAULTENCODING;
+    }
+
+    void handleJSON() {
+        if (jsonParser == null) {
+            return;
+        }
+        List<Object> list = params.get(HTTPStatus.JSON);
+        if (CollectionUtil.isNotEmptry(list)) {
+            Map<String, Object> objectMap = null;
+            try {
+                objectMap = jsonParser.parse((String) list.get(0));
+            } catch (Exception e) {
+                dispatcher.response.setCode(HTTPStatus.CODE_400);
+            }
+            if (objectMap != null) {
+                objectMap.forEach((k, v) -> {
+                    List<Object> tmp = new ArrayList<>(1);
+                    tmp.add(v);
+                    params.put(k, tmp);
+                });
+            }
+            params.remove(HTTPStatus.JSON);
+        }
     }
 }

@@ -8,10 +8,15 @@ import java.util.List;
 
 @Deprecated
 public class LoginServlet implements Servlet {
+
     private  String username;
+
     private  String password;
+
     private String content;
+
     private String head;
+
     @Override
     public void service() {
         if(username!=null&&password!=null) {

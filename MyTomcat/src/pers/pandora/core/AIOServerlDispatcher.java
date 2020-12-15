@@ -30,6 +30,9 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         ByteBuffer buffer = att.getBuffer();
         //model change:write -> read
         buffer.flip();
+        //set JSON parser
+        request.setJsonParser(server.getJsonParser());
+        response.setJsonParser(server.getJsonParser());
         //pre handle HTTP resource
         initRequest(buffer);
         String msg = null;
@@ -53,7 +56,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             try {
                 //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
                 Thread.sleep(80);
-                completed(att.getClient().read(buffer).get(),att);
+                completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
                 failed(e, att);
             }
@@ -100,7 +103,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             List<Object> objects;
             j = msg.indexOf(fileDesc);
             if (j >= 0) {
-                head = tmp + msg.substring(0, Math.max(0,j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER));
+                head = tmp + msg.substring(0, Math.max(0, j - HTTPStatus.MUPART_DESC_LINE.length() - HTTPStatus.LINE_SPLITER));
             }
             while (j >= 0) {
                 j += fileDesc.length() + HTTPStatus.LINE_SPLITER;
@@ -185,7 +188,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     @Override
     public void failed(Throwable t, Attachment att) {
-        server.close(att,this);
+        server.close(att, this);
     }
 
     @Override

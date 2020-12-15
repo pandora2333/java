@@ -33,11 +33,11 @@ public class TestServlet implements Servlet {
         System.out.println("test:" + test + ",client:" + client.getTestOM());
         StringBuilder sb = new StringBuilder();
         sb.append("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>")
-                .append("图片")
+                .append("picture")
                 .append("</title></head><body>")
                 .append("<img src='http://localhost:8080/static/114.png'></img>")
                 .append("<img src='http://localhost:8080/static/1.png'></img>")
-                .append("test页面")
+                .append("test page")
                 .append("</body></html>");
         return sb.toString();
     }

@@ -44,24 +44,26 @@ abstract class Dispatcher {
             }
             if (servlet != null) {
                 if (servlet.equals(HTTPStatus.OPTIONS)) {
-                    pushClient(response.handle(HTTPStatus.OPTIONS, null), null);
+                    pushClient(response.handle(HTTPStatus.OPTIONS, true), null);
                 } else if (servlet.equals(RequestMappingHandler.MVC_CLASS)) {
                     //exec mvc operation
                     //add mvc path into the map
                     ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
                     mv.setRequest(request);
                     mv.setResponse(response);
+                    handlePre();
                     server.getRequestMappingHandler().parseUrl(mv);
+                    handleAfter();
                     if (StringUtils.isNotEmpty(mv.getPage())) {
                         if (mv.isJson()) {
-                            pushClient(response.handle(HTTPStatus.GET, request), null);
+                            pushClient(response.handle(HTTPStatus.GET, false), null);
                         } else {
                             request.setFlag(false);
                             dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
                         }
                     } else {
                         //not found, in MVC-uri paths
-                        pushClient(response.handle(null, request), null);
+                        pushClient(response.handle(null, true), null);
                     }
                 } else {
                     String ss[] = servlet.split(HTTPStatus.HEAD_INFO_SPLITER);
@@ -79,10 +81,10 @@ abstract class Dispatcher {
                         }
                     }
                     response.setServlet(servlet);
-                    pushClient(response.handle(request.getMethod(), request), file);
+                    pushClient(response.handle(request.getMethod(), true), file);
                 }
             } else {
-                pushClient(response.handle(null, request), null);
+                pushClient(response.handle(null, true), null);
             }
         }
     }
@@ -100,6 +102,26 @@ abstract class Dispatcher {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
+                return;
+            }
+        }
+    }
+
+    void handleAfter() {
+        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+            if (!interceptor.getV().afterMethod(request, response)) {
+                return;
+            }
+        }
+    }
+
+    void handlePre() {
+        //handle json data
+        if (request.isJson()) {
+            request.handleJSON();
+        }
+        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+            if (!interceptor.getV().preMethod(request, response)) {
                 return;
             }
         }

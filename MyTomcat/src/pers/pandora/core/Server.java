@@ -52,6 +52,8 @@ public abstract class Server {
     private SerialSessionSupport serialSessionSupport;
     //set mvc-pattern paths
     private RequestMappingHandler requestMappingHandler;
+    //JSON parser
+    private JSONParser jsonParser;
 
     private Map<String, String> context;
     //browser build the tcps
@@ -70,6 +72,14 @@ public abstract class Server {
     private long waitReceivedTime = 80;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public JSONParser getJsonParser() {
+        return jsonParser;
+    }
+
+    public void setJsonParser(JSONParser jsonParser) {
+        this.jsonParser = jsonParser;
+    }
 
     public IdWorker getIdWorker() {
         return idWorker;

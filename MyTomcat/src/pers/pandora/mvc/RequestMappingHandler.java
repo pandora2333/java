@@ -529,7 +529,7 @@ public final class RequestMappingHandler {
         for (String path : paths) {
             scanFile(BeanPool.checkPath(path));
         }
-        BeanPool.waitFutures(result,timeOut,timeOutUnit);
+        BeanPool.waitFutures(result, timeOut, timeOutUnit);
         executor.shutdown();
         executor = null;
         result = null;
