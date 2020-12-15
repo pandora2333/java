@@ -55,9 +55,10 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         server.slavePool.submit(() -> {
             try {
                 //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
-                Thread.sleep(80);
+                Thread.sleep(server.getWaitReceivedTime());
                 completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
+                //writePendingExceptiion
                 failed(e, att);
             }
         });
@@ -188,6 +189,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     @Override
     public void failed(Throwable t, Attachment att) {
+        //WritePendingException or Connection_Closed_Exception
         server.close(att, this);
     }
 
