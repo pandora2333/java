@@ -47,7 +47,7 @@ import java.util.concurrent.Executors;
  */
 public class WebSocketServer extends Server {
 
-    private final Map<String, WebSocketSession> clients = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketSession> clients = new ConcurrentHashMap<>(16);
     //Allowed maximum number of transmitted information bits
     private int maxWSBits = 1024 * 1024;
 

@@ -69,7 +69,7 @@ public final class MapperProxyHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            List<Object> list = new ArrayList<>();
+            List<Object> list = new ArrayList<>(1);
             boolean notUnique = handleSQL(method, args, list);
             if (list.size() == 0) {
                 return null;
@@ -149,7 +149,7 @@ public final class MapperProxyHandler {
             DynamicSql dynamicSql = sqls.stream().filter(sql -> method.getName().equals(sql.getId())).findFirst().get();
             String sql = dynamicSql.getSql();
             assert StringUtils.isNotEmpty(sql);
-            List<Object> params = new ArrayList<>();
+            List<Object> params = new ArrayList<>(args.length);
             String cacheSql = tokenSpec(sql, args, params);
             String tableName = getTableName(cacheSql, SQL.FROM, XML.WHERE);
             String key = cacheFactory != null ? cacheFactory.createKey(tableName, cacheSql) : null;

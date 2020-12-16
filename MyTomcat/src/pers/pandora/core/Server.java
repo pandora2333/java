@@ -300,8 +300,8 @@ public abstract class Server {
     public abstract void start(int port);
 
     protected void execExpelThread() {
-        final List<String> invalidKey = new ArrayList<>();
-        final List<String> validKey = new ArrayList<>();
+        final List<String> invalidKey = new ArrayList<>(10);
+        final List<String> validKey = new ArrayList<>(1);
         Thread invalidResourceExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {

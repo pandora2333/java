@@ -40,7 +40,7 @@ public class XMLFactory {
     private Map<String, String> urlMapping;
 
     public XMLFactory() {
-        urlMapping = new ConcurrentHashMap<>();
+        urlMapping = new ConcurrentHashMap<>(16);
         try {
             sax = SAXParserFactory.newInstance().newSAXParser();
         } catch (Exception e) {

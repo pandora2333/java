@@ -192,12 +192,12 @@ public final class Request {
     }
 
     public Request(Dispatcher dispatcher) {
-        params = new HashMap<>();
+        params = new HashMap<>(4);
         jspParser = new JspParser();
-        uploadFiles = new HashMap<>();
-        cookies = new ArrayList<>();
+        uploadFiles = new HashMap<>(4);
+        cookies = new ArrayList<>(1);
         this.dispatcher = dispatcher;
-        filePaths = new HashMap<>();
+        filePaths = new HashMap<>(4);
     }
 
     public void setJspParser(JspParser jspParser) {

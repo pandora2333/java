@@ -144,7 +144,7 @@ public final class BeanPool {
             return;
         }
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
-        result = new ArrayList<>();
+        result = new ArrayList<>(10);
         //init AOP Config
         if (aopPaths != null && aopPaths.length != 0) {
             interceptors = new CopyOnWriteArraySet<>();

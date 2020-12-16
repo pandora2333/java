@@ -154,7 +154,7 @@ public final class RequestMappingHandler {
      * @throws Exception
      */
     public void parseUrl(ModelAndView modelAndView) {
-        Map<String, Object> valueObject = new HashMap<>();
+        Map<String, Object> valueObject = new HashMap<>(4);
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
         boolean restful = false;
         String[] tmp = null;
@@ -195,10 +195,10 @@ public final class RequestMappingHandler {
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object objects[] = new Object[parameterTypes.length];
-        Map<Integer, String> paramNames = new HashMap<>();
-        Map<Integer, String> restfulParamNames = new HashMap<>();
-        Map<String, String> restfulParamValues = new HashMap<>();
-        Map<String, String> defaultValues = new HashMap<>();
+        Map<Integer, String> paramNames = new HashMap<>(4);
+        Map<Integer, String> restfulParamNames = new HashMap<>(4);
+        Map<String, String> restfulParamValues = new HashMap<>(4);
+        Map<String, String> defaultValues = new HashMap<>(4);
         Map<String, List<Object>> params = modelAndView.getRequest().getParams();
         Annotation[][] annotations = method.getParameterAnnotations();
         for (int i = 0; i < annotations.length; i++) {
@@ -268,7 +268,7 @@ public final class RequestMappingHandler {
         try {
             Object result = method.invoke(controller, objects);
             if (modelAndView.isJson()) {
-                List<Object> temp = new LinkedList<>();
+                List<Object> temp = new ArrayList<>(1);
                 temp.add(result);
                 modelAndView.getRequest().getParams().put(Response.PLAIN, temp);
                 modelAndView.setPage(HTTPStatus.PLAIN);
@@ -360,8 +360,8 @@ public final class RequestMappingHandler {
     //Using ASM to operate class bytecode file to get parameter name
     @Deprecated
     public void handleMethodParamNames(Class<?> t) {
-        Map<String, Integer> modifers = new HashMap<>();
-        Map<String, String[]> paramNames = new HashMap<>();
+        Map<String, Integer> modifers = new HashMap<>(4);
+        Map<String, String[]> paramNames = new HashMap<>(4);
         for (Method method : t.getDeclaredMethods()) {
             if (method.isAnnotationPresent(RequestMapping.class)) {
                 StringBuilder key = new StringBuilder(t.getName());
@@ -523,7 +523,7 @@ public final class RequestMappingHandler {
             logger.warn("No path loaded");
             return;
         }
-        result = new ArrayList<>();
+        result = new ArrayList<>(10);
         interceptors = Collections.synchronizedSortedSet(new TreeSet<>(CMP));
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         for (String path : paths) {

@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public abstract class SerialSessionSupport {
     //the same JVM strategy
-    private static final Map<String, Map<String,Session>> SESSIONPOOL = new ConcurrentHashMap<>(16);
+    private static final Map<String, Map<String,Session>> SESSIONPOOL = new ConcurrentHashMap<>(4);
     //exclude Session
     private static final Set<String> EXCLUDESESSIONS = new CopyOnWriteArraySet<>();
     //create session file

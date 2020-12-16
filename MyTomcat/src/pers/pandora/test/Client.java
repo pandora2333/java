@@ -47,8 +47,8 @@ public class Client {
     public static void testStartUper(){
         //It gives two ways to init-servers:
         //1.Absolute path
-        //2.Relative path:It is relative to the current project directory. If it is under SRC, it should be src/ + your path
-        StartUper startUper = new StartUper("src/Pandora_test_1.properties","src/Pandora_test_ws_1.properties");
+        //2.Relative path:It is relative to the current project directory. If it is under SRC, it should be src/ + your path  "src/Pandora_test_ws_1.properties"
+        StartUper startUper = new StartUper("src/Pandora_test_1.properties");
         startUper.start(true);
 
     }

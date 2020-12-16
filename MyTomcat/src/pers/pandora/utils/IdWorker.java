@@ -18,7 +18,7 @@ public class IdWorker {
 
     protected long workerIdBits = 10L;
 
-    protected long maxWorkerId = -1L ^ (-1L << workerIdBits);
+    protected long maxWorkerId = ~(-1L << workerIdBits);
 
     protected long sequenceBits = 11L;
 
@@ -26,7 +26,7 @@ public class IdWorker {
 
     protected long timestampLeftShift = sequenceBits + workerIdBits;
 
-    protected long sequenceMask = -1L ^ (-1L << sequenceBits);
+    protected long sequenceMask = ~(-1L << sequenceBits);
 
     protected long lastMillis = -1L;
 

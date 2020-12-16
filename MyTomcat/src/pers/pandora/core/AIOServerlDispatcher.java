@@ -170,7 +170,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                             if (objects != null) {
                                 objects.add(varValue);
                             } else {
-                                objects = new ArrayList<>();
+                                objects = new ArrayList<>(1);
                                 objects.add(varValue.trim());
                                 request.getParams().put(varName, objects);
                             }

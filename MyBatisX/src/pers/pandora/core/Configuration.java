@@ -134,7 +134,7 @@ public final class Configuration {
         assert dbPool != null;
         dbPool.init();
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
-        result = new ArrayList<>();
+        result = new ArrayList<>(10);
         for (String path : paths) {
             scanFile(checkPath(path));
         }

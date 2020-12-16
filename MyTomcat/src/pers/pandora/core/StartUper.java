@@ -106,7 +106,7 @@ public final class StartUper {
 
     //It should not run in a multi-thread environment
     public void start(boolean blockingThread) {
-        List<Server> servers = new ArrayList<>();
+        List<Server> servers = new ArrayList<>(paths.length);
         Properties properties;
         java.io.File file;
         InputStream inputStream = null;
