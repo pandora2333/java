@@ -19,17 +19,25 @@ public class PBEDataBaseCoder implements DataBaseCoder {
     //Encrypted random string or password
     private static final char[] PASSWORD = {'P', 'a', 'n', 'd', 'o', 'r', 'a', 'O', 'R', 'M', 'S', 'e', 'c', 'u', 'r', 'e', 'K', 'e', 'y'};
 
-    private static Cipher encoder;
+    private static final byte[] SALT = {12, 23, -63, -23, -86, -87, 33, -9};
 
-    private static Cipher decoder;
+    private Cipher encoder;
 
-    static {
+    private Cipher decoder;
+    //
+    public PBEDataBaseCoder(byte[] salt,char[] password){
+        if(password == null || password.length == 0){
+            password = PASSWORD;
+        }
+        if(salt == null || salt.length == 0){
+            salt = SALT;
+        }
         try {
-            PBEKeySpec pbeKeySpec = new PBEKeySpec(PASSWORD);
+            PBEKeySpec pbeKeySpec = new PBEKeySpec(password);
             SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE);
             Key key = factory.generateSecret(pbeKeySpec);
             //new SecureRandom().generateSeed(8);
-            PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(new byte[]{12, 23, -63, -23, -86, -87, 33, -9}, 100);
+            PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
             encoder = Cipher.getInstance(PBE);
             decoder = Cipher.getInstance(PBE);
             encoder.init(Cipher.ENCRYPT_MODE, key, pbeParameterSpec);

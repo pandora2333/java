@@ -16,14 +16,14 @@ public class testMyBatisX {
 
     public static void test02(){
         MBG mbg = new MBG("src/dd_test.properties");
-        mbg.setDataBaseCoder(new PBEDataBaseCoder());
+        mbg.setDataBaseCoder(new PBEDataBaseCoder(null,null));
         try {
             mbg.parseXML("src/mbg.xml");
         } catch (DocumentException e) {
             e.printStackTrace();
         }
         mbg = new MBG("src/dbpool.properties");
-        mbg.setDataBaseCoder(new PBEDataBaseCoder());
+        mbg.setDataBaseCoder(new PBEDataBaseCoder(null,null));
         try {
             mbg.parseXML("src/mbg.xml");
         } catch (DocumentException e) {
@@ -76,7 +76,7 @@ public class testMyBatisX {
         //firstly, set dbProperties file
         configuration.setDbPoolProperties("src/dd_test.properties");
         //secondly, set DataBaseCoder
-        configuration.setDataBaseCoder(new PBEDataBaseCoder());
+        configuration.setDataBaseCoder(new PBEDataBaseCoder(null,null));
         configuration.setTransactionProxyFactory(new JDKTransactionProxyFactory());
         configuration.init("pers.pandora.test.dd");
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactory(configuration);
