@@ -1,6 +1,6 @@
 package pers.pandora.core;
 
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
@@ -49,7 +49,7 @@ public class PBEDataBaseCoder implements DataBaseCoder {
     }
 
     public String encode(String origin) {
-        if (!StringUtils.isNotEmpty(origin)) {
+        if (!StringUtil.isNotEmpty(origin)) {
             return origin;
         }
         byte[] res = null;
@@ -62,7 +62,7 @@ public class PBEDataBaseCoder implements DataBaseCoder {
     }
 
     public String decode(String encode) {
-        if (!StringUtils.isNotEmpty(encode)) {
+        if (!StringUtil.isNotEmpty(encode)) {
             return encode;
         }
         byte[] res = Base64.getDecoder().decode(encode.getBytes());

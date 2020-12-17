@@ -13,7 +13,7 @@ import pers.pandora.mbg.ColumnInfo;
 import pers.pandora.mbg.JavaGetSetter;
 import pers.pandora.mbg.TableInfo;
 import pers.pandora.utils.Dom4JUtil;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 import pers.pandora.utils.TypeConverter;
 
 import java.io.*;
@@ -201,7 +201,7 @@ public class MBG {
     private String checkPKType(TableInfo tableInfo) {
         if (tableInfo.getPks().size() == 1) {
             String autoPk = TypeConverter.databaseType2JavaType(tableInfo.getPks().get(0).getDataType());
-            if (StringUtils.isNotEmpty(autoPk) && (autoPk.equals(ENTITY.INTEGER) || autoPk.equals(ENTITY.LONG))) {
+            if (StringUtil.isNotEmpty(autoPk) && (autoPk.equals(ENTITY.INTEGER) || autoPk.equals(ENTITY.LONG))) {
                 return autoPk;
             }
         }
@@ -236,7 +236,7 @@ public class MBG {
                 append(XML.SELECT_END).append(ENTITY.LINE);
         xmlContent.append(ENTITY.TAB).append(XML.INSERT).append(XML.BLANK).append(SQL.ID).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(SQL.INSERT).append(XML.QUOTATION);
         boolean autoPk = false;
-        if (StringUtils.isNotEmpty(checkPKType(tableInfo))) {
+        if (StringUtil.isNotEmpty(checkPKType(tableInfo))) {
             autoPk = true;
             judgePK(xmlContent, tableInfo.getPks().get(0).getColumnName());
         }
@@ -353,7 +353,7 @@ public class MBG {
         String xmlPackage = rootElement.element(XML.XMLPACKAGE).getTextTrim();
         Element table = rootElement.element(XML.TABLE);
         String way = table.attributeValue(XML.WAY);
-        if (StringUtils.isNotEmpty(way) && way.equals(XML.SINGLETON)) {
+        if (StringUtil.isNotEmpty(way) && way.equals(XML.SINGLETON)) {
             way = table.getTextTrim();
         } else {
             way = XML.WAY_ALL;

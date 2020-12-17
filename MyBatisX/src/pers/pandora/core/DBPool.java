@@ -2,9 +2,8 @@ package pers.pandora.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -67,7 +66,7 @@ public class DBPool {
     }
 
     public DBPool(String dbProperties) {
-        assert StringUtils.isNotEmpty(dbProperties);
+        assert StringUtil.isNotEmpty(dbProperties);
         this.dbProperties = dbProperties;
         InputStream inputStream = null;
         try {

@@ -10,12 +10,10 @@ import pers.pandora.constant.LOG;
 import pers.pandora.constant.SQL;
 import pers.pandora.constant.XML;
 import pers.pandora.utils.Dom4JUtil;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class SqlSession {
 
@@ -47,13 +45,13 @@ public class SqlSession {
         List<Element> inserts = doc.getRootElement().elements(SQL.INSERT);
         List<Element> updates = doc.getRootElement().elements(SQL.UPDATE);
         List<Element> deletes = doc.getRootElement().elements(SQL.DELETE);
-        List<DynamicSql> proxys = new ArrayList<>();
+        List<DynamicSql> proxys = new ArrayList<>(4);
         selects.forEach(element -> {
             String select = element.attributeValue(SQL.ID);
             String resultType = element.attributeValue(XML.RESULTTYPE);
             String sql = element.getTextTrim();
             DynamicSql selectSql = null;
-            if (StringUtils.isNotEmpty(sql)) {
+            if (StringUtil.isNotEmpty(sql)) {
                 selectSql = new DynamicSql(SQL.SELECT, select, resultType, sql);
             }
             if (selectSql != null) {
@@ -64,10 +62,10 @@ public class SqlSession {
             String insert = element.attributeValue(SQL.ID);
             String sql = element.getTextTrim();
             DynamicSql insertSql = null;
-            if (StringUtils.isNotEmpty(sql)) {
+            if (StringUtil.isNotEmpty(sql)) {
                 insertSql = new DynamicSql(SQL.INSERT, insert, null, sql);
                 String useAutoKey = element.attributeValue(XML.USEGENERATEDKKEYS);
-                if (StringUtils.isNotEmpty(useAutoKey)) {
+                if (StringUtil.isNotEmpty(useAutoKey)) {
                     insertSql.setUseGeneratedKey(Boolean.valueOf(useAutoKey));
                     insertSql.setPkName(element.attributeValue(XML.KEPPROPERTY));
                 }
@@ -80,7 +78,7 @@ public class SqlSession {
             String delete = element.attributeValue(SQL.ID);
             String sql = element.getTextTrim();
             DynamicSql deleteSql = null;
-            if (StringUtils.isNotEmpty(sql)) {
+            if (StringUtil.isNotEmpty(sql)) {
                 deleteSql = new DynamicSql(SQL.DELETE, delete, null, sql);
             }
             if (deleteSql != null) {
@@ -91,7 +89,7 @@ public class SqlSession {
             String update = element.attributeValue(SQL.ID);
             String sql = element.getTextTrim();
             DynamicSql updateSql = null;
-            if (StringUtils.isNotEmpty(sql)) {
+            if (StringUtil.isNotEmpty(sql)) {
                 updateSql = new DynamicSql(SQL.UPDATE, update, null, sql);
             }
             if (updateSql != null) {
@@ -99,13 +97,13 @@ public class SqlSession {
             }
         });
         try {
-            List<DynamicSql> makeMethod = new LinkedList<>();
+            Map<String,DynamicSql> makeMethod = new HashMap<>(8);
             Class tClass = Class.forName(proxyClass);
             if (tClass.isInterface()) {
                 for (Method method : tClass.getDeclaredMethods()) {
                     for (DynamicSql dynamicSql : proxys) {
                         if (dynamicSql.getId().equals(method.getName())) {
-                            makeMethod.add(dynamicSql);
+                            makeMethod.put(dynamicSql.getId(),dynamicSql);
                         }
                     }
                 }

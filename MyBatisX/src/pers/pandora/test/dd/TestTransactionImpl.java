@@ -5,6 +5,7 @@ import pers.pandora.annotation.Transaction;
 import pers.pandora.annotation.Transactional;
 import pers.pandora.test.dd.mapper.TestMapper;
 
+@Deprecated
 @Transaction
 public class TestTransactionImpl implements TestTransaction {
 
@@ -12,6 +13,6 @@ public class TestTransactionImpl implements TestTransaction {
     @Override
     public void test(int a, int b, int d, int id, TestMapper mapper) {
         System.out.println(mapper.queryForOne(a, b, d, id));
-        throw new RuntimeException("test rollback");
+//        throw new RuntimeException("test rollback");
     }
 }

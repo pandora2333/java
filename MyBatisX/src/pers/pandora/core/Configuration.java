@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
 import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 
 import java.io.File;
 
@@ -18,8 +18,6 @@ import java.util.concurrent.*;
 public final class Configuration {
 
     private static Logger logger = LogManager.getLogger(Configuration.class);
-
-    private final Map<String, Class<?>> beans = new ConcurrentHashMap<>(16);
     //Entity class and attribute corresponding table associated with field alias
     private final Map<String, String> alias = new ConcurrentHashMap<>(16);
     //Transaction Proxy Factory
@@ -161,21 +159,6 @@ public final class Configuration {
         return path.replaceAll(ENTITY.FILE_REGEX_SPLITER, String.valueOf(ENTITY.SLASH));
     }
 
-    public <T> T getTableObject(String tableName) {
-        if (StringUtils.isNotEmpty(tableName)) {
-            try {
-                return (T) Objects.requireNonNull(getTableObjectType(tableName)).newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                logger.error("getTableObject" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-            }
-        }
-        return null;
-    }
-
-    public Class<?> getTableObjectType(String tableName) {
-        return beans.get(tableName);
-    }
-
     private void scanFile(String path) {
         File files = new File(path);
         if (files.exists()) {
@@ -197,36 +180,27 @@ public final class Configuration {
 
     private <T> void scanBean(Class<T> t, Field field, Class template) {
         if (template == Table.class) {
-            for (Annotation annotation : t.getDeclaredAnnotations()) {
-                if (annotation instanceof Table) {
-                    String table = ((Table) annotation).value();
-                    if (!StringUtils.isNotEmpty(table)) {
-                        table = t.getSimpleName().substring(0, 1).toLowerCase() + t.getSimpleName().substring(1);
-                    }
-                    beans.put(table, t);
-                    scanField(t);
-                }
+            if (t.isAnnotationPresent(template)) {
+                scanField(t);
             }
-        } else if (template == Id.class || template == Column.class) {
+        } else {
             if (field != null) {
                 try {
                     String fieldValue = null;
                     if (template == Id.class) {
                         Id id = field.getAnnotation(Id.class);
-                        fieldValue = id.value();
-                        if (!StringUtils.isNotEmpty(fieldValue)) {
-                            fieldValue = field.getName();
+                        if(id != null) {
+                            fieldValue = id.value();
                         }
                     } else {
                         Column column = field.getAnnotation(Column.class);
                         if (column != null) {
                             fieldValue = column.value();
-                            if (!StringUtils.isNotEmpty(fieldValue)) {
-                                fieldValue = field.getName();
-                            }
                         }
                     }
-                    alias.put(fieldValue, field.getName());
+                    if(StringUtil.isNotEmpty(fieldValue)){
+                        alias.put(fieldValue, field.getName());
+                    }
                 } catch (Exception e) {
                     logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
                 }

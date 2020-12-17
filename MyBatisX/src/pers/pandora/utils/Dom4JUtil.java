@@ -23,11 +23,11 @@ public class Dom4JUtil {
 
     @Deprecated
     public static void update(Document doc, String path,String encoding) throws IOException {
-        if(doc == null || !StringUtils.isNotEmpty(path)){
+        if(doc == null || !StringUtil.isNotEmpty(path)){
             return;
         }
         OutputFormat format = OutputFormat.createPrettyPrint();
-        if(!StringUtils.isNotEmpty(encoding)){
+        if(!StringUtil.isNotEmpty(encoding)){
             encoding = LOG.DEFAULTENCODING;
         }
         format.setEncoding(encoding);

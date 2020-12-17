@@ -1,7 +1,7 @@
 package pers.pandora.core;
 
 import pers.pandora.constant.ENTITY;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.StringUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,7 +12,7 @@ public class SimpleMapCacheFactory implements CacheFactory {
 
     @Override
     public void put(String key, Object object) {
-        if (!StringUtils.isNotEmpty(key)) {
+        if (!StringUtil.isNotEmpty(key)) {
             return;
         }
         String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
@@ -30,7 +30,7 @@ public class SimpleMapCacheFactory implements CacheFactory {
 
     @Override
     public Object get(String key) {
-        if (!StringUtils.isNotEmpty(key)) {
+        if (!StringUtil.isNotEmpty(key)) {
             return null;
         }
         String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
@@ -46,7 +46,7 @@ public class SimpleMapCacheFactory implements CacheFactory {
 
     @Override
     public void removeKey(String key) {
-        if (!StringUtils.isNotEmpty(key)) {
+        if (!StringUtil.isNotEmpty(key)) {
             return;
         }
         String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);

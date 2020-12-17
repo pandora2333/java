@@ -6,8 +6,8 @@ import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.SQL;
 import pers.pandora.constant.XML;
-import pers.pandora.utils.ClassUtils;
-import pers.pandora.utils.StringUtils;
+import pers.pandora.utils.ClassUtil;
+import pers.pandora.utils.StringUtil;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -49,7 +49,7 @@ public final class MapperProxyHandler {
      * @return Mapper proxy implementation object
      * @throws Exception
      */
-    public <T> T parseMethod(List<DynamicSql> dynamicSqls, Class<T> proxy) {
+    public <T> T parseMethod(Map<String, DynamicSql> dynamicSqls, Class<T> proxy) {
         SQLProxyHandler sqlProxyHandler = new SQLProxyHandler();
         sqlProxyHandler.setSqls(dynamicSqls);
         return (T) Proxy.newProxyInstance(proxy.getClassLoader(), new Class[]{proxy}, sqlProxyHandler);
@@ -61,9 +61,9 @@ public final class MapperProxyHandler {
     private class SQLProxyHandler implements InvocationHandler {
 
         //SQL statement storage
-        private List<DynamicSql> sqls;
+        private Map<String, DynamicSql> sqls;
 
-        public void setSqls(List<DynamicSql> sqls) {
+        public void setSqls(Map<String, DynamicSql> sqls) {
             this.sqls = sqls;
         }
 
@@ -82,22 +82,43 @@ public final class MapperProxyHandler {
          * Note: Property assignment of setter method based on JavaBean
          *
          * @param rs
-         * @param target
+         * @param resultType
          * @param list
          */
-        private void handleField(ResultSet rs, Object target, List<Object> list) {
+        private void handleField(ResultSet rs, String resultType, List<Object> list) {
+            if (!StringUtil.isNotEmpty(resultType)) {
+                return;
+            }
+            Class<?> tClass = ClassUtil.getClass(resultType);
+            assert tClass != null;
+            if (ClassUtil.checkBasicClass(tClass)) {
+                try {
+                    rs.next();
+                } catch (SQLException e) {
+                    //ignore
+                }
+                try {
+                    list.add(rs.getObject(1));
+                } catch (SQLException e) {
+                    //ignore
+                }
+                return;
+            }
             ResultSetMetaData metaData;
             assert configuration != null;
             Map<String, String> alias = configuration.getAlias();
             try {
                 metaData = rs.getMetaData();
+                String columnName, alia;
+                Object columnValue, rowObj;
                 while (rs.next()) {
-                    Object rowObj = target.getClass().newInstance();
+                    rowObj = ClassUtil.getInstance(tClass);
                     for (int i = 0; i < metaData.getColumnCount(); i++) {
-                        String columnName = metaData.getColumnLabel(i + 1);
-                        Object columnValue = rs.getObject(i + 1);
-                        if (alias.get(columnName) != null) {
-                            columnName = alias.get(columnName);
+                        columnName = metaData.getColumnLabel(i + 1);
+                        columnValue = rs.getObject(i + 1);
+                        alia = alias.get(columnName);
+                        if (StringUtil.isNotEmpty(alia)) {
+                            columnName = alia;
                         }
                         invokeSet(rowObj, columnName, columnValue);
                     }
@@ -120,14 +141,8 @@ public final class MapperProxyHandler {
             Method m;
             try {
                 if (columnValue != null) {
-                    if (columnValue.getClass() == Long.class || columnValue.getClass() == Integer.class) {
-                        m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
-                                + columnName.substring(1), Integer.class);
-                        columnValue = Integer.valueOf(String.valueOf(columnValue));
-                    } else {
-                        m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
-                                + columnName.substring(1), columnValue.getClass());
-                    }
+                    m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
+                            + columnName.substring(1), columnValue.getClass());
                     m.invoke(obj, columnValue);
                 }
             } catch (Exception e) {
@@ -146,9 +161,10 @@ public final class MapperProxyHandler {
          */
         private boolean handleSQL(Method method, Object[] args, List<Object> list) throws Exception {
             assert configuration != null;
-            DynamicSql dynamicSql = sqls.stream().filter(sql -> method.getName().equals(sql.getId())).findFirst().get();
+            DynamicSql dynamicSql = sqls.get(method.getName());
+            assert dynamicSql != null;
             String sql = dynamicSql.getSql();
-            assert StringUtils.isNotEmpty(sql);
+            assert StringUtil.isNotEmpty(sql);
             List<Object> params = new ArrayList<>(args.length);
             String cacheSql = tokenSpec(sql, args, params);
             String tableName = getTableName(cacheSql, SQL.FROM, XML.WHERE);
@@ -177,12 +193,12 @@ public final class MapperProxyHandler {
             ResultSet rs = null;
             if (dynamicSql.getMethod().equals(SQL.SELECT)) {
                 rs = st.executeQuery();
-                handleField(rs, configuration.getTableObject(tableName), list);
+                handleField(rs, dynamicSql.getResultType(), list);
             } else if (dynamicSql.getMethod().equals(SQL.INSERT) || dynamicSql.getMethod().equals(SQL.UPDATE)
                     || dynamicSql.getMethod().equals(SQL.DELETE)) {
                 st.execute();
                 //get pk value
-                if (dynamicSql.getMethod().equals(SQL.INSERT) && dynamicSql.isUseGeneratedKey() && StringUtils.isNotEmpty(dynamicSql.getPkName())) {
+                if (dynamicSql.getMethod().equals(SQL.INSERT) && dynamicSql.isUseGeneratedKey() && StringUtil.isNotEmpty(dynamicSql.getPkName())) {
                     tableName = getTableName(sql, XML.INTO, XML.VALUE);
                     rs = st.executeQuery(SQL.SELECT + XML.BLANK + SQL.MAX + ENTITY.LEFT_BRACKET + dynamicSql.getPkName()
                             + ENTITY.RIGHT_BRACKET + XML.BLANK + SQL.FROM + XML.BLANK + tableName);
@@ -279,7 +295,7 @@ public final class MapperProxyHandler {
             Object param = null;
             String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
             String quotation = String.valueOf(SQL.QUOTATION);
-            boolean vo = !ClassUtils.checkBasicClass(args[0].getClass());
+            boolean vo = !ClassUtil.checkBasicClass(args[0].getClass());
             while (matcher.find()) {
                 if (vo) {
                     String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
