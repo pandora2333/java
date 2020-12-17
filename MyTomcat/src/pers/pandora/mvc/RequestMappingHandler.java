@@ -274,7 +274,13 @@ public final class RequestMappingHandler {
                 modelAndView.setPage(HTTPStatus.PLAIN);
                 modelAndView.getResponse().setServlet(MVC_CLASS);
             } else {
-                modelAndView.setPage(result.toString());
+                String page = (String) result;
+                if (StringUtils.isNotEmpty(page) && page.startsWith(HTTPStatus.REDIRECT)) {
+                    modelAndView.getRequest().setRedirect(true);
+                    page = page.substring(page.indexOf(HTTPStatus.COLON) + 1);
+                }
+                modelAndView.setPage(page);
+                modelAndView.getRequest().setReqUrl(page);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +

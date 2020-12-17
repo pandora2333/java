@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
@@ -60,6 +61,20 @@ public final class Request {
     private boolean json;
 
     private JSONParser jsonParser;
+
+    private boolean redirect;
+
+    public void setReqUrl(String reqUrl) {
+        this.reqUrl = reqUrl;
+    }
+
+    public boolean isRedirect() {
+        return redirect;
+    }
+
+    public void setRedirect(boolean redirect) {
+        this.redirect = redirect;
+    }
 
     public JSONParser getJsonParser() {
         return jsonParser;
@@ -267,6 +282,13 @@ public final class Request {
     }
 
     public String handle(String msg) {
+        try {
+            msg = URLDecoder.decode(msg, charset);
+        } catch (UnsupportedEncodingException e) {
+            logger.error("decode URL" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            dispatcher.response.setCode(HTTPStatus.CODE_404);
+            return null;
+        }
         flag = true;
         if (msg.startsWith(HTTPStatus.OPTIONS)) {
             method = HTTPStatus.OPTIONS;
@@ -275,7 +297,7 @@ public final class Request {
         //handle request head
         msg = handleHeadInfo(msg);
         String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
-        json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON);
+        json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON_TYPE);
         int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
         if (index > 0) {
             reqUrl = reqToken.substring(0, index);
@@ -314,17 +336,16 @@ public final class Request {
             return null;
         }
         parseParams(reqToken, true);
-        if (isMVC(reqUrl)) {
-            return RequestMappingHandler.MVC_CLASS;
-        }
         if (reqUrl.contains(HTTPStatus.JSP)) {
             Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher.server.isHotLoadJSP());
             if (parse != null) {
                 dispatcher.addUrlMapping(parse.getK2(), parse.getV());
+                dispatcher.response.setType(HTTPStatus.TEXT_HTML);
                 return parse.getK1();
-            } else {
-                return null;
             }
+        }
+        if (isMVC(reqUrl)) {
+            return RequestMappingHandler.MVC_CLASS;
         }
         return dispatcher.server.getContext().get(reqUrl);
 
@@ -336,7 +357,7 @@ public final class Request {
         }
         List<Object> tmp = new ArrayList<>(1);
         tmp.add(param);
-        params.put(HTTPStatus.JSON, tmp);
+        params.put(HTTPStatus.JSON_TYPE, tmp);
     }
 
     private String handleHeadInfo(String msg) {
@@ -373,6 +394,7 @@ public final class Request {
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
         cookie.setNeedUpdate(true);
+        session.setSessionCookie(cookie);
         //sessionID will be add cookie, and it's path set the root path
         cookie.setPath(String.valueOf(HTTPStatus.SLASH));
         dispatcher.server.addSessionMap(session.getSessionID(), session);
@@ -426,10 +448,25 @@ public final class Request {
             if (reqToken.endsWith(HTTPStatus.HTML_MARK) || reqToken.endsWith(HTTPStatus.HTM_MARK)) {
                 return HTTPStatus.TEXT_HTML + HTTPStatus.COLON;
             }
-            if (reqToken.endsWith(HTTPStatus.JPG) || reqToken.endsWith(HTTPStatus.PNG) || reqToken.endsWith(HTTPStatus.JPEG)) {
-                return HTTPStatus.IMAGE_TYPE + HTTPStatus.COLON;
+            if (reqToken.endsWith(HTTPStatus.JPG) || reqToken.endsWith(HTTPStatus.JPEG)) {
+                return HTTPStatus.JPG_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.PNG)) {
+                return HTTPStatus.PNG_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.XML)) {
+                return HTTPStatus.XML_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.GIF)) {
+                return HTTPStatus.GIF_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.JSON)) {
+                return HTTPStatus.JSON_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.PDF)) {
+                return HTTPStatus.PDF_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.JS)) {
+                return HTTPStatus.JS_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.CSS)) {
+                return HTTPStatus.CSS_TYPE + HTTPStatus.COLON;
             }
-            return HTTPStatus.PLAIN + HTTPStatus.COLON;
+            //default binary data
+            return HTTPStatus.BINARY_TYPE + HTTPStatus.COLON;
         }
         return null;
     }
@@ -478,6 +515,7 @@ public final class Request {
                 cookie.setValue(sessionID);
                 //sessionID will be add cookie, and it's path set the root path
                 cookie.setPath(String.valueOf(HTTPStatus.SLASH));
+                session.setSessionCookie(cookie);
             }
         }
     }
@@ -513,6 +551,7 @@ public final class Request {
         fileDesc = null;
         servlet = null;
         json = false;
+        redirect = false;
         jsonParser = dispatcher.server.getJsonParser();
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
@@ -545,7 +584,7 @@ public final class Request {
         if (jsonParser == null) {
             return;
         }
-        List<Object> list = params.get(HTTPStatus.JSON);
+        List<Object> list = params.get(HTTPStatus.JSON_TYPE);
         if (CollectionUtil.isNotEmptry(list)) {
             Map<String, Object> objectMap = null;
             try {
@@ -560,7 +599,11 @@ public final class Request {
                     params.put(k, tmp);
                 });
             }
-            params.remove(HTTPStatus.JSON);
+            params.remove(HTTPStatus.JSON_TYPE);
         }
+    }
+
+    public void dispatcher(String path) {
+        dispatcher.dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + path + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
     }
 }

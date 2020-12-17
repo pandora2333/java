@@ -23,6 +23,16 @@ abstract class Dispatcher {
 
     protected Response response;
 
+    protected boolean keepAlive;
+
+    public boolean isKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
     void addUrlMapping(String url, String mvcClass) {
         if (StringUtils.isNotEmpty(url)) {
             server.getContext().put(url, mvcClass);
@@ -55,7 +65,7 @@ abstract class Dispatcher {
                     server.getRequestMappingHandler().parseUrl(mv);
                     handleAfter();
                     if (StringUtils.isNotEmpty(mv.getPage())) {
-                        if (mv.isJson()) {
+                        if (mv.isJson() || request.isRedirect()) {
                             pushClient(response.handle(HTTPStatus.GET, false), null);
                         } else {
                             request.setFlag(false);

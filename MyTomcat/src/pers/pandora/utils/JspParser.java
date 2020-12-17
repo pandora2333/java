@@ -28,13 +28,13 @@ public final class JspParser {
     //Hash encoding needed to generate jsp servlet class name
     private String hashEncode;
 
-    private static final String JSP_PACKAGE = "jsp";
-
-    private static final String CLASSDIR = "bin";
-
     private static final char PATH_SPLITER = '/';
 
+    private static final String JSP_PACKAGE = "jsp";
+
     private static final char PACKAGE_SPLITER = '.';
+
+    private static final String CLASSDIR = Objects.requireNonNull(JspParser.class.getClassLoader().getResource(String.valueOf(PACKAGE_SPLITER))).getPath();
 
     private static final String SALT = "PANDORA_SERVER_SECRET_KEY";
 
@@ -99,7 +99,7 @@ public final class JspParser {
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = Character.toUpperCase(servletName.charAt(0)) + servletName.substring(1);
             className = className + LOG.CLASS_NAME_SPLITER + query;
-            file = new File(CLASSDIR + PATH_SPLITER + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
+            file = new File(CLASSDIR + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
             className = JSP_PACKAGE + PACKAGE_SPLITER + className;
             if (file.exists()) {
                 return new Tuple<>(className, null, null);
@@ -179,7 +179,7 @@ public final class JspParser {
         ct.addMethod(CtMethod.make(buildService(javaCode), ct));
         ct.addMethod(CtMethod.make(buildDoGet(jsp), ct));
         ct.addMethod(CtMethod.make(buildDoPost(), ct));
-        ct.writeFile(CLASSDIR + PATH_SPLITER);
+        ct.writeFile(CLASSDIR);
         logger.info("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
     }
 

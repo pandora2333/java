@@ -3,6 +3,7 @@ package pers.pandora.servlet;
 import pers.pandora.annotation.Autowired;
 import pers.pandora.annotation.PropertySource;
 import pers.pandora.annotation.Value;
+import pers.pandora.constant.HTTPStatus;
 import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 import pers.pandora.test.Client;
@@ -35,10 +36,11 @@ public class TestServlet implements Servlet {
         sb.append("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/><title>")
                 .append("picture")
                 .append("</title></head><body>")
-//                .append("<img src='http://localhost:8080/static/114.png'></img>")
-//                .append("<img src='http://localhost:8080/static/1.png'></img>")
+                .append("<img src='http://localhost:8080/static/114.png'></img>")
+                .append("<img src='http://localhost:8080/static/1.png'></img>")
                 .append("test page")
                 .append("</body></html>");
+        response.setType(HTTPStatus.TEXT_HTML);
         return sb.toString();
     }
 

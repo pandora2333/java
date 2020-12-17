@@ -16,7 +16,7 @@ public class TestController {
     public String login(Request request, @RequestBody User user, Response response) {
         System.out.println("user login:" + user);
         response.addHeads("test", "test response add head");
-        return "/test.jsp";
+        return "@redirect:/test.jsp";
     }
 
     @RequestMapping(value = "/loginUser2.do")

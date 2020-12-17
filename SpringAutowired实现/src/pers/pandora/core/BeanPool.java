@@ -186,13 +186,18 @@ public final class BeanPool {
         unBeanInjectMap.forEach((k, v) -> {
             for (Field field : v) {
                 Autowired fieldSrc = field.getAnnotation(Autowired.class);
-                if (beans.containsKey(fieldSrc.value())) {
+                String name = fieldSrc.value();
+                //Try byName injection first. If there is no corresponding bean, try byType injection again
+                if (!StringUtils.isNotEmpty(name)) {
+                    name = field.getName();
+                }
+                if (beans.containsKey(name)) {
                     try {
-                        field.set(k, beans.get(fieldSrc.value()));
+                        field.set(k, beans.get(name));
                     } catch (IllegalAccessException e) {
                         //ignore
                     }
-                } else if (fieldSrc.value().equals(LOG.NO_CHAR) && typeBeans.containsKey(field.getType())) {
+                } else if (typeBeans.containsKey(field.getType())) {
                     if (typeBeans.get(field.getType()).size() == 1) {
                         try {
                             field.set(k, typeBeans.get(field.getType()).get(0));

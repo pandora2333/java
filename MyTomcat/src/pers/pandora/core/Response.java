@@ -24,7 +24,7 @@ public final class Response {
     //response body data
     private byte[] content;
     //resource type for the response
-    private String type = HTTPStatus.TEXT_HTML;
+    private String type = HTTPStatus.PLAIN;
     //the response is the static resoucre
     private boolean resource;
     //PLAIN parser
@@ -165,6 +165,7 @@ public final class Response {
         //2.build response head
         headInfo.append(HTTPStatus.SERVER).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.SERVER_DESC).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.DATE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(new Date()).append(HTTPStatus.CRLF);
+        headInfo.append(HTTPStatus.CONNECTION).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(dispatcher.isKeepAlive() ? HTTPStatus.KEEPALIVE : HTTPStatus.CLOSE).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER)
                 .append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
@@ -228,7 +229,10 @@ public final class Response {
             dispatcher.handlePre();
         }
         try {
-            if (dispatcher.request.getParams().containsKey(PLAIN)) {
+            if (dispatcher.request.isRedirect()) {
+                code = HTTPStatus.CODE_302;
+                addHeads(HTTPStatus.LOCATION, dispatcher.request.getReqUrl());
+            } else if (dispatcher.request.getParams().containsKey(PLAIN)) {
                 type = HTTPStatus.PLAIN;
                 Object obj = dispatcher.request.getParams().get(PLAIN).get(0);
                 if (obj != null) {
@@ -255,6 +259,10 @@ public final class Response {
                         ret = handler.doGet(dispatcher.request, this);
                     } else if (method.equals(HTTPStatus.POST)) {
                         ret = handler.doPost(dispatcher.request, this);
+                    }
+                    if (dispatcher.request.isRedirect()) {
+                        code = HTTPStatus.CODE_302;
+                        addHeads(HTTPStatus.LOCATION, dispatcher.request.getReqUrl());
                     }
                     if (StringUtils.isNotEmpty(ret)) {
                         content = ret.getBytes(Charset.forName(charset));
@@ -287,6 +295,11 @@ public final class Response {
         return datas;
     }
 
+    public void redirect(String path) {
+        dispatcher.request.setRedirect(true);
+        dispatcher.request.setReqUrl(path);
+    }
+
     private void handle_500_SERVER_ERROR(String errorMessage) {
         content = (HTTPStatus.CODE_500_OUTPUT_DESC + HTTPStatus.COLON + errorMessage).getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
@@ -312,6 +325,6 @@ public final class Response {
             heads.clear();
         }
         charset = HTTPStatus.DEFAULTENCODING;
-        type = HTTPStatus.TEXT_HTML;
+        type = HTTPStatus.PLAIN;
     }
 }

@@ -12,6 +12,7 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.time.Instant;
 import java.util.concurrent.*;
 
 /**
@@ -81,7 +82,7 @@ public final class AIOServer extends Server {
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
                             +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms" + LOG.VERTICAL + "waitReceivedTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(),getGcTime(),getWaitReceivedTime());
+                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime(), getWaitReceivedTime());
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -95,22 +96,25 @@ public final class AIOServer extends Server {
                     logger.info(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
-                    newAtt.setBuffer(ByteBuffer.allocate(getCapcity()));
-                    newAtt.setKeepAlive(true);
+                    newAtt.setReadBuffer(ByteBuffer.allocate(getCapcity()));
+                    newAtt.setKeepTime(Instant.now());
                     newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
+                    newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
                     //long connection or short connection
                     if (getKeepClients().size() < getMaxKeepClients()) {
                         assert clientAddr != null;
                         addClients(clientAddr.toString(), newAtt);
+                        newAtt.setKeep(true);
                     }
                     slavePool.submit(() -> {
                         AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                         try {
                             //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
                             Thread.sleep(getWaitReceivedTime());
-                            dispatcher.completed(client.read(newAtt.getBuffer()).get(), newAtt);
+                            dispatcher.completed(client.read(newAtt.getReadBuffer()).get(), newAtt);
                         } catch (InterruptedException | ExecutionException e) {
-                            dispatcher.failed(e, newAtt);
+                            //ignore
+                            //Guaranteed by the thread pool match queue, concurrent access to the buffer will not occur
                         }
                     });
                     asyncServerSocketChannel.accept(att, this);
@@ -127,8 +131,12 @@ public final class AIOServer extends Server {
                     asyncServerSocketChannel.accept(att, this);
                 }
             });
-            execExpelThread();
-            gc();
+            if (getExpelTime() > 0) {
+                execExpelThread();
+            }
+            if (getGcTime() > 0) {
+                gc();
+            }
             logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", getServerName(), (System.currentTimeMillis() - start));
         } catch (IOException | ClassNotFoundException e) {
             logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);

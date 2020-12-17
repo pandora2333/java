@@ -2,6 +2,7 @@ package pers.pandora.core;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.time.Instant;
 
 public class Attachment {
 
@@ -11,9 +12,31 @@ public class Attachment {
 
     private long waitReceivedTime;
 
-    private volatile boolean keepAlive;
+    private volatile Instant keepTime;
 
-    private ByteBuffer buffer;
+    private ByteBuffer readBuffer;
+
+    private ByteBuffer writeBuffer;
+
+    private Instant createTime;
+
+    private boolean isKeep;
+
+    public boolean isKeep() {
+        return isKeep;
+    }
+
+    public void setKeep(boolean keep) {
+        isKeep = keep;
+    }
+
+    public ByteBuffer getWriteBuffer() {
+        return writeBuffer;
+    }
+
+    public void setWriteBuffer(ByteBuffer writeBuffer) {
+        this.writeBuffer = writeBuffer;
+    }
 
     protected long getWaitReceivedTime() {
         return waitReceivedTime;
@@ -39,19 +62,19 @@ public class Attachment {
         this.client = client;
     }
 
-    public boolean isKeepAlive() {
-        return keepAlive;
+    public Instant getKeepTime() {
+        return keepTime;
     }
 
-    protected void setKeepAlive(boolean keepAlive) {
-        this.keepAlive = keepAlive;
+    public void setKeepTime(Instant keepTime) {
+        this.keepTime = keepTime;
     }
 
-    protected ByteBuffer getBuffer() {
-        return buffer;
+    protected ByteBuffer getReadBuffer() {
+        return readBuffer;
     }
 
-    protected void setBuffer(ByteBuffer buffer) {
-        this.buffer = buffer;
+    protected void setReadBuffer(ByteBuffer readBuffer) {
+        this.readBuffer = readBuffer;
     }
 }

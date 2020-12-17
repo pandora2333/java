@@ -8,6 +8,7 @@ import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,20 +29,22 @@ public abstract class Server {
     private String webConfigPath = rootPath + "/WEB-INF/web.xml";
 
     public String requestFileDir = resourceRootPath + "files/";
+
+    public static final String DEFAULTSERVER = "PandoraWeb";
     //serer name，it use logs,session file,etc
-    private String serverName = "PandoraWeb" + System.currentTimeMillis();
+    private String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
     private int mainPoolSize = Runtime.getRuntime().availableProcessors() + 1;
     //slave thread pool size
     private int slavePoolSize = 2 * mainPoolSize + 1;
     //up file buffer size (byte)
-    private int capcity = 10 * 1024 * 1024;
+    private int capcity = 8192;
 
     private static final String HOST = "127.0.0.1";
     //hot load JSP default true
     private boolean hotLoadJSP = true;
     //download resource buffer size（byte）
-    private int responseBuffer = capcity / 10;
+    private int responseBuffer = 8192;
     //server receive buffer size, it should greater than or equal to capcity
     private int receiveBuffer = capcity;
     //global session pool,base on memory
@@ -52,24 +55,24 @@ public abstract class Server {
     private SerialSessionSupport serialSessionSupport;
     //set mvc-pattern paths
     private RequestMappingHandler requestMappingHandler;
-    //JSON parser
+    //JSON_TYPE parser
     private JSONParser jsonParser;
 
     private Map<String, String> context;
     //browser build the tcps
     private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
     //max keep connections
-    private int maxKeepClients = 250;
+    private int maxKeepClients;
 
     protected ExecutorService mainPool;
 
     protected ExecutorService slavePool;
 
-    private long expelTime = 1000;
+    private long expelTime;
 
-    private long gcTime = 30000;
+    private long gcTime;
 
-    private long waitReceivedTime = 80;
+    private long waitReceivedTime;
     //SessionId Generator
     private IdWorker idWorker;
 
@@ -130,7 +133,7 @@ public abstract class Server {
     }
 
     public void addClients(String ip, Attachment attachment) {
-        if (StringUtils.isNotEmpty(ip) && attachment != null && attachment.isKeepAlive()) {
+        if (StringUtils.isNotEmpty(ip) && attachment != null) {
             this.keepClients.put(ip, attachment);
         }
     }
@@ -353,7 +356,7 @@ public abstract class Server {
                 Instant now = Instant.now();
                 startTime = now.getEpochSecond();
                 keepClients.forEach((k, v) -> {
-                    if (!v.isKeepAlive()) {
+                    if (now.toEpochMilli() - v.getKeepTime().toEpochMilli() >= gcTime) {
                         close(v, this);
                     }
                 });
@@ -364,10 +367,12 @@ public abstract class Server {
         invalidClientExecutor.start();
     }
 
-    public synchronized void close(Attachment att, Object target) {
+    public void close(Attachment att, Object target) {
         try {
             if (att.getClient().isOpen()) {
-                logger.info(LOG.LOG_POS + " will be closed!", getServerName(), att.getClient().getRemoteAddress());
+                SocketAddress address = att.getClient().getRemoteAddress();
+                keepClients.remove(address.toString());
+                logger.info(LOG.LOG_POS + " will be closed!", getServerName(), address);
                 att.getClient().close();
             }
         } catch (IOException e) {

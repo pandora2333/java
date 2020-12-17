@@ -3,7 +3,6 @@ package pers.pandora.core;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.WS;
-import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.CodeUtils;
 import pers.pandora.vo.BinaryWSData;
 import pers.pandora.vo.TextWSData;
@@ -133,20 +132,24 @@ public class WebSocketServer extends Server {
                         ByteBuffer byteBuffer = ByteBuffer.allocate(getCapcity());
                         WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
-                        webSocketSession.setBuffer(byteBuffer);
+                        webSocketSession.setReadBuffer(byteBuffer);
+                        webSocketSession.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
                         client.read(byteBuffer, webSocketSession, new CompletionHandler<Integer, WebSocketSession>() {
                             //write message to client
                             private void writeMsg(byte[] msg, WebSocketSession attachment) {
                                 if (msg == null || msg.length == 0) {
                                     return;
                                 }
+                                if(attachment.getWriteBuffer().capacity() < msg.length){
+                                    attachment.setWriteBuffer(ByteBuffer.allocate(msg.length));
+                                }
                                 //Avoid for concurrently reading in the same buffer by read-thread
-                                ByteBuffer tmp = ByteBuffer.allocate(msg.length);
+                                ByteBuffer tmp =  attachment.getWriteBuffer();
                                 try {
                                     tmp.put(msg);
                                     //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
                                     tmp.flip();
-                                    attachment.getClient().write(tmp);
+                                    attachment.getClient().write(tmp).get();
                                 } catch (Exception e) {
                                     //ignore,retry again
                                     boolean ok = false;
@@ -165,11 +168,11 @@ public class WebSocketServer extends Server {
                                         }
                                     }
                                 }
+                                tmp.compact();
                             }
-
                             @Override
                             public void completed(Integer result, WebSocketSession attachment) {
-                                ByteBuffer buffer = attachment.getBuffer();
+                                ByteBuffer buffer = attachment.getReadBuffer();
                                 buffer.flip();
                                 try {
                                     String ip = attachment.getClient().getRemoteAddress().toString();
@@ -189,6 +192,7 @@ public class WebSocketServer extends Server {
                                         clients.put(ip, attachment);
                                     } else {
                                         //TCP packet sticking / unpacking,the application layer protocol splitting
+                                        //chrome's max bracket size is 128k
                                         int i = buffer.position();
                                         attachment.clear();
                                         while (i < buffer.limit()) {
@@ -273,12 +277,11 @@ public class WebSocketServer extends Server {
                                         try {
                                             this.completed(attachment.getClient().read(buffer).get(), attachment);
                                         } catch (InterruptedException | ExecutionException e) {
-                                            e.printStackTrace();
-                                            this.failed(e, attachment);
+                                            //ignore
                                         }
                                     });
                                 } catch (IOException e) {
-                                    logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), e);
+                                    //IO concurrent error, forced interrupt
                                     this.failed(e, attachment);
                                 }
                             }

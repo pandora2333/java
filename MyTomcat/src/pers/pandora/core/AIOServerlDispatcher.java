@@ -11,6 +11,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -23,14 +24,17 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     public void completed(Integer result, Attachment att) {
         server = att.getServer();
         this.att = att;
-        att.setKeepAlive(true);
         if (result < 0) {
+            //The identifier at the end of the packet indicates that the TCP request packet has been sent
+            //The TCP it can not be closed immediately. The browser may be reused next time, so it needs to be kept alive
             return;
         }
-        ByteBuffer buffer = att.getBuffer();
+        att.setKeepTime(Instant.now());
+        setKeepAlive(att.isKeep());
+        ByteBuffer buffer = att.getReadBuffer();
         //model change:write -> read
         buffer.flip();
-        //set JSON parser
+        //set JSON_TYPE parser
         request.setJsonParser(server.getJsonParser());
         response.setJsonParser(server.getJsonParser());
         //pre handle HTTP resource
@@ -42,6 +46,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         } catch (UnsupportedEncodingException e) {
             logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
         }
+        buffer.clear();
         try {
             dispatcher(msg);
         } catch (RuntimeException e) {
@@ -51,15 +56,14 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         handleRequestCompleted();
         response.reset();
         buffer.clear();
-        att.setKeepAlive(false);
         server.slavePool.submit(() -> {
             try {
                 //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
                 Thread.sleep(server.getWaitReceivedTime());
                 completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
-                //writePendingExceptiion
-                failed(e, att);
+                //AsyncClosedException,and when channel is closed,it must cause
+                //ignore
             }
         });
     }
@@ -196,42 +200,59 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     @Override
     protected void pushClient(byte[] content, java.io.File staticFile) {
         if (content != null) {
-            att.getBuffer().clear();
-            att.getBuffer().put(content);
-            att.getBuffer().flip();
-            att.getClient().write(att.getBuffer());
-            att.getBuffer().clear();
+            if (att.getWriteBuffer().capacity() < content.length) {
+                att.setWriteBuffer(ByteBuffer.allocateDirect(content.length));
+            }
+            ByteBuffer by = att.getWriteBuffer();
+            by.put(content);
+            by.flip();
+            try {
+                if (att.getClient().isOpen()) {
+                    att.getClient().write(by).get();
+                } else {
+                    return;
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                //ignore
+                //ClosedException
+            }
+            by.compact();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
             FileInputStream in = null;
             if (staticFile != null) {
+                by = att.getWriteBuffer();
                 try {
                     in = new FileInputStream(staticFile);
                     FileChannel fin = in.getChannel();
-                    ByteBuffer by = ByteBuffer.allocateDirect(server.getResponseBuffer());
                     while (fin.read(by) != -1) {
                         by.flip();
                         try {
-                            att.getClient().write(by).get();
+                            if (att.getClient().isOpen()) {
+                                att.getClient().write(by).get();
+                            } else {
+                                return;
+                            }
                         } catch (InterruptedException | ExecutionException e) {
+                            //The write operation is abnormal. The last IO operation of the underlying tcpsocket is still occurring, and the Current IO operation is interrupted
                             logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS,
                                     server.getServerName(), staticFile.getAbsolutePath(),
                                     LOG.EXCEPTION_DESC, e);
+                            break;
+                        } finally {
+                            by.compact();
                         }
-                        by.compact();
                     }
                 } catch (IOException e) {
-                    logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS, server.getServerName(), staticFile.getAbsolutePath(),
-                            LOG.EXCEPTION_DESC, e);
+                    //ignore
+                    //ClosedException
                 }
                 if (in != null) {
                     try {
                         in.close();
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "pushClient I/O Stream close" + LOG.LOG_POS,
-                                server.getServerName(), LOG.EXCEPTION_DESC, e);
+                        //ignore
                     }
                 }
-                att.getBuffer().clear();
             }
         }
     }

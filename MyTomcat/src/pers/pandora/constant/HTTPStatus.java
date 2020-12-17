@@ -84,7 +84,33 @@ public class HTTPStatus {
 
     public static final String JPEG = ".jpeg";
 
-    public static final String IMAGE_TYPE = "image/jpeg";
+    public static final String XML = ".xml";
+
+    public static final String GIF = ".gif";
+
+    public static final String JSON = ".json";
+
+    public static final String PDF = ".pdf";
+
+    public static final String JS = ".js";
+
+    public static final String CSS = ".css";
+
+    public static final String JPG_TYPE = "image/jpeg";
+
+    public static final String PNG_TYPE = "image/png";
+
+    public static final String XML_TYPE = "text/xml";
+
+    public static final String GIF_TYPE = "image/gif";
+
+    public static final String PDF_TYPE = "application/pdf";
+
+    public static final String BINARY_TYPE = "application/octet-stream";
+
+    public static final String JS_TYPE = "application/javascript";
+
+    public static final String CSS_TYPE = "text/css";
 
     public static final int CODE_200 = 200;
 
@@ -126,7 +152,6 @@ public class HTTPStatus {
 
     public static final String PATH_PARM_REPLACE = ".*?";
 
-    //cookie
     public static final String VERSION = "Version";
 
     public static final String EXPIRES = "Expires";
@@ -141,5 +166,15 @@ public class HTTPStatus {
 
     public static final String ALLOW = "Allow";
 
-    public static final String JSON = "application/json";
+    public static final String JSON_TYPE = "application/json";
+
+    public static final String REDIRECT = "@redirect:";
+
+    public static final String LOCATION = "Location";
+
+    public static final String CONNECTION = "Connection";
+
+    public static final String KEEPALIVE = "keep-alive";
+
+    public static final String CLOSE = "close";
 }

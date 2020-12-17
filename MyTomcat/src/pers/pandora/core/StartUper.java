@@ -193,8 +193,8 @@ public final class StartUper {
         }
         value = properties.getProperty(MVCPATHS, null);
         if (StringUtils.isNotEmpty(value)) {
-            requestMappingHandler.init(value.split(separator, -1));
             requestMappingHandler.setBeanPool(beanPool);
+            requestMappingHandler.init(value.split(separator, -1));
         }
         if (pattern.equals(FALSE)) {
             server = new AIOServer();

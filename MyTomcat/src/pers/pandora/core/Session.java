@@ -24,6 +24,16 @@ public final class Session implements Serializable {
 
     private Map<String, Object> attrbuites = new ConcurrentHashMap<>();
 
+    private Cookie sessionCookie;
+
+    public Cookie getSessionCookie() {
+        return sessionCookie;
+    }
+
+    public void setSessionCookie(Cookie sessionCookie) {
+        this.sessionCookie = sessionCookie;
+    }
+
     public Map<String, Object> getAttrbuites() {
         return attrbuites;
     }
@@ -37,12 +47,16 @@ public final class Session implements Serializable {
     //if session should invalid,please exec the method and exec Request#addInvalidSession as the same time
     //it set max_age > 0,it will be invalid
     public void setMax_age(int max_age) {
+        assert  sessionCookie != null;
         if (max_age > 0) {
             this.max_age = Instant.now();
             this.max_age = this.max_age.plusSeconds(max_age);
+            sessionCookie.setMax_age(max_age);
         } else {
             this.max_age = null;
+            sessionCookie.setMax_age(-1);
         }
+        sessionCookie.setNeedUpdate(true);
     }
 
     public String getMax_ageByFormatter(String format) {
