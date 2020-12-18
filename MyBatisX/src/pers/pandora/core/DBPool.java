@@ -4,14 +4,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtil;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Date;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DBPool {
 
@@ -20,8 +23,8 @@ public class DBPool {
     private int initalSize;
     //Database connection pool maximum CONNECTIONS
     private int maxSize;
-    //Connection get timeOut threshold
-    private long timeOut;
+
+    private AtomicInteger len = new AtomicInteger(0);
     //Database connection URI identifier
     private String url;
     private String user;
@@ -29,9 +32,7 @@ public class DBPool {
     //Database driven
     private String driver;
     //Maintain connection pool
-    private PoolConnection[] connections;
-    //Request number determination, capacity expansion decision
-    private int threshold;
+    private BlockingQueue<PoolConnection> connections;
 
     public static final String INITALSIZE = "initalSize";
 
@@ -65,6 +66,10 @@ public class DBPool {
         return dbProperties;
     }
 
+    public int size(){
+        return len.get();
+    }
+
     public DBPool(String dbProperties) {
         assert StringUtil.isNotEmpty(dbProperties);
         this.dbProperties = dbProperties;
@@ -88,7 +93,6 @@ public class DBPool {
         try {
             initalSize = Integer.valueOf(properties.getProperty(INITALSIZE, null));
             maxSize = Integer.valueOf(properties.getProperty(MAXSIZE, null));
-            timeOut = Long.valueOf(properties.getProperty(TIMEOUT));
             url = properties.getProperty(URL);
             user = properties.getProperty(USER);
             password = properties.getProperty(PASSWORD);
@@ -101,20 +105,19 @@ public class DBPool {
         } catch (NumberFormatException e) {
             logger.error("format number" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
         }
-        if (initalSize <= 0 || maxSize <= 0 || maxSize < initalSize || timeOut <= 0) {
+        if (initalSize <= 0 || maxSize <= 0 || maxSize < initalSize) {
             logger.error("file config number" + LOG.LOG_POS, LOG.ERROR_DESC);
             return false;
         }
-        connections = new PoolConnection[initalSize];
+        connections = new ArrayBlockingQueue<>(initalSize);
         try {
             Class.forName(driver);
-            for (int i = 0; i < connections.length; i++) {
-                if (connections[i] == null) {
-                    connections[i] = new PoolConnection();
-                    assert url != null;
-                    connections[i].setConnection(DriverManager.getConnection(url, user, password));
-                    connections[i].setBusy(false);
-                }
+            for (int i = 0; i < initalSize; i++) {
+                PoolConnection connection = new PoolConnection();
+                assert url != null;
+                connection.setConnection(DriverManager.getConnection(url, user, password));
+                connection.setBusy(false);
+                connections.add(connection);
             }
         } catch (Exception e) {
             logger.error("init-connection" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
@@ -124,63 +127,54 @@ public class DBPool {
     }
 
     public PoolConnection getConnection() throws SQLException {
-        return getConnection(timeOut);
+        return getConnection(Long.MAX_VALUE);
     }
 
     //Block acquisition until timeout
-    public synchronized PoolConnection getConnection(long millis) throws SQLException {
-        if (initalSize <= 0) {
+    public PoolConnection getConnection(long timeOut) throws SQLException {
+        if (connections.remainingCapacity() == 0) {
             rePool();
         }
-        long first = new Date().getTime();
         PoolConnection connection = null;
-        threshold++;
-        while (new Date().getTime() - first <= millis) {
-            for (PoolConnection tcursor : connections) {
-                if (tcursor != null && tcursor.getConnection() != null
-                        && !tcursor.getConnection().isClosed() && !tcursor.isBusy()) {
-                    initalSize--;
-                    connection = tcursor;
-                    tcursor.setBusy(true);
-                    break;
-                }
+        try {
+            connection = connections.poll(timeOut,TimeUnit.MILLISECONDS);
+            if(connection != null) {
+                connection.setBusy(true);
             }
+        } catch (InterruptedException e) {
+            //ignore
         }
         return connection;
     }
 
-    private void rePool() throws SQLException {
-        int upSize = connections.length << 1;
-        if (maxSize - connections.length >= 0 && threshold > upSize) {
-            PoolConnection[] temp;
-            upSize++;
-            if (upSize < maxSize) {
-                maxSize -= upSize;
-                temp = new PoolConnection[upSize];
-            } else {
-                temp = new PoolConnection[maxSize];
-            }
-            int cursor = 0;
-            for (PoolConnection connection : connections) {
-                if (connection != null && connection.getConnection() != null && !connection.getConnection().isClosed()) {
-                    temp[cursor] = connection;
-                } else {
-                    temp[cursor] = new PoolConnection();
-                    temp[cursor].setConnection(DriverManager.getConnection(url, user, password));
-                    temp[cursor].setBusy(false);
-                }
-                cursor++;
-            }
-            connections = temp;
+    private synchronized void rePool() throws SQLException {
+        assert connections != null;
+        if(len.get() == maxSize){
+            return;
         }
+        int upSize = Math.min(len.get() << 1,maxSize);
+        int remain = upSize - len.get();
+        for (int i = 0;i < remain;i++) {
+            PoolConnection connection = new PoolConnection();
+            connection.setBusy(false);
+            connection.setConnection(DriverManager.getConnection(url, user, password));
+            try {
+                connections.put(connection);
+            } catch (InterruptedException e) {
+                //ignore
+                i--;
+            }
+        }
+        len.set(upSize);
     }
-
+    //When it's closed, the pool won't work,it will be forced closure,and it means it's not secure
     public synchronized void close() throws SQLException {
         if (connections != null) {
-            for (PoolConnection connection : connections) {
-                connection.getConnection().close();
+            while(connections.remainingCapacity() > 0){
+                Objects.requireNonNull(connections.poll()).getConnection().close();
             }
             connections = null;
+            len = null;
         }
     }
 
@@ -188,8 +182,13 @@ public class DBPool {
         if (connection != null) {
             if (!connection.getConnection().isClosed() && connection.isBusy()) {
                 connection.setBusy(false);
-            } else if (connection.getConnection().isClosed()) {
-                connection.setConnection(null);
+                try {
+                    connections.put(connection);
+                } catch (InterruptedException e) {
+                    //ignore
+                    connection.getConnection().close();
+                    len.decrementAndGet();
+                }
             }
         }
     }

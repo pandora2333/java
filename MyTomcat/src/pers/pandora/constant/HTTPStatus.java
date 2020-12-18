@@ -1,5 +1,7 @@
 package pers.pandora.constant;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
+
 public class HTTPStatus {
 
     public static final char SLASH = '/';
@@ -124,6 +126,10 @@ public class HTTPStatus {
 
     public static final int CODE_500 = 500;
 
+    public static final int CODE_304 = 304;
+
+    public static final String CODE_304_DESC = "Not Modified";
+
     public static final String CODE_200_DESC = "OK";
 
     public static final String CODE_404_DESC = "Not Found";
@@ -177,4 +183,20 @@ public class HTTPStatus {
     public static final String KEEPALIVE = "keep-alive";
 
     public static final String CLOSE = "close";
+
+    public static final String CACAHE_CONTROL = "Cache-Control";
+
+    public static final String CACHAE_CONTROL_DESC = "public, max-age=";
+
+    public static final String LASTMODIFIED = "Last-Modified";
+
+    public static final String IF_MODIFIED_SINCE = "If-Modified-Since";
+
+    public static final String IF_NONE_MATCH = "If-None-Match";
+
+    public static final String ETAG = "ETag";
+
+    public static final String NO_CACHE = "no-cache";
+
+    public static final String PRAGMA = "Pragma";
 }

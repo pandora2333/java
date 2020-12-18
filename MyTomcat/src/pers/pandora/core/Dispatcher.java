@@ -84,14 +84,15 @@ abstract class Dispatcher {
                     if (file != null) {
                         if (!file.exists()) {
                             file = null;
+                            response.setCode(HTTPStatus.CODE_404);
                         } else {
-                            response.setResource(true);
+                            response.setCode(HTTPStatus.CODE_200);
                             response.setType(ss[0]);
                             response.setLen(file.length());
                         }
                     }
                     response.setServlet(servlet);
-                    pushClient(response.handle(request.getMethod(), true), file);
+                    pushClient(response.handle(request.getMethod(), true), response.getCode() == HTTPStatus.CODE_304 ? null : file);
                 }
             } else {
                 pushClient(response.handle(null, true), null);

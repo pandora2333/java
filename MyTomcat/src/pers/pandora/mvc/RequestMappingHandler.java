@@ -71,15 +71,15 @@ public final class RequestMappingHandler {
 
     public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
     //Thread pool minimum number of cores
-    private int minCore = Runtime.getRuntime().availableProcessors();
+    private int minCore = 5;
     //Thread pool maximum number of cores
     private int maxCore = minCore + 5;
     //Thread idle time
-    private long keepAlive = 50;
+    private long keepAlive = 10;
     //Thread idle time unit
     private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     //Timeout waiting for class loading time
-    private long timeOut = 5;
+    private long timeOut = 60 * 10;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
 //    static {
@@ -195,8 +195,8 @@ public final class RequestMappingHandler {
         }
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object objects[] = new Object[parameterTypes.length];
-        Map<Integer, String> paramNames = new HashMap<>(4);
-        Map<Integer, String> restfulParamNames = new HashMap<>(4);
+        String[] paramNames = new String[parameterTypes.length];
+        String[] restfulParamNames = new String[parameterTypes.length];
         Map<String, String> restfulParamValues = new HashMap<>(4);
         Map<String, String> defaultValues = new HashMap<>(4);
         Map<String, List<Object>> params = modelAndView.getRequest().getParams();
@@ -205,13 +205,13 @@ public final class RequestMappingHandler {
             for (Annotation annotation : annotations[i]) {
                 if (annotation instanceof RequestParam) {
                     RequestParam param = (RequestParam) annotation;
-                    paramNames.put(i, param.value());
+                    paramNames[i] = param.value();
                     if (StringUtils.isNotEmpty((param.defaultValue()))) {
                         defaultValues.put(param.value(), param.defaultValue());
                     }
                 } else if (restful && annotation instanceof PathVariable) {
                     PathVariable param = (PathVariable) annotation;
-                    restfulParamNames.put(i, param.value());
+                    restfulParamNames[i] = param.value();
                 }
             }
         }
@@ -248,14 +248,14 @@ public final class RequestMappingHandler {
                 } catch (IllegalAccessException | InstantiationException e) {
                     //ignore
                 }
-            } else if (paramNames.containsKey(i)) {
-                list = params.get(paramNames.get(i));
+            } else if (StringUtils.isNotEmpty(paramNames[i])) {
+                list = params.get(paramNames[i]);
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
                 if (objects[i] == null) {
-                    objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames.get(i)));
+                    objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames[i]));
                 }
-            } else if (restful && restfulParamNames.containsKey(i)) {
-                objects[i] = getValueByType(parameterTypes[i], restfulParamValues.get(restfulParamNames.get(i)));
+            } else if (restful && StringUtils.isNotEmpty(restfulParamNames[i])) {
+                objects[i] = getValueByType(parameterTypes[i], restfulParamValues.get(restfulParamNames[i]));
             } else {
                 logger.warn(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
                                 LOG.LOG_PRE + LOG.LOG_PRE, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
@@ -441,11 +441,12 @@ public final class RequestMappingHandler {
 
     private void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
         try {
-            if (!objectMap.containsKey(t.getName())) {
-                Object bean = beanPool != null ? beanPool.getBeanByType(t) : null;
-                objectMap.put(t.getName(), bean != null ? bean : t.newInstance());
+            String name = Character.toLowerCase(t.getSimpleName().charAt(0)) + t.getSimpleName().substring(1);
+            if (!objectMap.containsKey(name)) {
+                Object bean = ClassUtils.getClass(t, beanPool);
+                objectMap.put(name, bean);
             }
-            controllers.put(method, objectMap.get(t.getName()));
+            controllers.put(method, objectMap.get(name));
         } catch (InstantiationException | IllegalAccessException e) {
             logger.error(LOG.LOG_PRE + "saveUrlPathMapping for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                     MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);

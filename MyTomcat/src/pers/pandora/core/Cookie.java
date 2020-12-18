@@ -16,7 +16,7 @@ public final class Cookie {
     //expire time after max_age,default time is session level
     private int max_age;
     //cookie version
-    private int version = 1;//默认version1
+    private int version = 1;//default version1
     //when to update Cookie
     private boolean needUpdate;
 

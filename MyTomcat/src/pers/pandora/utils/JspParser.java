@@ -60,6 +60,26 @@ public final class JspParser {
         if (!file.exists()) {
             return null;
         }
+        String query = null;
+        if(!hotLoadJSP){
+            //DCL
+            if (jspCahce == null) {
+                synchronized (logger) {
+                    if (jspCahce == null) {
+                        jspCahce = new ConcurrentHashMap<>(16);
+                    }
+                }
+            }
+            //DCL
+            if (!jspCahce.containsKey(jspFile)) {
+                synchronized (logger) {
+                    if (!jspCahce.containsKey(jspFile)) {
+                        jspCahce.put(jspFile, CodeUtils.hashEncode(jspFile, SALT, null, null));
+                    }
+                }
+            }
+            query = jspCahce.get(jspFile);
+        }
         Reader inFifle;
         try {
             inFifle = new FileReader(file);
@@ -67,33 +87,17 @@ public final class JspParser {
             StringBuilder buf = new StringBuilder();
             String temp;
             while ((temp = inputStream.readLine()) != null) {
-                buf.append(temp.trim());
+                temp = temp.trim();
+                if(!temp.startsWith(JSP.DOUBLE_SLASH)){
+                    buf.append(temp).append(JSP.CRLF);
+                }
             }
             inputStream.close();
             inFifle.close();
             String jsp = buf.toString();
-            String query;
-            if (hotLoadJSP) {
+            if(query == null){
                 //Using file hash, duplicate classes are not generated again
                 query = CodeUtils.hashEncode(jsp, SALT, null, null);
-            } else {
-                //DCL
-                if (jspCahce == null) {
-                    synchronized (logger) {
-                        if (jspCahce == null) {
-                            jspCahce = new ConcurrentHashMap<>(16);
-                        }
-                    }
-                }
-                //DCL
-                if (!jspCahce.containsKey(jsp)) {
-                    synchronized (logger) {
-                        if (!jspCahce.containsKey(jsp)) {
-                            jspCahce.put(jsp, CodeUtils.hashEncode(jsp, SALT, null, null));
-                        }
-                    }
-                }
-                query = jspCahce.get(jsp);
             }
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
@@ -109,7 +113,7 @@ public final class JspParser {
                 jsp = jsp.replace(JSP.JSP_LANGUAGE_DESC, LOG.NO_CHAR).trim();
             }
             sb.append(jsp.substring(jsp.indexOf(JSP.JSP_HEAD_DESC) + 6, jsp.indexOf(JSP.JSP_TAIL_DESC)).trim());
-            //target类生成
+            //target class
             ClassPool pool = ClassPool.getDefault();
             CtClass ct = pool.makeClass(className);
             ct.setInterfaces(new CtClass[]{pool.get(SERVLET_CLASS)});
@@ -123,14 +127,13 @@ public final class JspParser {
             String javaCode, specToken;
             while (matcher.find()) {
                 javaCode = sb.toString().substring(matcher.start() + 2, matcher.end() - 2);
-                //写入Servlet类
                 sbuf.append(JSP.JSP_CODE_PRE).append(javaCode).append(HTTPStatus.CRLF);
                 matcher.appendReplacement(jspSrc, LOG.NO_CHAR);
             }
             matcher.appendTail(jspSrc);
-            //去除所有"特殊符号
+            //Remove all "special symbols"
             if (jspSrc.toString().contains(String.valueOf(HTTPStatus.FILENAMETAIL))) {
-                specToken = jspSrc.toString().replaceAll(String.valueOf(HTTPStatus.FILENAMETAIL), LOG.NO_CHAR);
+                specToken = jspSrc.toString().replace(String.valueOf(HTTPStatus.FILENAMETAIL), JSP.SPECIAL_MARK);
                 jspSrc.delete(0, jspSrc.length());
                 jspSrc.append(specToken);
             }
@@ -167,7 +170,7 @@ public final class JspParser {
                 }
             }
             matcher.appendTail(sb);
-            servletGenerator(ct, sbuf.toString(), sb.toString());
+            servletGenerator(ct, set, sbuf.toString(), sb.toString());
             return new Tuple<>(className, jspFile.substring(urlIndex), className);
         } catch (Exception e) {
             logger.error(LOG.LOG_PRE + "parse" + LOG.LOG_POS, this, LOG.EXCEPTION_DESC, e);
@@ -175,8 +178,8 @@ public final class JspParser {
         return null;
     }
 
-    private void servletGenerator(CtClass ct, String javaCode, String jsp) throws Exception {
-        ct.addMethod(CtMethod.make(buildService(javaCode), ct));
+    private void servletGenerator(CtClass ct, Set<String> fields, String javaCode, String jsp) throws Exception {
+        ct.addMethod(CtMethod.make(buildService(javaCode, fields), ct));
         ct.addMethod(CtMethod.make(buildDoGet(jsp), ct));
         ct.addMethod(CtMethod.make(buildDoPost(), ct));
         ct.writeFile(CLASSDIR);
@@ -187,8 +190,15 @@ public final class JspParser {
         return JSP.JAVA_DOPOST;
     }
 
-    private String buildService(String javaCode) {
-        return JSP.JAVA_SERVICE_PRE + javaCode + JSP.JAVA_RIGHT_BRACKET;
+    private String buildService(String javaCode, Set<String> fields) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JSP.JAVA_SERVICE_PRE);
+        fields.forEach(field -> sb.append(JSP.IF_PRE).append(field).append(HTTPStatus.PARAM_KV_SPLITER)
+                .append(HTTPStatus.PARAM_KV_SPLITER).append(JSP.NULL).append(JSP.IF_POS)
+                .append(field).append(HTTPStatus.PARAM_KV_SPLITER).append(HTTPStatus.FILENAMETAIL)
+                .append(HTTPStatus.FILENAMETAIL).append(HTTPStatus.COOKIE_SPLITER).append(HTTPStatus.CRLF));
+        sb.append(javaCode).append(JSP.JAVA_RIGHT_BRACKET);
+        return sb.toString();
     }
 
     private String buildDoGet(String jsp) {

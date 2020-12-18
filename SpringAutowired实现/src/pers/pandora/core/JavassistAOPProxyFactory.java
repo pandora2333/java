@@ -18,6 +18,8 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
 
     private static final char METHOD_SEPARATOR = '#';
 
+    public static final String PROXY_MARK = "setHandler";
+
     @Override
     public <T> T createProxyClass(Class<T> t) {
         ProxyFactory proxyFactory = new ProxyFactory();

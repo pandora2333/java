@@ -4,15 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.*;
 
+import javassist.util.proxy.MethodHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.annotation.*;
@@ -34,7 +33,19 @@ public final class BeanPool {
 
     private final Map<Class<?>, List<Object>> typeBeans = new ConcurrentHashMap<>(16);
 
-    private final Map<Object, List<Field>> unBeanInjectMap = new ConcurrentHashMap<>(16);
+    private Map<Object, List<Field>> unBeanInjectMap = new ConcurrentHashMap<>(16);
+
+    private Map<String, Integer> in = new ConcurrentHashMap<>(16);
+
+    private Map<String, Method> beanMethods = new ConcurrentHashMap<>(16);
+
+    private Map<String, List<String>> out = new ConcurrentHashMap<>(16);
+
+    private Map<Method, Object> configs = new ConcurrentHashMap<>(16);
+
+    private Map<Method, String[]> methodParams = new ConcurrentHashMap<>(16);
+
+    private List<Class<?>> controllerAndService = new CopyOnWriteArrayList<>();
 
     private ThreadPoolExecutor executor;
 
@@ -44,15 +55,15 @@ public final class BeanPool {
 
     private List<Future<Boolean>> result;
     //Thread pool minimum number of cores
-    private int minCore = Runtime.getRuntime().availableProcessors();
+    private int minCore = 5;
     //Thread pool maximum number of cores
     private int maxCore = minCore + 5;
     //Thread idle time
-    private long keepAlive = 50;
+    private long keepAlive = 10;
     //Thread idle time unit
     private TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     //Timeout waiting for class loading time
-    private long timeOut = 5;
+    private long timeOut = 60 * 10;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
     //AOP Config for @Aspect
@@ -159,10 +170,60 @@ public final class BeanPool {
             scanFile(checkPath(path), false);
         }
         waitFutures(result, timeOut, timeOutUnit);
+        result.clear();
+        //Topology injection
+        topologyBean();
+        //Controller auto-injected
+        injectControllerAndService();
+        waitFutures(result, timeOut, timeOutUnit);
         executor.shutdownNow();
+        //Attribute cyclic dependency injection
         injectValueForAutowired();
         executor = null;
         result = null;
+    }
+
+    private void injectControllerAndService() {
+        controllerAndService.stream().filter(tClass -> getBeanByType(tClass) == null)
+                .forEach(tClass -> {
+                    boolean annotation = tClass.isAnnotationPresent(Controller.class);
+                    result.add(executor.submit(new IOTask(tClass.getName(), annotation ? Controller.class : Service.class, false)));
+                });
+        controllerAndService = null;
+    }
+
+    private void topologyBean() {
+        ArrayDeque<String> q = new ArrayDeque<>(beans.size());
+        beans.forEach((k, v) -> q.addLast(k));
+        String cur;
+        List<String> next;
+        while (q.size() > 0) {
+            cur = q.getFirst();
+            q.pollFirst();
+            next = out.get(cur);
+            if (CollectionUtil.isNotEmptry(next)) {
+                next.forEach(name -> {
+                    in.put(name, in.get(name) - 1);
+                    if (in.get(name) == 0) {
+                        Method method = beanMethods.get(name);
+                        assert method != null;
+                        Class<?>[] types = method.getParameterTypes();
+                        Object[] params = new Object[types.length];
+                        String[] names = methodParams.get(method);
+                        for (int i = 0; i < types.length; i++) {
+                            params[i] = beans.get(names[i]);
+                        }
+                        createBean(method, name, configs.get(method), params);
+                        q.addLast(name);
+                    }
+                });
+            }
+        }
+        in = null;
+        out = null;
+        methodParams = null;
+        configs = null;
+        beanMethods = null;
     }
 
     public static void waitFutures(List<Future<Boolean>> result, long timeOut, TimeUnit timeOutUnit) {
@@ -197,21 +258,16 @@ public final class BeanPool {
                     } catch (IllegalAccessException e) {
                         //ignore
                     }
-                } else if (typeBeans.containsKey(field.getType())) {
-                    if (typeBeans.get(field.getType()).size() == 1) {
-                        try {
-                            field.set(k, typeBeans.get(field.getType()).get(0));
-                        } catch (IllegalAccessException e) {
-                            //ignore
-                        }
-                    } else {
-                        logger.warn("Multiple bean injections of the same type were detected, and the bean name needs to be specified:"
-                                + LOG.LOG_POS, LOG.ERROR_DESC, field.getType());
-                        return;
+                } else {
+                    try {
+                        field.set(k, getBeanByType(field.getType()));
+                    } catch (IllegalAccessException e) {
+                        //ignore
                     }
                 }
             }
         });
+        unBeanInjectMap = null;
     }
 
     public <T> T getBean(String beanName) {
@@ -224,7 +280,7 @@ public final class BeanPool {
     public <T> T getBeanByType(Class<T> tClass) {
         if (tClass != null) {
             List<Object> objects = typeBeans.get(tClass);
-            return CollectionUtil.isNotEmptry(objects) ? (T) objects.get(0) : null;
+            return objects != null && objects.size() == 1 ? (T) objects.get(0) : null;
         }
         return null;
     }
@@ -244,11 +300,23 @@ public final class BeanPool {
                     String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, NO_CHAR).
                             replace(PATH_SPLITER_PATTERN, FILE_SPLITER);
                     if (!className.equals(BEAN_POOL_CLASS)) {
-                        result.add(executor.submit(new IOTask(className, aop)));
+                        result.add(executor.submit(new IOTask(className, null, aop)));
                     }
                 }
             }
         }
+    }
+
+    private void createBean(Method method, String nameTemp, Object config, Object[] params) {
+        //Save meta object,Not a post proxy object
+        Object obj;
+        try {
+            obj = method.invoke(config, params);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            logger.error("createBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            return;
+        }
+        initBean(obj, nameTemp);
     }
 
     /**
@@ -261,61 +329,104 @@ public final class BeanPool {
      * @param <T>
      */
     private <T> void scanBean(Class<T> t, Field field, Class template, Properties prop) {
-        if (t.isAnnotationPresent(Configruation.class)) {
-            Object config, obj;
-            try {
-                config = t.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+        if (template == null) {
+            if (t.isAnnotationPresent(Configruation.class)) {
+                Object config, obj;
+                try {
+                    config = t.newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                    return;
+                }
+                //subclass or parent class have all public methods
+                int i;
+                String[] args;
+                String nameTemp;
+                Class<?>[] params;
+                Object[] objs;
+                boolean delay;
+                Annotation annotation;
+                for (Method method : t.getMethods()) {
+                    annotation = method.getAnnotation(Bean.class);
+                    if (annotation != null) {
+                        nameTemp = ((Bean) annotation).value();
+                        if (!StringUtils.isNotEmpty(nameTemp)) {
+                            nameTemp = method.getName();
+                        }
+                        //the same name,only save the first one
+                        if (beans.containsKey(nameTemp)) {
+                            logger.warn("Duplicate bean name");
+                            continue;
+                        }
+                        i = 0;
+                        delay = false;
+                        params = method.getParameterTypes();
+                        args = new String[params.length];
+                        for (Annotation[] annotations : method.getParameterAnnotations()) {
+                            for (Annotation an : annotations) {
+                                //the same @Autowired, only save the first one
+                                if (an instanceof Autowired) {
+                                    args[i] = ((Autowired) an).value();
+                                    break;
+                                }
+                            }
+                            i++;
+                        }
+                        i = 0;
+                        objs = new Object[params.length];
+                        for (Class<?> param : params) {
+                            if (!ClassUtils.checkBasicClass(param)) {
+                                if (!StringUtils.isNotEmpty(args[i])) {
+                                    args[i] = Character.toLowerCase(param.getSimpleName().charAt(0)) + param.getSimpleName().substring(1);
+                                }
+                                obj = beans.get(args[i]);
+                                if (obj != null || (obj = getBeanByType(param)) != null) {
+                                    objs[i] = obj;
+                                } else {
+                                    delay = true;
+                                    in.put(nameTemp, in.getOrDefault(nameTemp, 0) + 1);
+                                    //DCL
+                                    if (!out.containsKey(args[i])) {
+                                        synchronized (out) {
+                                            if (!out.containsKey(args[i])) {
+                                                out.put(args[i], new CopyOnWriteArrayList<>());
+                                            }
+                                        }
+                                    }
+                                    out.get(args[i]).add(nameTemp);
+                                }
+                            }
+                            i++;
+                        }
+                        beanMethods.put(nameTemp, method);
+                        if (!delay) {
+                            createBean(method, nameTemp, config, objs);
+                        } else {
+                            configs.put(method, config);
+                            methodParams.put(method, args);
+                        }
+                    }
+                }
+            } else if (t.isAnnotationPresent(Controller.class) || t.isAnnotationPresent(Service.class)) {
+                controllerAndService.add(t);
+            }
+        } else if (template == Controller.class || template == Service.class) {
+            if (getBeanByType(t) != null) {
                 return;
             }
-            String target;
-            List<Object> tmp;
-            for (Method method : t.getDeclaredMethods()) {
-                Annotation annotation = method.getAnnotation(Bean.class);
-                if (annotation != null) {
-                    String nameTemp = ((Bean) annotation).value();
-                    if (!StringUtils.isNotEmpty(nameTemp)) {
-                        nameTemp = method.getName();
-                    }
-                    if (beans.containsKey(nameTemp)) {
-                        continue;
-                    }
-                    //Save meta object,Not a post proxy object
-                    Class<?> objTarget;
-                    try {
-                        obj = method.invoke(config);
-                        objTarget = obj.getClass();
-                        target = obj.getClass().getName();
-                        if (aopProxyFactory != null && interceptors.stream().anyMatch(target::matches)) {
-                            obj = ClassUtils.copy(obj.getClass(), obj, aopProxyFactory.createProxyClass(obj.getClass()));
-                        }
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-                        return;
-                    }
-                    singleton.set(obj);
-                    injectValue(objTarget);
-                    beans.put(nameTemp, obj);
-                    if (typeBeans.containsKey(objTarget)) {
-                        typeBeans.get(objTarget).add(obj);
-                    } else {
-                        tmp = new CopyOnWriteArrayList<>();
-                        tmp.add(obj);
-                        typeBeans.put(objTarget, tmp);
-                    }
-                }
+            try {
+                initBean(ClassUtils.getClass(t, null), Character.toLowerCase(t.getSimpleName().charAt(0))
+                        + t.getSimpleName().substring(1));
+            } catch (IllegalAccessException | InstantiationException e) {
+                logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
             }
         } else if (template == PropertySource.class) {
-            for (Annotation annotation : t.getDeclaredAnnotations()) {
-                if (annotation instanceof PropertySource) {
-                    String filePath = ((PropertySource) annotation).value();
-                    if (!StringUtils.isNotEmpty(filePath)) {
-                        filePath = t.getName() + FILE_SPLITER + PROPERTIES;
-                    }
-                    loadProperties(t, filePath);
-                }
+            PropertySource propertySource = t.getAnnotation(PropertySource.class);
+            String filePath = propertySource != null ? propertySource.value() : null;
+            if (!StringUtils.isNotEmpty(filePath)) {
+                filePath = t.getName() + FILE_SPLITER + PROPERTIES;
             }
+            loadProperties(t, filePath);
         } else if (template == Value.class) {
             if (field != null) {
                 try {
@@ -357,6 +468,42 @@ public final class BeanPool {
         }
     }
 
+    private void initBean(Object obj, String objName) {
+        assert obj != null;
+        Class<?> objTarget = obj.getClass();
+        String target = obj.getClass().getName();
+        int cnt = 1;
+        if (aopProxyFactory != null && interceptors.stream().anyMatch(target::matches)) {
+            try {
+                objTarget.getMethod(JavassistAOPProxyFactory.PROXY_MARK, MethodHandler.class);
+            } catch (NoSuchMethodException e) {
+                //The bean has not yet been represented
+                obj = ClassUtils.copy(obj.getClass(), obj, aopProxyFactory.createProxyClass(obj.getClass()));
+                cnt++;
+            }
+        }
+        singleton.set(obj);
+        injectValue(objTarget);
+        beans.put(objName, obj);
+        List<Class<?>> parents = new ArrayList<>(objTarget.getInterfaces().length + cnt);
+        Collections.addAll(parents, objTarget.getInterfaces());
+        while (objTarget != Object.class) {
+            parents.add(objTarget);
+            objTarget = objTarget.getSuperclass();
+        }
+        for (Class<?> parent : parents) {
+            //DCL
+            if (!typeBeans.containsKey(parent)) {
+                synchronized (typeBeans) {
+                    if (!typeBeans.containsKey(parent)) {
+                        typeBeans.put(parent, new CopyOnWriteArrayList<>());
+                    }
+                }
+            }
+            typeBeans.get(parent).add(obj);
+        }
+    }
+
     //Automatic injection of attribute values
     private <T> void injectValue(Class<T> tClass) {
         scanBean(tClass, null, PropertySource.class, null);
@@ -372,7 +519,7 @@ public final class BeanPool {
     private void loadProperties(Class tClass, String file) {
         try {
             File source = new File(ROOTPATH + file);
-            if (source.exists()) {
+            if (source.exists() && !source.isDirectory()) {
                 FileInputStream inputStream = new FileInputStream(source);
                 prop.get().load(inputStream);
                 inputStream.close();
@@ -422,8 +569,11 @@ public final class BeanPool {
 
         private boolean aop;
 
-        IOTask(String className, boolean aop) {
+        private Class<?> template;
+
+        IOTask(String className, Class<?> template, boolean aop) {
             this.aop = aop;
+            this.template = template;
             this.className = className;
         }
 
@@ -435,7 +585,7 @@ public final class BeanPool {
                 if (aop) {
                     scanAOP(tClass);
                 } else {
-                    scanBean(tClass, null, null, null);
+                    scanBean(tClass, null, template, null);
                 }
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
@@ -454,6 +604,7 @@ public final class BeanPool {
         if (annotation != null) {
             int order = ((Aspect) annotation).value();
             String cutPonit;
+            //current class all methods
             for (Method method : tClass.getDeclaredMethods()) {
                 method.setAccessible(true);
                 annotation = method.getAnnotation(Before.class);
@@ -486,6 +637,3 @@ public final class BeanPool {
         }
     }
 }
-
-
- 	

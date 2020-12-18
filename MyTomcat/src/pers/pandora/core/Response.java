@@ -2,6 +2,7 @@ package pers.pandora.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.servlet.Servlet;
 import pers.pandora.utils.CollectionUtil;
@@ -25,12 +26,12 @@ public final class Response {
     private byte[] content;
     //resource type for the response
     private String type = HTTPStatus.PLAIN;
-    //the response is the static resoucre
-    private boolean resource;
     //PLAIN parser
     private JSONParser jsonParser;
 
     private Dispatcher dispatcher;
+    //control cache time
+    private long max_age;
     //response code
     private int code;
 
@@ -59,10 +60,6 @@ public final class Response {
         this.dispatcher = dispatcher;
     }
 
-    public void setResource(boolean resource) {
-        this.resource = resource;
-    }
-
     public void setLen(long len) {
         this.len = len;
     }
@@ -73,10 +70,6 @@ public final class Response {
 
     public byte[] getContent() {
         return content;
-    }
-
-    public boolean isResource() {
-        return resource;
     }
 
     public void setContent(byte[] content) {
@@ -135,7 +128,7 @@ public final class Response {
         return servlet;
     }
 
-    private byte[] createHeadInfo(List<Cookie> cookies, boolean options) {
+    private byte[] createHeadInfo(List<Cookie> cookies, boolean options, boolean src) {
         StringBuilder headInfo = new StringBuilder();
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
@@ -145,6 +138,9 @@ public final class Response {
                 break;
             case HTTPStatus.CODE_302:
                 headInfo.append(HTTPStatus.CODE_302_DESC);
+                break;
+            case HTTPStatus.CODE_304:
+                headInfo.append(HTTPStatus.CODE_304_DESC);
                 break;
             case HTTPStatus.CODE_400:
                 headInfo.append(HTTPStatus.CODE_400_BAD_REQUEST);
@@ -168,11 +164,21 @@ public final class Response {
         headInfo.append(HTTPStatus.CONNECTION).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(dispatcher.isKeepAlive() ? HTTPStatus.KEEPALIVE : HTTPStatus.CLOSE).append(HTTPStatus.CRLF);
         headInfo.append(HTTPStatus.CONTENTTYPE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(type).append(HTTPStatus.COOKIE_SPLITER)
                 .append(HTTPStatus.CHARSET).append(HTTPStatus.PARAM_KV_SPLITER).append(charset).append(HTTPStatus.CRLF);
-        headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
         if (options) {
             headInfo.append(HTTPStatus.ALLOW).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.GET).append(HTTPStatus.COMMA)
                     .append(HTTPStatus.POST).append(HTTPStatus.COMMA).append(HTTPStatus.PUT).append(HTTPStatus.COMMA).append(HTTPStatus.DELETE)
                     .append(HTTPStatus.CRLF);
+        }
+
+        if (src) {
+            headInfo.append(HTTPStatus.CACAHE_CONTROL).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.CACHAE_CONTROL_DESC).append(max_age).append(HTTPStatus.CRLF);
+            String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
+            String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
+            headInfo.append(HTTPStatus.LASTMODIFIED).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(time).append(HTTPStatus.CRLF);
+            headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
+        }
+        if (code == HTTPStatus.CODE_200) {
+            headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
         }
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
@@ -218,12 +224,12 @@ public final class Response {
 
     public byte[] handle(String method, boolean interceptor) {
         //OPTIONS is HTTP pre-request，just return ok signal or other bad request
-        boolean options = StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS);
+        boolean options = StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS), src = false;
         if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || options) {
             if (options) {
                 code = HTTPStatus.CODE_200;
             }
-            return createHeadInfo(null, options);
+            return createHeadInfo(null, options, src);
         }
         if (interceptor) {
             dispatcher.handlePre();
@@ -274,8 +280,25 @@ public final class Response {
                 } else {
                     handle_404_NOT_FOUND();
                 }
-            } else if (resource) {
-                code = HTTPStatus.CODE_200;
+            } else if (code == HTTPStatus.CODE_200) {
+                src = true;
+                code = HTTPStatus.CODE_304;
+                String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
+                String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
+                if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
+                    dispatcher.request.getHeads().put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
+                    dispatcher.request.getHeads().put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
+                    code = HTTPStatus.CODE_200;
+                }
+                String cahce = dispatcher.request.getHeads().get(HTTPStatus.CACAHE_CONTROL);
+                if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
+                    code = HTTPStatus.CODE_200;
+                } else {
+                    cahce = dispatcher.request.getHeads().get(HTTPStatus.PRAGMA);
+                    if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
+                        code = HTTPStatus.CODE_200;
+                    }
+                }
             } else {
                 handle_404_NOT_FOUND();
             }
@@ -286,7 +309,7 @@ public final class Response {
         if (interceptor) {
             dispatcher.handleAfter();
         }
-        byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false);
+        byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false, src);
         byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
         if (content != null) {
@@ -316,11 +339,11 @@ public final class Response {
 
     void reset() {
         servlet = null;
-        resource = false;
         content = null;
         jsonParser = dispatcher.server.getJsonParser();
         len = 0;
         code = 0;
+        max_age = 0;
         if (CollectionUtil.isNotEmptry(heads)) {
             heads.clear();
         }

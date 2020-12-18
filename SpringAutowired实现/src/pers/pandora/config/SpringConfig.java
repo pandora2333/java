@@ -10,13 +10,17 @@ import pers.pandora.bean.User;
 @Configruation
 public class SpringConfig {
 
+    @Bean
+    public TaskBean askBean(TaskBean taskBean){
+        return taskBean;
+    }
+
 	@Bean("taskBean")
-	public TaskBean taskBean(){
-		return new TaskBean();
-	}
-	@Bean
-	public TaskBean askBean(){
-		return new TaskBean();
+	public TaskBean taskBean(B b){
+        TaskBean taskBean = new TaskBean();
+        taskBean.b = b;
+        b.setB("AAAA");
+        return taskBean;
 	}
 	@Bean
 	public User user(){
