@@ -47,11 +47,7 @@ abstract class Dispatcher {
     //main handle HTTP message
     final void dispatcher(String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
-            String servlet = request.getServlet();
-            if (!request.isFlag()) {
-                servlet = request.handle(reqMsg);
-                request.setServlet(servlet);
-            }
+            String servlet = request.handle(reqMsg);
             if (servlet != null) {
                 if (servlet.equals(HTTPStatus.OPTIONS)) {
                     pushClient(response.handle(HTTPStatus.OPTIONS, true), null);
@@ -68,7 +64,6 @@ abstract class Dispatcher {
                         if (mv.isJson() || request.isRedirect()) {
                             pushClient(response.handle(HTTPStatus.GET, false), null);
                         } else {
-                            request.setFlag(false);
                             dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
                         }
                     } else {

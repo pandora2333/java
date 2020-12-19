@@ -1,6 +1,5 @@
 package pers.pandora.constant;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 
 public class HTTPStatus {
 
@@ -12,7 +11,7 @@ public class HTTPStatus {
 
     public static final int LINE_SPLITER = System.lineSeparator().length();//windows 2 byte:\r\n; linux 1 byte: \n
 
-    public static final String FILEMARK = "Content-Type: multipart/form-data; boundary=";
+    public static final String FILEMARK = "multipart/form-data; boundary=";
 
     public static final String FILENAME = "; filename=";
 
@@ -44,9 +43,7 @@ public class HTTPStatus {
 
     public static final String HTTP = "HTTP";
 
-    public static final String TEXT_PLAIN = "text/plain";
-
-    public static final String COOKIE_MARK = "cookie";
+    public static final String COOKIE_MARK = "Cookie";
 
     public static final String SESSION_MARK = "sessionID";
 
@@ -168,7 +165,7 @@ public class HTTPStatus {
 
     public static final String PATH = "Path";
 
-    public static final String SECURE = "secure";
+    public static final String SECURE = "Secure";
 
     public static final String ALLOW = "Allow";
 

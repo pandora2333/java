@@ -169,7 +169,6 @@ public final class Response {
                     .append(HTTPStatus.POST).append(HTTPStatus.COMMA).append(HTTPStatus.PUT).append(HTTPStatus.COMMA).append(HTTPStatus.DELETE)
                     .append(HTTPStatus.CRLF);
         }
-
         if (src) {
             headInfo.append(HTTPStatus.CACAHE_CONTROL).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.CACHAE_CONTROL_DESC).append(max_age).append(HTTPStatus.CRLF);
             String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
@@ -177,9 +176,8 @@ public final class Response {
             headInfo.append(HTTPStatus.LASTMODIFIED).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(time).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
         }
-        if (code == HTTPStatus.CODE_200) {
-            headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
-        }
+        //The browser decides to accept the data length according to the content length. If the length is not specified, all resource requests will be pending until the timeout except for the non resource request status such as HTTP 304
+        headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
@@ -207,8 +205,8 @@ public final class Response {
                         sb.append(HTTPStatus.PATH).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getPath())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
-                    if (cookie.getSecure() > 0) {
-                        sb.append(HTTPStatus.SECURE).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getSecure())
+                    if(cookie.getSecure() > 0){
+                        sb.append(HTTPStatus.SECURE).append(HTTPStatus.PARAM_KV_SPLITER).append(true)
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
                     sb.append(HTTPStatus.CRLF);
@@ -293,10 +291,12 @@ public final class Response {
                 String cahce = dispatcher.request.getHeads().get(HTTPStatus.CACAHE_CONTROL);
                 if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
                     code = HTTPStatus.CODE_200;
+                    src = false;
                 } else {
                     cahce = dispatcher.request.getHeads().get(HTTPStatus.PRAGMA);
                     if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
                         code = HTTPStatus.CODE_200;
+                        src = false;
                     }
                 }
             } else {

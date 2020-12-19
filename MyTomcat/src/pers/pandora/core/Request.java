@@ -54,10 +54,6 @@ public final class Request {
 
     private String fileDesc;
 
-    private String servlet;
-    //reset flag
-    private boolean flag;
-
     private boolean json;
 
     private JSONParser jsonParser;
@@ -86,22 +82,6 @@ public final class Request {
 
     public boolean isJson() {
         return json;
-    }
-
-    public void setFlag(boolean flag) {
-        this.flag = flag;
-    }
-
-    public boolean isFlag() {
-        return flag;
-    }
-
-    public String getServlet() {
-        return servlet;
-    }
-
-    public void setServlet(String servlet) {
-        this.servlet = servlet;
     }
 
     public String getFileDesc() {
@@ -211,6 +191,7 @@ public final class Request {
         jspParser = new JspParser();
         uploadFiles = new HashMap<>(4);
         cookies = new ArrayList<>(1);
+        heads = new HashMap<>(16);
         this.dispatcher = dispatcher;
         filePaths = new HashMap<>(4);
     }
@@ -289,13 +270,10 @@ public final class Request {
             dispatcher.response.setCode(HTTPStatus.CODE_404);
             return null;
         }
-        flag = true;
         if (msg.startsWith(HTTPStatus.OPTIONS)) {
             method = HTTPStatus.OPTIONS;
             return HTTPStatus.OPTIONS;
         }
-        //handle request head
-        msg = handleHeadInfo(msg);
         String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
         json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON_TYPE);
         int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
@@ -313,11 +291,14 @@ public final class Request {
         }
         if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
-            String param = msg.substring(msg.indexOf(HTTPStatus.CRLF)).trim();
-            if (json) {
-                addJSON(param);
-            } else if (!isMultipart) {
-                parseParams(param, false);
+            index = msg.indexOf(HTTPStatus.CRLF);
+            if(index > 0){
+                String param = msg.substring(index).trim();
+                if (json) {
+                    addJSON(param);
+                } else if (!isMultipart) {
+                    parseParams(param, false);
+                }
             }
         } else if (msg.startsWith(HTTPStatus.GET)) {
             method = HTTPStatus.GET;
@@ -360,35 +341,7 @@ public final class Request {
         params.put(HTTPStatus.JSON_TYPE, tmp);
     }
 
-    private String handleHeadInfo(String msg) {
-        boolean initSession = false;
-        Map<String, String> heads = new HashMap<>();
-        StringBuilder other = new StringBuilder();
-        String[] sp;
-        for (String s : msg.split(String.valueOf(HTTPStatus.CRLF), -1)) {
-            sp = s.split(HTTPStatus.HEAD_INFO_SPLITER + HTTPStatus.BLANK, -1);
-            if (sp.length == 2) {
-                if (sp[0].toLowerCase().equals(HTTPStatus.COOKIE_MARK)) {
-                    initCookies(sp[1].trim());
-                    initSession = true;
-                }
-                heads.put(sp[0], sp[1].trim());
-            } else {
-                s = s.trim();
-                other.append(s);
-                if (StringUtils.isNotEmpty(s)) {
-                    other.append(HTTPStatus.CRLF);
-                }
-            }
-        }
-        if (!initSession && (session == null || !checkSessionInvalid(session.getSessionID()))) {
-            initSession();
-        }
-        this.heads = heads;
-        return other.toString();
-    }
-
-    private void initSession() {
+    void initSession() {
         session = new Session(getSessionID());
         Cookie cookie = new Cookie();
         cookie.setKey(HTTPStatus.SESSION_MARK);
@@ -402,7 +355,7 @@ public final class Request {
     }
 
     //It ensures that the sessionID is never duplicated
-    private String getSessionID() {
+    String getSessionID() {
         String sessionID;
         do {
             sessionID = dispatcher.server.getIdWorker().nextSessionID();
@@ -410,7 +363,7 @@ public final class Request {
         return sessionID;
     }
 
-    private void initCookies(String cookie_str) {
+    void initCookies(String cookie_str) {
         boolean initSession = false;
         if (StringUtils.isNotEmpty(cookie_str)) {
             Cookie cookie;
@@ -435,7 +388,7 @@ public final class Request {
         }
     }
 
-    private boolean checkSessionInvalid(String sessionID) {
+    boolean checkSessionInvalid(String sessionID) {
         if (!dispatcher.server.getSessionMap().containsKey(sessionID)) {
             return false;
         }
@@ -545,11 +498,9 @@ public final class Request {
     }
 
     void reset() {
-        flag = false;
         method = null;
         reqUrl = null;
         fileDesc = null;
-        servlet = null;
         json = false;
         redirect = false;
         jsonParser = dispatcher.server.getJsonParser();
