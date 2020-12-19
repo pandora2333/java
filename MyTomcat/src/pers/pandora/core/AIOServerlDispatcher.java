@@ -23,7 +23,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     private long remain;
 
-    private boolean fileFail;
+    private byte[] fileData;
 
     @Override
     public void completed(Integer result, Attachment att) {
@@ -34,7 +34,6 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             //The TCP it can not be closed immediately. The browser may be reused next time, so it needs to be kept alive
             return;
         }
-        fileFail = false;
         att.setKeepTime(Instant.now());
         setKeepAlive(att.isKeep());
         ByteBuffer buffer = att.getReadBuffer();
@@ -51,10 +50,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         } catch (UnsupportedEncodingException e) {
             logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
         }
-        if (remain <= 0 || !fileFail) {
-            if (!fileFail) {
-                request.getUploadFiles().clear();
-            }
+        if (remain <= 0) {
             try {
                 dispatcher(msg);
             } catch (RuntimeException e) {
@@ -65,13 +61,12 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             request.reset();
             response.reset();
             msg = null;
+            fileData = null;
             remain = 0;
         }
         buffer.clear();
         server.slavePool.submit(() -> {
             try {
-                //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
-                Thread.sleep(server.getWaitReceivedTime());
                 completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
                 //AsyncClosedException,and when channel is closed,it must cause
@@ -124,90 +119,84 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             String dataSize = request.getHeads().get(HTTPStatus.CONTENTLENGTH);
             remain = StringUtils.isNotEmpty(dataSize) ? Long.valueOf(dataSize) : 0;
         }
-        remain += -limit + i;
-        if (StringUtils.isNotEmpty(request.getFileDesc())) {
+        int len = limit - i;
+        byte[] tmpData;
+        if(len > 0) {
+            tmpData = new byte[(fileData != null ? fileData.length : 0) + len];
+            if(fileData != null) System.arraycopy(fileData, 0, tmpData, 0, fileData.length);
+            System.arraycopy(data, i, tmpData, fileData != null ? fileData.length : 0, len);
+            fileData = tmpData;
+        }
+        remain -= len;
+        if (StringUtils.isNotEmpty(request.getFileDesc()) && remain <= 0) {
+            i = 0;
+            limit = fileData.length;
+            data = fileData;
             request.setMultipart(true);
             String fileDesc, sideWindow;
             fileDesc = HTTPStatus.MUPART_DESC_LINE + request.getFileDesc();
             sideWindow = HTTPStatus.CRLF + fileDesc;
-            int len = HTTPStatus.MUPART_DESC_LINE.length() + request.getFileDesc().length();
-            if (i + len <= limit && fileDesc.equals(new String(data, i, len, request.getCharset()))) {
-                i += len + HTTPStatus.LINE_SPLITER;
-                String query, varName, varValue, fileName, fileType;
-                byte[] fileData;
-                List<Object> objects;
-                boolean isFile;
-                for (; i < limit && !fileFail; ) {
-                    isFile = false;
-                    for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-                    if (j == limit) {
-                        fileFail = true;
-                        break;
-                    }
-                    query = new String(data, i, j - i + subLen, request.getCharset());
-                    i = j + 1;
-                    k = query.indexOf(HTTPStatus.MUPART_NAME);
-                    if (k > 0) {
-                        k += HTTPStatus.MUPART_NAME.length() + 1;
-                        for (j = k; j < query.length() && query.charAt(j) != HTTPStatus.FILENAMETAIL; j++) ;
-                        varName = query.substring(k, j);
-                        k = query.indexOf(HTTPStatus.FILENAME);
-                        if (k > 0) {//file
-                            j = k + HTTPStatus.FILENAME.length() + 1;
-                            for (k = j; k < query.length() && query.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
-                            fileName = query.substring(j, k);
-                            i += HTTPStatus.CONTENTTYPE.length() + 1;
-                            for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-                            if (j == limit) {
-                                fileFail = true;
+            len = HTTPStatus.MUPART_DESC_LINE.length() + request.getFileDesc().length();
+            i += len + HTTPStatus.LINE_SPLITER;
+            String query, varName, varValue, fileName, fileType;
+            List<Object> objects;
+            boolean isFile;
+            for (; i < limit; ) {
+                isFile = false;
+                for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
+                query = new String(data, i, j - i + subLen, request.getCharset());
+                i = j + 1;
+                k = query.indexOf(HTTPStatus.MUPART_NAME);
+                if (k > 0) {
+                    k += HTTPStatus.MUPART_NAME.length() + 1;
+                    for (j = k; j < query.length() && query.charAt(j) != HTTPStatus.FILENAMETAIL; j++) ;
+                    varName = query.substring(k, j);
+                    k = query.indexOf(HTTPStatus.FILENAME);
+                    if (k > 0) {//file
+                        j = k + HTTPStatus.FILENAME.length() + 1;
+                        for (k = j; k < query.length() && query.charAt(k) != HTTPStatus.FILENAMETAIL; k++) ;
+                        fileName = query.substring(j, k);
+                        i += HTTPStatus.CONTENTTYPE.length() + 1;
+                        for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
+                        //get file type
+                        fileType = new String(data, i, j - i + subLen, request.getCharset()).trim();
+                        i = j + 1 + HTTPStatus.LINE_SPLITER;
+                        for (j = i; j < limit; j++) {
+                            if (data[j] != HTTPStatus.CRLF) continue;
+                            if (new String(data, j, sideWindow.length(), request.getCharset()).equals(sideWindow)) {
+                                j += subLen;
+                                isFile = true;
                                 break;
                             }
-                            //get file type
-                            fileType = new String(data, i, j - i + subLen, request.getCharset()).trim();
-                            i = j + 1 + HTTPStatus.LINE_SPLITER;
-                            for (j = i; j < limit; j++) {
-                                if (data[j] != HTTPStatus.CRLF) continue;
-                                if (new String(data, j, sideWindow.length(), request.getCharset()).equals(sideWindow)) {
-                                    j += subLen;
-                                    isFile = true;
-                                    break;
-                                }
-                            }
-                            if (isFile) {
-                                k = j - i;
-                                //copy file data
-                                fileData = new byte[k];
-                                System.arraycopy(data, i, fileData, 0, k);
-                                Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, fileData);
-                                request.getUploadFiles().put(varName, file);//the same varname just save one file
-                            } else fileFail = true;
-                            i = j + HTTPStatus.LINE_SPLITER;
-                        } else {//form value
-                            i += HTTPStatus.LINE_SPLITER;
-                            for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-                            if (j == limit) {
-                                fileFail = true;
-                                break;
-                            }
-                            varValue = new String(data, i, j - i + subLen, request.getCharset());
-                            objects = request.getParams().get(varName);
-                            if (objects != null) {
-                                objects.add(varValue);
-                            } else {
-                                objects = new ArrayList<>(1);
-                                objects.add(varValue);
-                                request.getParams().put(varName, objects);
-                            }
-                            i = j + 1;
                         }
-                    } else fileFail = true;
-                    i += len + HTTPStatus.LINE_SPLITER;
-                    if (i > limit) fileFail = true;
-                    if (i == limit || (i + 4 == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2))))
-                        break;
+                        if (isFile) {
+                            k = j - i;
+                            //copy file data
+                            tmpData = new byte[k];
+                            System.arraycopy(data, i, tmpData, 0, k);
+                            Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, tmpData);
+                            request.getUploadFiles().put(varName, file);//the same varname just save one file
+                        }
+                        i = j + HTTPStatus.LINE_SPLITER;
+                    } else {//form value
+                        i += HTTPStatus.LINE_SPLITER;
+                        for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
+                        varValue = new String(data, i, j - i + subLen, request.getCharset());
+                        objects = request.getParams().get(varName);
+                        if (objects != null) {
+                            objects.add(varValue);
+                        } else {
+                            objects = new ArrayList<>(1);
+                            objects.add(varValue);
+                            request.getParams().put(varName, objects);
+                        }
+                        i = j + 1;
+                    }
                 }
-            } else fileFail = true;
-        } else if (StringUtils.isNotEmpty(msg)) msg += HTTPStatus.CRLF + new String(data, i, limit - i);
+                i += len + HTTPStatus.LINE_SPLITER;
+                if (i == limit || (i + 4 == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2)))) break;
+            }
+        } else if (!StringUtils.isNotEmpty(request.getFileDesc())) msg += HTTPStatus.CRLF + new String(data, i, limit - i);
         //For the server, a TCP connection can process multiple requests in batches, but only one request can be processed simultaneously
         return remain <= 0;
     }

@@ -71,8 +71,6 @@ public abstract class Server {
     private long expelTime;
 
     private long gcTime;
-
-    private long waitReceivedTime;
     //SessionId Generator
     private IdWorker idWorker;
 
@@ -90,14 +88,6 @@ public abstract class Server {
 
     public void setIdWorker(IdWorker idWorker) {
         this.idWorker = idWorker;
-    }
-
-    public long getWaitReceivedTime() {
-        return waitReceivedTime;
-    }
-
-    public void setWaitReceivedTime(long waitReceivedTime) {
-        this.waitReceivedTime = waitReceivedTime;
     }
 
     public long getGcTime() {

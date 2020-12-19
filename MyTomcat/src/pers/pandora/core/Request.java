@@ -435,7 +435,7 @@ public final class Request {
                     index = reqToken.length();
                 }
                 String path = reqToken.substring(0, index);
-                if (StringUtils.isNotEmpty(path)) {
+                if (StringUtils.isNotEmpty(path) && path.length() > 1) {
                     pathParams = Arrays.asList(path.split(String.valueOf(HTTPStatus.SLASH), -1));
                 }
             } else {

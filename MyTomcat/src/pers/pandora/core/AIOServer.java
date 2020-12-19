@@ -74,15 +74,14 @@ public final class AIOServer extends Server {
             //init web.xml
             setContext(new XMLFactory().parse(getWebConfigPath()));
             att.setServer(this);
-            att.setWaitReceivedTime(getWaitReceivedTime());
             //load SESSION.ser if set before the start method is running
             if (getSerialSessionSupport() != null) {
                 setSessionMap(getSerialSessionSupport().deserialSession(getServerName()));
             }
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
-                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms" + LOG.VERTICAL + "waitReceivedTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime(), getWaitReceivedTime());
+                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
+                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime());
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -109,8 +108,6 @@ public final class AIOServer extends Server {
                     slavePool.submit(() -> {
                         AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                         try {
-                            //for the size is over 1M files to wait a time for receiving all datas,the time should determined by bandwidth
-                            Thread.sleep(getWaitReceivedTime());
                             dispatcher.completed(client.read(newAtt.getReadBuffer()).get(), newAtt);
                         } catch (InterruptedException | ExecutionException e) {
                             //ignore

@@ -62,8 +62,6 @@ public final class StartUper {
 
     public static final String GCTIME = "gcTime";
 
-    public static final String WAITRECEIVEDTIME = "waitReceivedTime";
-
     public static final String WS = "ws";
 
     public static final String FALSE = "false";
@@ -311,10 +309,6 @@ public final class StartUper {
         value = properties.getProperty(GCTIME, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setGcTime(Long.valueOf(value));
-        }
-        value = properties.getProperty(WAITRECEIVEDTIME, null);
-        if (StringUtils.isNotEmpty(value)) {
-            server.setWaitReceivedTime(Long.valueOf(value));
         }
         value = properties.getProperty(JSONCLASS, null);
         if (StringUtils.isNotEmpty(value)) {

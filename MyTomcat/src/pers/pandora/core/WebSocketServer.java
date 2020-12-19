@@ -123,8 +123,8 @@ public class WebSocketServer extends Server {
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port));
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
-                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms" + LOG.VERTICAL + "waitReceivedTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime(), getWaitReceivedTime());
+                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
+                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime());
             serverSocketChannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, WebSocketSession>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
