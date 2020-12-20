@@ -30,6 +30,8 @@ public abstract class Server {
 
     public String requestFileDir = resourceRootPath + "files/";
 
+    public static final String OVERMAXUPBITS = "Maximum allowable transmission bit exceeded";
+
     public static final String DEFAULTSERVER = "PandoraWeb";
     //serer name，it use logs,session file,etc
     private String serverName = DEFAULTSERVER + System.currentTimeMillis();
@@ -63,6 +65,8 @@ public abstract class Server {
     private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
     //max keep connections
     private int maxKeepClients;
+    //Allowed maximum number of transmitted information bits
+    private long maxUpBits = 1024 * 1024 * 100;
 
     protected ExecutorService mainPool;
 
@@ -73,6 +77,14 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public void setMaxUpBits(long maxUpBits) {
+        this.maxUpBits = maxUpBits;
+    }
+
+    public long getMaxUpBits() {
+        return maxUpBits;
+    }
 
     public JSONParser getJsonParser() {
         return jsonParser;

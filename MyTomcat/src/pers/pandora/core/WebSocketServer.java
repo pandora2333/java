@@ -47,9 +47,6 @@ import java.util.concurrent.Executors;
 public class WebSocketServer extends Server {
 
     private final Map<String, WebSocketSession> clients = new ConcurrentHashMap<>(16);
-    //Allowed maximum number of transmitted information bits
-    private int maxWSBits = 1024 * 1024;
-
     //Downtime when the maximum number of clients is maintained
     private long busyTime = 1000;
     //retry count
@@ -80,10 +77,6 @@ public class WebSocketServer extends Server {
 
     private String charset = HTTPStatus.DEFAULTENCODING;
 
-    public final int getMaxWSBits() {
-        return maxWSBits;
-    }
-
     public long getBusyTime() {
         return busyTime;
     }
@@ -98,10 +91,6 @@ public class WebSocketServer extends Server {
 
     public String getCharset() {
         return charset;
-    }
-
-    public final void setMaxWSBits(int maxWSBits) {
-        this.maxWSBits = maxWSBits;
     }
 
     @Override
@@ -241,7 +230,7 @@ public class WebSocketServer extends Server {
                                                         len = 0;
                                                         for (int j = 0; j < size; j++) {
                                                             len = (len << 0x08) | (buffer.get(++i) & 0xff);
-                                                            if (len > maxWSBits) {
+                                                            if (len > getMaxUpBits()) {
                                                                 writeMsg(WS.OVER_UP_DATA_SIZE.getBytes(Charset.forName(charset)), attachment);
                                                                 close(attachment, this);
                                                                 return;

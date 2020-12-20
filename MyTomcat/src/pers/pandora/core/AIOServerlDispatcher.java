@@ -1,9 +1,11 @@
 package pers.pandora.core;
 
 import pers.pandora.constant.LOG;
+import pers.pandora.exception.OverMaxUpBitsException;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.utils.StringUtils;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -47,8 +49,9 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //conten-length = all body data bytes after blank line(\n)
         try {
             initRequest(buffer.array(), buffer.position(), buffer.limit());
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+            if(e instanceof OverMaxUpBitsException) return;
         }
         if (remain <= 0) {
             try {
@@ -114,16 +117,23 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 if (k >= 0) fileSeparator = contentType.substring(k + HTTPStatus.FILEMARK.length());
                 if (StringUtils.isNotEmpty(fileSeparator)) {
                     request.setFileDesc(fileSeparator);
+                    request.setMultipart(true);
                 }
             }
             String dataSize = request.getHeads().get(HTTPStatus.CONTENTLENGTH);
             remain = StringUtils.isNotEmpty(dataSize) ? Long.valueOf(dataSize) : 0;
+            //Directly refuse to receive data after exceeding the maximum transmission bit
+            if (remain > server.getMaxUpBits()) {
+                OverMaxUpBitsException exception = new OverMaxUpBitsException(Server.OVERMAXUPBITS);
+                failed(exception,att);
+                throw exception;
+            }
         }
         int len = limit - i;
         byte[] tmpData;
-        if(len > 0) {
+        if (len > 0) {
             tmpData = new byte[(fileData != null ? fileData.length : 0) + len];
-            if(fileData != null) System.arraycopy(fileData, 0, tmpData, 0, fileData.length);
+            if (fileData != null) System.arraycopy(fileData, 0, tmpData, 0, fileData.length);
             System.arraycopy(data, i, tmpData, fileData != null ? fileData.length : 0, len);
             fileData = tmpData;
         }
@@ -132,7 +142,6 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             i = 0;
             limit = fileData.length;
             data = fileData;
-            request.setMultipart(true);
             String fileDesc, sideWindow;
             fileDesc = HTTPStatus.MUPART_DESC_LINE + request.getFileDesc();
             sideWindow = HTTPStatus.CRLF + fileDesc;
@@ -196,7 +205,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 i += len + HTTPStatus.LINE_SPLITER;
                 if (i == limit || (i + 4 == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2)))) break;
             }
-        } else if (!StringUtils.isNotEmpty(request.getFileDesc())) msg += HTTPStatus.CRLF + new String(data, i, limit - i);
+        } else if (!StringUtils.isNotEmpty(request.getFileDesc()))
+            msg += HTTPStatus.CRLF + new String(data, i, limit - i);
         //For the server, a TCP connection can process multiple requests in batches, but only one request can be processed simultaneously
         return remain <= 0;
     }

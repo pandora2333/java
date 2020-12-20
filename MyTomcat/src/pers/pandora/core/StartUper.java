@@ -2,7 +2,6 @@ package pers.pandora.core;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
@@ -70,7 +69,7 @@ public final class StartUper {
 
     public static final String BUSYTIME = "busyTime";
 
-    public static final String MAXBITS = "maxWSBits";
+    public static final String MAXUPBITS = "maxUpBits";
 
     public static final String CHARSET = "charset";
 
@@ -86,9 +85,9 @@ public final class StartUper {
 
     public static final String JSONCLASS = "jsonClass";
 
-    public static final String RETRYTIME ="retryTime";
+    public static final String RETRYTIME = "retryTime";
 
-    public static final String RETRYCNT ="retryCnt";
+    public static final String RETRYCNT = "retryCnt";
 
     private String[] paths;
 
@@ -210,7 +209,7 @@ public final class StartUper {
                 try {
                     IdWorker idWoker = ClassUtils.getClass(value, beanPool);
                     server.setIdWorker(idWoker);
-                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+                } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
                 }
@@ -250,10 +249,6 @@ public final class StartUper {
             value = properties.getProperty(BUSYTIME, null);
             if (StringUtils.isNotEmpty(value)) {
                 ((WebSocketServer) server).setBusyTime(Long.valueOf(value));
-            }
-            value = properties.getProperty(MAXBITS, null);
-            if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setMaxWSBits(Integer.valueOf(value));
             }
             value = properties.getProperty(CHARSET, null);
             if (StringUtils.isNotEmpty(value)) {
@@ -310,11 +305,15 @@ public final class StartUper {
         if (StringUtils.isNotEmpty(value)) {
             server.setGcTime(Long.valueOf(value));
         }
+        value = properties.getProperty(MAXUPBITS, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setMaxUpBits(Long.valueOf(value));
+        }
         value = properties.getProperty(JSONCLASS, null);
         if (StringUtils.isNotEmpty(value)) {
             try {
-                server.setJsonParser(ClassUtils.getClass(value,beanPool));
-            } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+                server.setJsonParser(ClassUtils.getClass(value, beanPool));
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error("buildServer jsonClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                 return null;
             }
