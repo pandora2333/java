@@ -147,7 +147,7 @@ public final class Configuration {
             try {
                 future.get(timeOut, timeOutUnit);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                logger.error("waitFutures" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                logger.error("waitFutures" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
             }
         }
     }
@@ -202,7 +202,7 @@ public final class Configuration {
                         alias.put(fieldValue, field.getName());
                     }
                 } catch (Exception e) {
-                    logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                    logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
                 }
             }
         }
@@ -241,7 +241,7 @@ public final class Configuration {
                 }
             } catch (Exception e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                        this, className, LOG.EXCEPTION_DESC, e);
+                        this, className, LOG.EXCEPTION_DESC, e.getCause());
                 return false;
             }
             return true;

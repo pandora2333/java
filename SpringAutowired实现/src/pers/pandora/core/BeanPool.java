@@ -45,7 +45,7 @@ public final class BeanPool {
 
     private Map<Method, String[]> methodParams = new ConcurrentHashMap<>(16);
 
-    private List<Class<?>> controllerAndService = new CopyOnWriteArrayList<>();
+    private List<Class<?>> WCS = new CopyOnWriteArrayList<>();
 
     private ThreadPoolExecutor executor;
 
@@ -174,7 +174,7 @@ public final class BeanPool {
         //Topology injection
         topologyBean();
         //Controller auto-injected
-        injectControllerAndService();
+        injectWCS();
         waitFutures(result, timeOut, timeOutUnit);
         executor.shutdownNow();
         //Attribute cyclic dependency injection
@@ -183,13 +183,13 @@ public final class BeanPool {
         result = null;
     }
 
-    private void injectControllerAndService() {
-        controllerAndService.stream().filter(tClass -> getBeanByType(tClass) == null)
-                .forEach(tClass -> {
-                    boolean annotation = tClass.isAnnotationPresent(Controller.class);
-                    result.add(executor.submit(new IOTask(tClass.getName(), annotation ? Controller.class : Service.class, false)));
-                });
-        controllerAndService = null;
+    private void injectWCS() {
+        WCS.stream().filter(tClass -> getBeanByType(tClass) == null)
+                .forEach(tClass -> result.add(executor.submit(new IOTask(tClass.getName(),
+                        tClass.isAnnotationPresent(Controller.class) ? Controller.class :
+                                (tClass.isAnnotationPresent(WebSocket.class) ? WebSocket.class : Service.class),
+                        false))));
+        WCS = null;
     }
 
     private void topologyBean() {
@@ -313,7 +313,7 @@ public final class BeanPool {
         try {
             obj = method.invoke(config, params);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            logger.error("createBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+            logger.error("createBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
             return;
         }
         initBean(obj, nameTemp);
@@ -407,10 +407,12 @@ public final class BeanPool {
                         }
                     }
                 }
-            } else if (t.isAnnotationPresent(Controller.class) || t.isAnnotationPresent(Service.class)) {
-                controllerAndService.add(t);
+            } else if (t.isAnnotationPresent(Controller.class) ||
+                    t.isAnnotationPresent(Service.class)
+                    || t.isAnnotationPresent(WebSocket.class)) {
+                WCS.add(t);
             }
-        } else if (template == Controller.class || template == Service.class) {
+        } else if (template == Controller.class || template == Service.class || template == WebSocket.class) {
             if (getBeanByType(t) != null) {
                 return;
             }
@@ -511,7 +513,7 @@ public final class BeanPool {
 
     /**
      * Load configuration file
-     * Note:you can simply use the @ Autowired function without specifying the configuration file
+     * Note:you can simply use the @Autowired function without specifying the configuration file
      *
      * @param tClass
      * @param file
@@ -528,7 +530,7 @@ public final class BeanPool {
                 field.setAccessible(true);
                 if (field.isAnnotationPresent(Value.class)) {
                     scanBean(tClass, field, Value.class, prop.get());
-                } else if (!Modifier.isPrivate(field.getModifiers()) && field.isAnnotationPresent(Autowired.class)) {
+                } else if (field.isAnnotationPresent(Autowired.class)) {
                     Autowired fieldSrc = field.getAnnotation(Autowired.class);
                     if (beans.containsKey(fieldSrc.value())) {
                         try {

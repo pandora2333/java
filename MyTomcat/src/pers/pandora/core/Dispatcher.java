@@ -83,11 +83,36 @@ abstract class Dispatcher {
                         } else {
                             response.setCode(HTTPStatus.CODE_200);
                             response.setType(ss[0]);
-                            response.setLen(file.length());
+                            long len = file.length();
+                            String range = request.getHeads().get(HTTPStatus.RANGE);
+                            if (StringUtils.isNotEmpty(range)) {
+                                String tmp[] = range.split(HTTPStatus.PARAM_KV_SPLITER);
+                                //Currently only bytes are processed
+                                if (tmp.length == 2 && tmp[0].equals(HTTPStatus.BYTES)) {
+                                    if (StringUtils.isNotEmpty(tmp[1])) {
+                                        tmp = tmp[1].split(HTTPStatus.RANGEREGEX, -1);
+                                        response.setTotal(len);
+                                        if (tmp.length == 2) {
+                                            response.setCode(HTTPStatus.CODE_206);
+                                            long start = Long.valueOf(tmp[0]);
+                                            response.setStart(start);
+                                            if (StringUtils.isNotEmpty(tmp[1])) {
+                                                response.setEnd(Long.valueOf(tmp[1]));
+                                                len = Math.min(len - start + 1, response.getEnd() - start + 1);
+                                            } else {
+                                                len = Math.min(len - start + 1, server.getResponseBuffer());
+                                            }
+                                            response.setEnd(len + start - 1);
+                                        }
+                                    }
+                                }
+                            }
+                            response.setLen(len);
                         }
                     }
                     response.setServlet(servlet);
-                    pushClient(response.handle(request.getMethod(), true), response.getCode() == HTTPStatus.CODE_304 ? null : file);
+                    pushClient(response.handle(request.getMethod(), true),
+                            response.getCode() == HTTPStatus.CODE_304 && file != null ? null : file);
                 }
             } else {
                 pushClient(response.handle(null, true), null);

@@ -302,10 +302,10 @@ public final class Request {
             }
         } else if (msg.startsWith(HTTPStatus.GET)) {
             method = HTTPStatus.GET;
-            String type = judgeStatic(reqToken);
+            String type = judgeStatic(reqUrl);
             if (type != null) {
                 //static resource
-                return type + reqToken;
+                return type + reqUrl;
             }
         } else if (msg.startsWith(HTTPStatus.PUT)) {
             method = HTTPStatus.PUT;
@@ -417,6 +417,10 @@ public final class Request {
                 return HTTPStatus.JS_TYPE + HTTPStatus.COLON;
             } else if (reqToken.endsWith(HTTPStatus.CSS)) {
                 return HTTPStatus.CSS_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.MP4)) {
+                return HTTPStatus.MP4_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.MP3)) {
+                return HTTPStatus.MP3_TYPE + HTTPStatus.COLON;
             }
             //default binary data
             return HTTPStatus.BINARY_TYPE + HTTPStatus.COLON;

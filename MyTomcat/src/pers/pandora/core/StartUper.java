@@ -89,6 +89,10 @@ public final class StartUper {
 
     public static final String RETRYCNT = "retryCnt";
 
+    public static final String OPENMSG = "openMsg";
+
+    public static final String CLOSEMSG = "closeMsg";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -234,6 +238,14 @@ public final class StartUper {
             if (StringUtils.isNotEmpty(value)) {
                 server.setRequestFileDir(value);
             }
+            value = properties.getProperty(EXPELTIME, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setExpelTime(Long.valueOf(value));
+            }
+            value = properties.getProperty(GCTIME, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setGcTime(Long.valueOf(value));
+            }
         } else {
             value = properties.getProperty(WSCLASS, null);
             if (StringUtils.isNotEmpty(value)) {
@@ -261,6 +273,14 @@ public final class StartUper {
             value = properties.getProperty(RETRYCNT, null);
             if (StringUtils.isNotEmpty(value)) {
                 ((WebSocketServer) server).setRetryCnt(Integer.valueOf(value));
+            }
+            value = properties.getProperty(OPENMSG, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setOpenMsg(Boolean.valueOf(value));
+            }
+            value = properties.getProperty(CLOSEMSG, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setCloseMsg(Boolean.valueOf(value));
             }
         }
         //common configs
@@ -296,14 +316,6 @@ public final class StartUper {
         value = properties.getProperty(MAXKEEPCLIENTS, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setMaxKeepClients(Integer.valueOf(value));
-        }
-        value = properties.getProperty(EXPELTIME, null);
-        if (StringUtils.isNotEmpty(value)) {
-            server.setExpelTime(Long.valueOf(value));
-        }
-        value = properties.getProperty(GCTIME, null);
-        if (StringUtils.isNotEmpty(value)) {
-            server.setGcTime(Long.valueOf(value));
         }
         value = properties.getProperty(MAXUPBITS, null);
         if (StringUtils.isNotEmpty(value)) {

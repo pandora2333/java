@@ -70,34 +70,38 @@ public final class JspParser {
                     }
                 }
             }
-            //DCL
-            if (!jspCahce.containsKey(jspFile)) {
-                synchronized (logger) {
-                    if (!jspCahce.containsKey(jspFile)) {
-                        jspCahce.put(jspFile, CodeUtils.hashEncode(jspFile, SALT, null, null));
-                    }
-                }
-            }
             query = jspCahce.get(jspFile);
         }
         Reader inFifle;
+        StringBuilder buf;
+        String jsp = null;
         try {
-            inFifle = new FileReader(file);
-            BufferedReader inputStream = new BufferedReader(inFifle);
-            StringBuilder buf = new StringBuilder();
-            String temp;
-            while ((temp = inputStream.readLine()) != null) {
-                temp = temp.trim();
-                if(!temp.startsWith(JSP.DOUBLE_SLASH)){
-                    buf.append(temp).append(JSP.CRLF);
+            if(!StringUtils.isNotEmpty(query)){
+                inFifle = new FileReader(file);
+                BufferedReader inputStream = new BufferedReader(inFifle);
+                buf = new StringBuilder();
+                String temp;
+                while ((temp = inputStream.readLine()) != null) {
+                    temp = temp.trim();
+                    if(!temp.startsWith(JSP.DOUBLE_SLASH)){
+                        buf.append(temp).append(JSP.CRLF);
+                    }
                 }
-            }
-            inputStream.close();
-            inFifle.close();
-            String jsp = buf.toString();
-            if(query == null){
+                inputStream.close();
+                inFifle.close();
+                jsp = buf.toString();
                 //Using file hash, duplicate classes are not generated again
                 query = CodeUtils.hashEncode(jsp, SALT, null, null);
+                if(!hotLoadJSP){
+                    //DCL
+                    if (!jspCahce.containsKey(jspFile)) {
+                        synchronized (logger) {
+                            if (!jspCahce.containsKey(jspFile)) {
+                                jspCahce.put(jspFile, query);
+                            }
+                        }
+                    }
+                }
             }
             int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
             String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();

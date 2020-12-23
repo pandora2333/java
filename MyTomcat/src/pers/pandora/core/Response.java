@@ -36,11 +36,37 @@ public final class Response {
     private int code;
 
     private Map<String, String> heads;
+    //support code 206
+    private long end;
+
+    private long total;
+
+    private long start;
 
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
 
-    public Dispatcher getDispatcher() {
-        return dispatcher;
+    public long getStart() {
+        return start;
+    }
+
+    public void setStart(long start) {
+        this.start = start;
+    }
+
+    public long getEnd() {
+        return end;
+    }
+
+    public void setEnd(long end) {
+        this.end = end;
+    }
+
+    public long getTotal() {
+        return total;
+    }
+
+    public void setTotal(long total) {
+        this.total = total;
     }
 
     public void setJsonParser(JSONParser jsonParser) {
@@ -136,6 +162,9 @@ public final class Response {
             case HTTPStatus.CODE_200:
                 headInfo.append(HTTPStatus.CODE_200_DESC);
                 break;
+            case HTTPStatus.CODE_206:
+                headInfo.append(HTTPStatus.CODE_206_DESC);
+                break;
             case HTTPStatus.CODE_302:
                 headInfo.append(HTTPStatus.CODE_302_DESC);
                 break;
@@ -176,6 +205,12 @@ public final class Response {
             headInfo.append(HTTPStatus.LASTMODIFIED).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(time).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
         }
+
+        if (code == HTTPStatus.CODE_206) {
+            headInfo.append(HTTPStatus.ACCEPTRANGES).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.CRLF);
+            headInfo.append(HTTPStatus.CONTENTRANGE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.BLANK).append(start)
+                    .append(HTTPStatus.MUPART_DESC_LINE.charAt(0)).append(String.valueOf(end)).append(HTTPStatus.SLASH).append(String.valueOf(total)).append(HTTPStatus.CRLF);
+        }
         //The browser decides to accept the data length according to the content length. If the length is not specified, all resource requests will be pending until the timeout except for the non resource request status such as HTTP 304
         headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
@@ -205,7 +240,7 @@ public final class Response {
                         sb.append(HTTPStatus.PATH).append(HTTPStatus.PARAM_KV_SPLITER).append(cookie.getPath())
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
-                    if(cookie.getSecure() > 0){
+                    if (cookie.getSecure() > 0) {
                         sb.append(HTTPStatus.SECURE).append(HTTPStatus.PARAM_KV_SPLITER).append(true)
                                 .append(HTTPStatus.COOKIE_SPLITER);
                     }
@@ -278,24 +313,32 @@ public final class Response {
                 } else {
                     handle_404_NOT_FOUND();
                 }
-            } else if (code == HTTPStatus.CODE_200) {
+            } else if (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206) {
                 src = true;
-                code = HTTPStatus.CODE_304;
-                String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
+                if(code == HTTPStatus.CODE_200){
+                    code = HTTPStatus.CODE_304;
+                }
                 String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
+                String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
                 if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
                     dispatcher.request.getHeads().put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
                     dispatcher.request.getHeads().put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
-                    code = HTTPStatus.CODE_200;
+                    if(code == HTTPStatus.CODE_304){
+                        code = HTTPStatus.CODE_200;
+                    }
                 }
                 String cahce = dispatcher.request.getHeads().get(HTTPStatus.CACAHE_CONTROL);
                 if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
-                    code = HTTPStatus.CODE_200;
+                    if(code == HTTPStatus.CODE_304){
+                        code = HTTPStatus.CODE_200;
+                    }
                     src = false;
                 } else {
                     cahce = dispatcher.request.getHeads().get(HTTPStatus.PRAGMA);
                     if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
-                        code = HTTPStatus.CODE_200;
+                        if(code == HTTPStatus.CODE_304){
+                            code = HTTPStatus.CODE_200;
+                        }
                         src = false;
                     }
                 }
@@ -344,6 +387,9 @@ public final class Response {
         len = 0;
         code = 0;
         max_age = 0;
+        start = 0;
+        end = 0;
+        total = 0;
         if (CollectionUtil.isNotEmptry(heads)) {
             heads.clear();
         }

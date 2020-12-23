@@ -63,7 +63,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             try {
                 exec(BEFOREHANDlES, joinPoint);
             } catch (InvocationTargetException | IllegalAccessException e) {
-                logger.error("exec proxy method:" + LOG.LOG_PRE + LOG.LOG_POS, parentMethod.getName(), LOG.EXCEPTION_DESC, e);
+                logger.error("exec proxy method:" + LOG.LOG_PRE + LOG.LOG_POS, parentMethod.getName(), LOG.EXCEPTION_DESC, e.getCause());
             }
             Object ret = null;
             try {

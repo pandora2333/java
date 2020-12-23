@@ -1,5 +1,4 @@
 package pers.pandora.controller;
-import pers.pandora.annotation.WebSocket;
 import pers.pandora.annotation.WebSocketMethod;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.WS;
@@ -8,7 +7,6 @@ import pers.pandora.core.WebSocketSession;
 import java.nio.charset.Charset;
 import java.util.Map;
 @Deprecated
-@WebSocket("/ws")
 public class WSTestController {
 
     /**

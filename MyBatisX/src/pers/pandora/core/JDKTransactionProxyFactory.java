@@ -52,7 +52,7 @@ public class JDKTransactionProxyFactory implements TransactionProxyFactory {
             Object result = null;
             boolean transaction = false;
             PoolConnection connection = null;
-            int level = 0;
+            int level = MapperProxyHandler.ZERO;
             if (transactional != null) {
                 transaction = true;
                 //close db auto-commit
@@ -68,7 +68,7 @@ public class JDKTransactionProxyFactory implements TransactionProxyFactory {
                         connection.getConnection().setTransactionIsolation(transactional.isolation());
                         //Binding transactions through ThreadLocal
                         if(transactional.propagation() == Propagation.REQUIRES_NEW){
-                            connection.setTransNew(0);
+                            connection.setTransNew(MapperProxyHandler.ZERO);
                         }
                         TRANSACTIONS.set(connection);
                     } catch (SQLException e) {
@@ -88,7 +88,7 @@ public class JDKTransactionProxyFactory implements TransactionProxyFactory {
                         connection.getConnection().rollback();
                         logger.debug("method:" + LOG.LOG_PRE + "trigger connection rollback" + LOG.LOG_POS, method.getName(), LOG.ERROR_DESC, e.getCause());
                     } catch (SQLException e1) {
-                        logger.error("connection rollback" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                        logger.error("connection rollback" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
                     }
                 }
             }

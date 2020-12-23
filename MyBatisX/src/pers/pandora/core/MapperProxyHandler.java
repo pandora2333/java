@@ -8,7 +8,6 @@ import pers.pandora.constant.SQL;
 import pers.pandora.constant.XML;
 import pers.pandora.utils.ClassUtil;
 import pers.pandora.utils.StringUtil;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -40,6 +39,10 @@ public final class MapperProxyHandler {
         this.configuration = configuration;
     }
 
+    public static final byte ZERO = 0;
+
+    public static final byte ONE = 1;
+
     /**
      * The implementation of XML file SQL parsing, processing, entity class assignment a series of processing procedures
      *
@@ -69,12 +72,12 @@ public final class MapperProxyHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            List<Object> list = new ArrayList<>(1);
+            List<Object> list = new ArrayList<>(ONE);
             boolean notUnique = handleSQL(method, args, list);
-            if (list.size() == 0) {
+            if (list.size() == ZERO) {
                 return null;
             }
-            return notUnique ? list : list.get(0);
+            return notUnique ? list : list.get(ZERO);
         }
 
         /**
@@ -98,7 +101,7 @@ public final class MapperProxyHandler {
                     //ignore
                 }
                 try {
-                    list.add(rs.getObject(1));
+                    list.add(rs.getObject(ONE));
                 } catch (SQLException e) {
                     //ignore
                 }
@@ -113,9 +116,9 @@ public final class MapperProxyHandler {
                 Object columnValue, rowObj;
                 while (rs.next()) {
                     rowObj = ClassUtil.getInstance(tClass);
-                    for (int i = 0; i < metaData.getColumnCount(); i++) {
-                        columnName = metaData.getColumnLabel(i + 1);
-                        columnValue = rs.getObject(i + 1);
+                    for (int i = ZERO; i < metaData.getColumnCount(); i++) {
+                        columnName = metaData.getColumnLabel(i + ONE);
+                        columnValue = rs.getObject(i + ONE);
                         alia = alias.get(columnName);
                         if (StringUtil.isNotEmpty(alia)) {
                             columnName = alia;
@@ -126,7 +129,7 @@ public final class MapperProxyHandler {
                 }
                 close(null, rs);
             } catch (Exception e) {
-                logger.error("handleField" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                logger.error("handleField" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
             }
         }
 
@@ -141,8 +144,8 @@ public final class MapperProxyHandler {
             Method m;
             try {
                 if (columnValue != null) {
-                    m = obj.getClass().getDeclaredMethod(ENTITY.SET + columnName.substring(0, 1).toUpperCase()
-                            + columnName.substring(1), columnValue.getClass());
+                    m = obj.getClass().getDeclaredMethod(ENTITY.SET + Character.toUpperCase(columnName.charAt(ZERO))
+                            + columnName.substring(ONE), columnValue.getClass());
                     m.invoke(obj, columnValue);
                 }
             } catch (Exception e) {
@@ -178,11 +181,11 @@ public final class MapperProxyHandler {
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
             PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();
             boolean transation = false;
-            if (connection == null || connection.getTransNew() > 0) {
+            if (connection == null || connection.getTransNew() > ZERO) {
                 connection = configuration.getDbPool().getConnection();
             } else {
-                if (connection.getTransNew() == 0) {
-                    connection.setTransNew(1);
+                if (connection.getTransNew() == ZERO) {
+                    connection.setTransNew(ONE);
                 }
                 transation = true;
             }
@@ -203,9 +206,9 @@ public final class MapperProxyHandler {
                     rs = st.executeQuery(SQL.SELECT + XML.BLANK + SQL.MAX + ENTITY.LEFT_BRACKET + dynamicSql.getPkName()
                             + ENTITY.RIGHT_BRACKET + XML.BLANK + SQL.FROM + XML.BLANK + tableName);
                     rs.next();
-                    Object value = rs.getObject(1);
+                    Object value = rs.getObject(ONE);
                     args[0].getClass().getDeclaredMethod(ENTITY.SET + Character.toUpperCase(dynamicSql.getPkName().charAt(0))
-                            + dynamicSql.getPkName().substring(1), value.getClass()).invoke(args[0], value);
+                            + dynamicSql.getPkName().substring(ONE), value.getClass()).invoke(args[ZERO], value);
                 }
             }
             close(st, rs);
@@ -214,7 +217,7 @@ public final class MapperProxyHandler {
             }
             if (cacheFactory != null) {
                 if (sql.startsWith(SQL.SELECT)) {
-                    cacheFactory.put(key, method.getReturnType() == List.class ? list : list.size() > 0 ? list.get(0) : null);
+                    cacheFactory.put(key, method.getReturnType() == List.class ? list : list.size() > ZERO ? list.get(ZERO) : null);
                 } else {
                     cacheFactory.removeKey(key);
                 }
@@ -224,35 +227,35 @@ public final class MapperProxyHandler {
 
         private void assignParams(PreparedStatement st, List<Object> params) {
             Class<?> type;
-            for (int i = 0; i < params.size() - 1; i++) {
+            for (int i = 0; i < params.size() - ONE; i++) {
                 try {
                     if (params.get(i) == null) {
-                        st.setObject(i + 1, null);
+                        st.setObject(i + ONE, null);
                         continue;
                     }
                     type = params.get(i).getClass();
                     if (type == Integer.class || type == int.class) {
-                        st.setInt(i + 1, (Integer) params.get(i));
+                        st.setInt(i + ONE, (Integer) params.get(i));
                     } else if (type == Long.class || type == long.class) {
-                        st.setLong(i + 1, (Long) params.get(i));
+                        st.setLong(i + ONE, (Long) params.get(i));
                     } else if (type == Double.class || type == double.class) {
-                        st.setDouble(i + 1, (Double) params.get(i));
+                        st.setDouble(i + ONE, (Double) params.get(i));
                     } else if (type == Float.class || type == float.class) {
-                        st.setFloat(i + 1, (float) params.get(i));
+                        st.setFloat(i + ONE, (float) params.get(i));
                     } else if (type == String.class) {
-                        st.setString(i + 1, (String) params.get(i));
+                        st.setString(i + ONE, (String) params.get(i));
                     } else if (type == Clob.class) {
-                        st.setClob(i + 1, (Clob) params.get(i));
+                        st.setClob(i + ONE, (Clob) params.get(i));
                     } else if (type == Blob.class) {
-                        st.setBlob(i + 1, (Blob) params.get(i));
+                        st.setBlob(i + ONE, (Blob) params.get(i));
                     } else if (type == Date.class) {
-                        st.setDate(i + 1, (Date) params.get(i));
+                        st.setDate(i + ONE, (Date) params.get(i));
                     } else if (type == Time.class) {
-                        st.setTime(i + 1, (Time) params.get(i));
+                        st.setTime(i + ONE, (Time) params.get(i));
                     } else if (type == Timestamp.class) {
-                        st.setTimestamp(i + 1, (Timestamp) params.get(i));
+                        st.setTimestamp(i + ONE, (Timestamp) params.get(i));
                     } else if (type == BigDecimal.class) {
-                        st.setBigDecimal(i + 1, (BigDecimal) params.get(i));
+                        st.setBigDecimal(i + ONE, (BigDecimal) params.get(i));
                     }
 
                 } catch (SQLException e) {
@@ -264,7 +267,7 @@ public final class MapperProxyHandler {
         private String getTableName(String sql, String condition1, String condition2) {
             String table = sql.substring(sql.indexOf(condition1) + 4).trim();
             int index = table.indexOf(condition2);
-            if (index > 0) {
+            if (index > ZERO) {
                 table = table.replace(table.substring(index), LOG.NO_CHAR).trim();
             }
             return table;
@@ -282,7 +285,7 @@ public final class MapperProxyHandler {
      */
     private String tokenSpec(String sql, Object[] args, List<Object> params) {
         String preSql = sql.replaceAll(XML.VAR_REGEX_PATTERN, String.valueOf(SQL.QUESTION_MARK));
-        if (args == null || args.length == 0) {
+        if (args == null || args.length == ZERO) {
             params.add(preSql);
             return sql;
         }
@@ -291,18 +294,18 @@ public final class MapperProxyHandler {
         if (sql.contains(var_mark)) {
             Matcher matcher = pattern.matcher(sql);
             StringBuffer sb = new StringBuffer();
-            int cursor = 0;
+            int cursor = ZERO;
             Object param = null;
             String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
             String quotation = String.valueOf(SQL.QUOTATION);
-            boolean vo = !ClassUtil.checkBasicClass(args[0].getClass());
+            boolean vo = !ClassUtil.checkBasicClass(args[ZERO].getClass());
             while (matcher.find()) {
                 if (vo) {
                     String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
                     try {
-                        param = args[0].getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(0)) + paramTemp.substring(1)).invoke(args[0]);
+                        param = args[ZERO].getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(ZERO)) + paramTemp.substring(ONE)).invoke(args[ZERO]);
                     } catch (Exception e) {
-                        logger.error("tokenSpec" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                        logger.error("tokenSpec" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
                     }
                 } else {
                     param = args[cursor];

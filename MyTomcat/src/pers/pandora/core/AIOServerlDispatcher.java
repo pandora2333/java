@@ -14,7 +14,9 @@ import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public final class AIOServerlDispatcher extends Dispatcher implements CompletionHandler<Integer, Attachment> {
@@ -26,6 +28,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     private long remain;
 
     private byte[] fileData;
+    //support http 206
+    private Map<String, FileChannel> ins = new HashMap<>(4);
 
     @Override
     public void completed(Integer result, Attachment att) {
@@ -51,7 +55,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             initRequest(buffer.array(), buffer.position(), buffer.limit());
         } catch (Exception e) {
             logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
-            if(e instanceof OverMaxUpBitsException) return;
+            if (e instanceof OverMaxUpBitsException) return;
         }
         if (remain <= 0) {
             try {
@@ -125,7 +129,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             //Directly refuse to receive data after exceeding the maximum transmission bit
             if (remain > server.getMaxUpBits()) {
                 OverMaxUpBitsException exception = new OverMaxUpBitsException(Server.OVERMAXUPBITS);
-                failed(exception,att);
+                failed(exception, att);
                 throw exception;
             }
         }
@@ -238,43 +242,69 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             }
             by.compact();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
+            FileChannel fin;
             FileInputStream in = null;
             if (staticFile != null) {
                 by = att.getWriteBuffer();
+                boolean part = response.getCode() == HTTPStatus.CODE_206;
                 try {
-                    in = new FileInputStream(staticFile);
-                    FileChannel fin = in.getChannel();
-                    while (fin.read(by) != -1) {
-                        by.flip();
-                        try {
-                            if (att.getClient().isOpen()) {
-                                att.getClient().write(by).get();
-                            } else {
-                                return;
+                    if (part) {
+                        fin = ins.get(staticFile.getAbsolutePath());
+                        if (fin == null) {
+                            fin = (in = new FileInputStream(staticFile)).getChannel();
+                            ins.put(staticFile.getAbsolutePath(), fin);
+                        }
+                    } else {
+                        fin = (in = new FileInputStream(staticFile)).getChannel();
+                    }
+                    assert fin != null;
+                    if (!part) {
+                        while (fin.read(by) != -1) {
+                            by.flip();
+                            if (!write(by, staticFile.getAbsolutePath())) {
+                                break;
                             }
-                        } catch (InterruptedException | ExecutionException e) {
-                            //The write operation is abnormal. The last IO operation of the underlying tcpsocket is still occurring, and the Current IO operation is interrupted
-                            logger.error(LOG.LOG_PRE + "pushClient read I/O" + LOG.LOG_POS,
-                                    server.getServerName(), staticFile.getAbsolutePath(),
-                                    LOG.EXCEPTION_DESC, e);
-                            break;
-                        } finally {
                             by.compact();
                         }
+                    } else {
+                        by = ByteBuffer.allocateDirect((int) response.getLen());
+                        fin.read(by, response.getStart());
+                        by.flip();
+                        write(by, staticFile.getAbsolutePath());
                     }
                 } catch (IOException e) {
                     //ignore
                     //ClosedException
                 }
-                if (in != null) {
+                if (in != null && (!part || response.getEnd() == response.getTotal() - 1)) {
                     try {
                         in.close();
+                        if (part) {
+                            ins.remove(staticFile.getAbsolutePath());
+                        }
                     } catch (IOException e) {
                         //ignore
                     }
                 }
             }
         }
+    }
+
+    public boolean write(ByteBuffer by, String file) {
+        try {
+            if (att.getClient().isOpen()) {
+                att.getClient().write(by).get();
+            } else {
+                return false;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            //The write operation is abnormal. The last IO operation of the underlying tcpsocket is still occurring, and the Current IO operation is interrupted
+            logger.error(LOG.LOG_PRE + "I/O write" + LOG.LOG_POS,
+                    server.getServerName(), file,
+                    LOG.EXCEPTION_DESC, e);
+            return false;
+        }
+        return true;
     }
 
 }

@@ -125,6 +125,10 @@ public class HTTPStatus {
 
     public static final int CODE_304 = 304;
 
+    public static final int CODE_206 = 206;
+
+    public static final String CODE_206_DESC = "Partial Content";
+
     public static final String CODE_304_DESC = "Not Modified";
 
     public static final String CODE_200_DESC = "OK";
@@ -196,4 +200,24 @@ public class HTTPStatus {
     public static final String NO_CACHE = "no-cache";
 
     public static final String PRAGMA = "Pragma";
+
+    public static final String RANGE = "Range";
+
+    public static final String BYTES = "bytes";
+
+    public static final String RANGEREGEX = "\\-";
+
+    public static final String ACCEPTRANGES = "Accept-Ranges";
+
+    public static final String CONTENTRANGE = "Content-Range";
+
+    public static final String MP4_TYPE = "video/mp4";
+
+    public static final String MP3_TYPE = "video/mp3";
+
+    public static final String MP4 = ".mp4";
+
+    public static final String MP3 = ".mp3";
+
+    public static final String IFRANGE = "If-Range";
 }

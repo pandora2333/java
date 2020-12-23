@@ -1,23 +1,19 @@
 package pers.pandora.core;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 public class PoolConnection {
 
     private boolean isBusy;
 
     private Connection connection;
 
-    private int transNew = -1;
+    private byte transNew = -1;
 
-    public int getTransNew() {
+    public byte getTransNew() {
         return transNew;
     }
 
-    public void setTransNew(int transNew) {
+    public void setTransNew(byte transNew) {
         this.transNew = transNew;
     }
 

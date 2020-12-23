@@ -11,6 +11,7 @@ import pers.pandora.vo.WSData;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
@@ -53,6 +54,26 @@ public class WebSocketServer extends Server {
     private int retryCnt;
     //retry interval time
     private long retryTime;
+
+    private boolean openMsg;
+
+    private boolean closeMsg;
+
+    public boolean isCloseMsg() {
+        return closeMsg;
+    }
+
+    public boolean isOpenMsg() {
+        return openMsg;
+    }
+
+    public void setOpenMsg(boolean openMsg) {
+        this.openMsg = openMsg;
+    }
+
+    public void setCloseMsg(boolean closeMsg) {
+        this.closeMsg = closeMsg;
+    }
 
     public int getRetryCnt() {
         return retryCnt;
@@ -129,11 +150,11 @@ public class WebSocketServer extends Server {
                                 if (msg == null || msg.length == 0) {
                                     return;
                                 }
-                                if(attachment.getWriteBuffer().capacity() < msg.length){
+                                if (attachment.getWriteBuffer().capacity() < msg.length) {
                                     attachment.setWriteBuffer(ByteBuffer.allocate(msg.length));
                                 }
                                 //Avoid for concurrently reading in the same buffer by read-thread
-                                ByteBuffer tmp =  attachment.getWriteBuffer();
+                                ByteBuffer tmp = attachment.getWriteBuffer();
                                 try {
                                     tmp.put(msg);
                                     //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
@@ -142,16 +163,16 @@ public class WebSocketServer extends Server {
                                 } catch (Exception e) {
                                     //ignore,retry again
                                     boolean ok = false;
-                                    for(int i = 0;i < retryCnt && !ok;i++){
+                                    for (int i = 0; i < retryCnt && !ok; i++) {
                                         ok = true;
                                         try {
                                             Thread.sleep(retryTime);
                                         } catch (InterruptedException ex) {
                                             //ignore
                                         }
-                                        try{
+                                        try {
                                             attachment.getClient().write(tmp);
-                                        }catch (Exception exx){
+                                        } catch (Exception exx) {
                                             //ignore
                                             ok = false;
                                         }
@@ -159,6 +180,7 @@ public class WebSocketServer extends Server {
                                 }
                                 tmp.compact();
                             }
+
                             @Override
                             public void completed(Integer result, WebSocketSession attachment) {
                                 ByteBuffer buffer = attachment.getReadBuffer();
@@ -166,13 +188,15 @@ public class WebSocketServer extends Server {
                                 try {
                                     String ip = attachment.getClient().getRemoteAddress().toString();
                                     if (ip != null && !clients.containsKey(ip)) {
-                                        String msg = new String(buffer.array(), 0, buffer.limit());
+                                        String msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
                                         webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
                                         if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
                                             //sync write
                                             writeMsg(buildWS(msg), attachment);
                                             //callBack method for exec some init-methods
-                                            writeMsg(initWebSocketSession(attachment), attachment);
+                                            if (openMsg) {
+                                                writeMsg(initWebSocketSession(attachment), attachment);
+                                            }
                                         } else {
                                             //no-mapping url path,just close it
                                             close(attachment, this);
@@ -211,7 +235,9 @@ public class WebSocketServer extends Server {
                                                     attachment.setCloseSignal(true);
                                                     clients.remove(ip);
                                                     //callBack method for exec some destroy-methods
-                                                    destroyWebSocketSession(attachment);
+                                                    if (closeMsg) {
+                                                        destroyWebSocketSession(attachment);
+                                                    }
                                                     close(attachment, this);
                                                     return;
                                                 }

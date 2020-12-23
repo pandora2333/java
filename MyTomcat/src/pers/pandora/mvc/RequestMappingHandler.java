@@ -212,6 +212,9 @@ public final class RequestMappingHandler {
                 } else if (restful && annotation instanceof PathVariable) {
                     PathVariable param = (PathVariable) annotation;
                     restfulParamNames[i] = param.value();
+                } else if (annotation instanceof RequestBody) {
+                    RequestBody param = (RequestBody) annotation;
+                    paramNames[i] = param.value();
                 }
             }
         }
@@ -226,7 +229,7 @@ public final class RequestMappingHandler {
                 }
             }
         }
-        Object target;
+        Object target = null;
         List<Object> list;
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i] == Request.class) {
@@ -236,18 +239,24 @@ public final class RequestMappingHandler {
             } else if (parameterTypes[i] == ModelAndView.class) {
                 objects[i] = modelAndView;
             } else if (!ClassUtils.checkBasicClass(parameterTypes[i])) {
-                //Duplicate parameter simple class names are not allowed, even if the whole class names are inconsistent
-                try {
-                    target = ClassUtils.getClass(parameterTypes[i], beanPool);
-                    //requestScope
-                    ClassUtils.initWithParams(target, params);
-                    //sessionScope
-                    ClassUtils.initWithParams(target, modelAndView.getRequest().getSession().getAttrbuites());
-                    valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
-                    objects[i] = target;
-                } catch (IllegalAccessException | InstantiationException e) {
-                    //ignore
+                if (StringUtils.isNotEmpty(paramNames[i])) {
+                    target = modelAndView.getRequest().getParams().get(paramNames[i]);
+                    if (target == null) {
+                        target = modelAndView.getRequest().getSession().getAttrbuites().get(paramNames[i]);
+                    }
+                } else {
+                    try {
+                        target = ClassUtils.getClass(parameterTypes[i], beanPool);
+                        //requestScope
+                        ClassUtils.initWithParams(target, params);
+                        //sessionScope
+                        ClassUtils.initWithParams(target, modelAndView.getRequest().getSession().getAttrbuites());
+                        valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
+                    } catch (IllegalAccessException | InstantiationException e) {
+                        //ignore
+                    }
                 }
+                objects[i] = target;
             } else if (StringUtils.isNotEmpty(paramNames[i])) {
                 list = params.get(paramNames[i]);
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
@@ -267,6 +276,10 @@ public final class RequestMappingHandler {
         }
         try {
             Object result = method.invoke(controller, objects);
+            if (method.getReturnType() == void.class || method.getReturnType() == Void.class) {
+                modelAndView.setJson(true);
+                result = LOG.NO_CHAR;
+            }
             if (modelAndView.isJson()) {
                 List<Object> temp = new ArrayList<>(1);
                 temp.add(result);
@@ -285,7 +298,7 @@ public final class RequestMappingHandler {
         } catch (IllegalAccessException | InvocationTargetException e) {
             logger.error(LOG.LOG_PRE + "parseUrl ModelAndView:" + LOG.LOG_PRE + "by class:" + LOG.LOG_PRE + "=> method:" +
                             LOG.LOG_PRE + LOG.LOG_POS, modelAndView.getRequest().getServerName(), modelAndView, controller.getClass().getName(),
-                    method.getName(), LOG.ERROR_DESC, e);
+                    method.getName(), LOG.ERROR_DESC, e.getCause());
             modelAndView.getResponse().setCode(HTTPStatus.CODE_400);
             modelAndView.setPage(null);
         }
@@ -322,7 +335,7 @@ public final class RequestMappingHandler {
             try {
                 method.invoke(wsController, values);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                logger.error("The request method does not exist:" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                logger.error("execWSCallBack" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
             }
         } else {
             logger.warn("No Match WS uri resource:" + LOG.LOG_PRE, reqUrl);
