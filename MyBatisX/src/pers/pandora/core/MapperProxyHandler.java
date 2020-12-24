@@ -170,13 +170,17 @@ public final class MapperProxyHandler {
             assert StringUtil.isNotEmpty(sql);
             List<Object> params = new ArrayList<>(args.length);
             String cacheSql = tokenSpec(sql, args, params);
-            String tableName = getTableName(cacheSql, SQL.FROM, XML.WHERE);
-            String key = cacheFactory != null ? cacheFactory.createKey(tableName, cacheSql) : null;
-            Object cacheObject;
-            //query cache
-            if (cacheFactory != null && (cacheObject = cacheFactory.get(key)) != null) {
-                list.add(cacheObject);
-                return method.getReturnType() == List.class;
+            String tableName;
+            String key= null;
+            if(dynamicSql.getMethod().equals(SQL.SELECT)){
+                tableName = getTableName(cacheSql, SQL.FROM, XML.WHERE);
+                key = cacheFactory != null ? cacheFactory.createKey(tableName, cacheSql) : null;
+                Object cacheObject;
+                //query cache
+                if (cacheFactory != null && (cacheObject = cacheFactory.get(key)) != null) {
+                    list.add(cacheObject);
+                    return method.getReturnType() == List.class;
+                }
             }
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
             PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();

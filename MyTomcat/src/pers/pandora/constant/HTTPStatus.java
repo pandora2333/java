@@ -220,4 +220,10 @@ public class HTTPStatus {
     public static final String MP3 = ".mp3";
 
     public static final String IFRANGE = "If-Range";
+
+    public static final String LISTTYPE = ".*?\\[[0-9]{1,}?\\]\\..*";
+
+    public static final char LISTTYPESEPARATOR_PRE = '[';
+
+    public static final char LISTTYPESEPARATOR_POS = ']';
 }

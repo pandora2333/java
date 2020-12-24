@@ -18,12 +18,12 @@ import pers.pandora.core.Response;
 import pers.pandora.utils.ClassUtils;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -197,10 +197,22 @@ public final class RequestMappingHandler {
         Object objects[] = new Object[parameterTypes.length];
         String[] paramNames = new String[parameterTypes.length];
         String[] restfulParamNames = new String[parameterTypes.length];
+        Class<?>[] genericTypes = new Class<?>[parameterTypes.length];
         Map<String, String> restfulParamValues = new HashMap<>(4);
         Map<String, String> defaultValues = new HashMap<>(4);
         Map<String, List<Object>> params = modelAndView.getRequest().getParams();
         Annotation[][] annotations = method.getParameterAnnotations();
+        java.lang.reflect.Type[] types = method.getGenericParameterTypes();
+
+        for (int i = 0; i < types.length; i++) {
+            if (types[i] == null) {
+                continue;
+            }
+            if (types[i] instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) types[i];
+                genericTypes[i] = (Class<?>) pt.getActualTypeArguments()[0];
+            }
+        }
         for (int i = 0; i < annotations.length; i++) {
             for (Annotation annotation : annotations[i]) {
                 if (annotation instanceof RequestParam) {
@@ -229,8 +241,10 @@ public final class RequestMappingHandler {
                 }
             }
         }
-        Object target = null;
-        List<Object> list;
+        Object target = null, tmpListObj;
+        List list;
+        List<Object> tmpList = null;
+        Map<Integer, Map<String, String>> typeParams;
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i] == Request.class) {
                 objects[i] = modelAndView.getRequest();
@@ -244,9 +258,52 @@ public final class RequestMappingHandler {
                     if (target == null) {
                         target = modelAndView.getRequest().getSession().getAttrbuites().get(paramNames[i]);
                     }
+                    if (parameterTypes[i] == List.class && genericTypes[i] != null) {
+                        if (target == null) {
+                            typeParams = modelAndView.getRequest().getListTypeParams().get(paramNames[i]);
+                            if (typeParams != null) {
+                                tmpList = new ArrayList<>(typeParams.size());
+                                for (int j = 0; j < typeParams.size(); j++) {
+                                    try {
+                                        tmpListObj = ClassUtils.getClass(genericTypes[i], beanPool, false);
+                                        ClassUtils.initWithParams(tmpListObj, typeParams.get(j));
+                                        tmpList.add(tmpListObj);
+                                    } catch (IllegalAccessException | InstantiationException e) {
+                                        //ignore
+                                    }
+                                }
+                            }
+                        } else {
+                            list = (List) target;
+                            if (list.get(0).getClass() == genericTypes[i]) {
+                                tmpList = list;
+                                continue;
+                            }
+                            if (genericTypes[i] == Integer.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Integer.class);
+                            } else if (genericTypes[i] == Long.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Long.class);
+                            } else if (genericTypes[i] == Boolean.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Boolean.class);
+                            } else if (genericTypes[i] == Character.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Character.class);
+                            } else if (genericTypes[i] == Float.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Float.class);
+                            } else if (genericTypes[i] == Double.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Double.class);
+                            } else if (genericTypes[i] == Byte.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Byte.class);
+                            } else if (genericTypes[i] == Short.class) {
+                                tmpList = ClassUtils.convertBasicObject(list, Short.class);
+                            } else {
+                                logger.warn("unknown basic class type");
+                            }
+                        }
+                        target = tmpList;
+                    }
                 } else {
                     try {
-                        target = ClassUtils.getClass(parameterTypes[i], beanPool);
+                        target = ClassUtils.getClass(parameterTypes[i], beanPool, true);
                         //requestScope
                         ClassUtils.initWithParams(target, params);
                         //sessionScope
@@ -456,7 +513,7 @@ public final class RequestMappingHandler {
         try {
             String name = Character.toLowerCase(t.getSimpleName().charAt(0)) + t.getSimpleName().substring(1);
             if (!objectMap.containsKey(name)) {
-                Object bean = ClassUtils.getClass(t, beanPool);
+                Object bean = ClassUtils.getClass(t, beanPool, true);
                 objectMap.put(name, bean);
             }
             controllers.put(method, objectMap.get(name));
@@ -498,7 +555,7 @@ public final class RequestMappingHandler {
             for (Class<?> i : interfaces) {
                 if (i == Interceptor.class) {
                     try {
-                        interceptors.add(new Pair<>(order.value(), (Interceptor) ClassUtils.getClass(t, beanPool)));
+                        interceptors.add(new Pair<>(order.value(), (Interceptor) ClassUtils.getClass(t, beanPool, true)));
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                                 MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);

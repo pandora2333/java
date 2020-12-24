@@ -2,7 +2,10 @@ package pers.pandora.utils;
 
 import pers.pandora.constant.LOG;
 import pers.pandora.core.BeanPool;
+
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +19,10 @@ public final class ClassUtils {
 
     private static final String MODIFIER = "modifiers";
 
-    public static <T> T getClass(String name, BeanPool beanPool) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        return (T) getClass(Class.forName(name), beanPool);
+    private static final String VALUEOF = "valueOf";
+
+    public static <T> T getClass(String name, BeanPool beanPool, boolean cache) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        return (T) getClass(Class.forName(name), beanPool, cache);
     }
 
     public static <T> void initWithParams(T t, Map params) {
@@ -53,7 +58,7 @@ public final class ClassUtils {
         }
     }
 
-    private static String getKeyBySeparator(String[] ss) {
+    public static String getKeyBySeparator(String[] ss) {
         if (ss.length < 2) {
             return null;
         }
@@ -63,17 +68,23 @@ public final class ClassUtils {
         return ss[1];
     }
 
-    private static void injectValue(Object obj, Object t, List<Field> fields) {
+    public static void injectValue(Object obj, Object t, List<Field> fields) {
         if (obj == null || !CollectionUtil.isNotEmptry(fields)) {
             return;
         }
         for (Field field : fields) {
             try {
-                if (obj instanceof List && ((List) obj).size() == 1 &&
-                        checkType(((List) obj).get(0).getClass(), field.getType())) {
-                    field.set(t, ((List) obj).get(0));
-                    return;
-                } else if (checkType(obj.getClass(), field.getType())) {
+                if (obj instanceof List) {
+                    if (((List) obj).size() == 1 && checkType(((List) obj).get(0).getClass(), field.getType())) {
+                        field.set(t, ((List) obj).get(0));
+                        return;
+                    }
+                    if (checkBasicClass(field.getType()) && ((List) obj).get(0).getClass() == String.class) {
+                        field.set(t, getBascialObjectByString((String) ((List) obj).get(0), field.getType()));
+                        return;
+                    }
+                }
+                if (checkType(obj.getClass(), field.getType())) {
                     field.set(t, obj);
                     return;
                 }
@@ -83,7 +94,24 @@ public final class ClassUtils {
         }
     }
 
-    private static Field getFieldByObject(Class<?> objClass, String fieldName) {
+    public static List<Object> convertBasicObject(List list, Class<?> basicClass) {
+        List<Object> tmpList = new ArrayList<>(list.size());
+        try {
+            Method method = basicClass.getMethod(VALUEOF, String.class);
+            for (Object obj : list) {
+                try {
+                    tmpList.add(method.invoke(null, (String) obj));
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    //ignore
+                }
+            }
+        } catch (NoSuchMethodException e) {
+            //ignore
+        }
+        return tmpList;
+    }
+
+    public static Field getFieldByObject(Class<?> objClass, String fieldName) {
         try {
             Field field = objClass.getDeclaredField(fieldName);
             field.setAccessible(true);
@@ -95,23 +123,28 @@ public final class ClassUtils {
         }
     }
 
-    public static <T> T getClass(Class<T> tClass, BeanPool beanPool) throws IllegalAccessException, InstantiationException {
+    public static <T> T getClass(Class<T> tClass, BeanPool beanPool, boolean cache) throws IllegalAccessException, InstantiationException {
         if (tClass == null) {
             return null;
         }
-        T bean = (T) objectMap.get(tClass.getName());
-        if (bean != null) {
-            return bean;
+        T bean;
+        if (cache) {
+            bean = (T) objectMap.get(tClass.getName());
+            if (bean != null) {
+                return bean;
+            }
         }
         bean = beanPool != null ? beanPool.getBeanByType(tClass) : null;
         if (bean == null) {
             bean = tClass.newInstance();
         }
-        objectMap.put(tClass.getName(), bean);
+        if (cache) {
+            objectMap.put(tClass.getName(), bean);
+        }
         return bean;
     }
 
-    private static boolean checkType(Class<?> aClass, Class<?> type) {
+    public static boolean checkType(Class<?> aClass, Class<?> type) {
         return aClass == type || type == Object.class;
     }
 
@@ -148,6 +181,21 @@ public final class ClassUtils {
                 }
             }
         }
+    }
+
+    public static Object getBascialObjectByString(String orign, Class<?> basicClass) {
+        Method method = null;
+        try {
+            method = basicClass.getMethod(VALUEOF, String.class);
+        } catch (NoSuchMethodException e) {
+            //ignore
+        }
+        try {
+            return method.invoke(null, orign);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            //ignore
+        }
+        return null;
     }
 
     public static <T> void handleObjectField(T t, Map fieldMap, boolean isField) {

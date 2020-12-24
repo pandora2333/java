@@ -158,7 +158,7 @@ public final class StartUper {
         value = properties.getProperty(AOPPROXYFACTORY, null);
         if (StringUtils.isNotEmpty(value)) {
             try {
-                beanPool.setAopProxyFactory(ClassUtils.getClass(value, null));
+                beanPool.setAopProxyFactory(ClassUtils.getClass(value, null, true));
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error("buildServer aopPaths:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                 return null;
@@ -202,7 +202,7 @@ public final class StartUper {
             value = properties.getProperty(SERIALSESSIONSUPPORT, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    server.setSerialSessionSupport(ClassUtils.getClass(value, beanPool));
+                    server.setSerialSessionSupport(ClassUtils.getClass(value, beanPool, true));
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer serialSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
@@ -211,7 +211,7 @@ public final class StartUper {
             value = properties.getProperty(SESSIONIDGENERATOR, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    IdWorker idWoker = ClassUtils.getClass(value, beanPool);
+                    IdWorker idWoker = ClassUtils.getClass(value, beanPool, true);
                     server.setIdWorker(idWoker);
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
@@ -250,7 +250,7 @@ public final class StartUper {
             value = properties.getProperty(WSCLASS, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    server = ClassUtils.getClass(value, beanPool);
+                    server = ClassUtils.getClass(value, beanPool, true);
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer wsClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
@@ -324,7 +324,7 @@ public final class StartUper {
         value = properties.getProperty(JSONCLASS, null);
         if (StringUtils.isNotEmpty(value)) {
             try {
-                server.setJsonParser(ClassUtils.getClass(value, beanPool));
+                server.setJsonParser(ClassUtils.getClass(value, beanPool, true));
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error("buildServer jsonClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                 return null;

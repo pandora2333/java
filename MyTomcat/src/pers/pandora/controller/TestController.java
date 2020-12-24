@@ -6,6 +6,8 @@ import pers.pandora.vo.User;
 import pers.pandora.core.Request;
 import pers.pandora.core.Response;
 
+import java.util.List;
+
 /**
  * Introducing @Controller mode of springMVC
  */
@@ -13,7 +15,7 @@ import pers.pandora.core.Response;
 @Controller("/test")
 public class TestController {
     @RequestMapping(value = "/loginUser.do")
-    public String login(Request request, @RequestBody User user, Response response) {
+    public String login(Request request, @RequestBody("user") List<User> user, Response response) {
         System.out.println("user login:" + user);
         response.addHeads("test", "test response add head");
         return "/test.jsp";

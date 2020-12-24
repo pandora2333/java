@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.*;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
@@ -59,6 +58,12 @@ public final class Request {
     private JSONParser jsonParser;
 
     private boolean redirect;
+
+    private Map<String, Map<Integer, Map<String, String>>> listTypeParams;
+
+    public Map<String, Map<Integer, Map<String, String>>> getListTypeParams() {
+        return listTypeParams;
+    }
 
     public void setReqUrl(String reqUrl) {
         this.reqUrl = reqUrl;
@@ -194,6 +199,7 @@ public final class Request {
         heads = new HashMap<>(16);
         this.dispatcher = dispatcher;
         filePaths = new HashMap<>(4);
+        listTypeParams = new HashMap<>(4);
     }
 
     public void setJspParser(JspParser jspParser) {
@@ -274,7 +280,11 @@ public final class Request {
             method = HTTPStatus.OPTIONS;
             return HTTPStatus.OPTIONS;
         }
-        String reqToken = msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim();
+        int i = msg.indexOf(HTTPStatus.SLASH),j = msg.indexOf(HTTPStatus.HTTP);
+        if(i > j){
+            return null;
+        }
+        String reqToken = msg.substring(i, j).trim();
         json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON_TYPE);
         int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
         if (index > 0) {
@@ -292,7 +302,7 @@ public final class Request {
         if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
             index = msg.indexOf(HTTPStatus.CRLF);
-            if(index > 0){
+            if (index > 0) {
                 String param = msg.substring(index).trim();
                 if (json) {
                     addJSON(param);
@@ -482,20 +492,32 @@ public final class Request {
             return;
         }
         String[] kv;
+        String key;
+        int i, j;
         List<Object> list;
+        Map map;
         for (String str : temp) {
             kv = str.split(HTTPStatus.PARAM_KV_SPLITER);
             if (kv.length == 2) {
                 if (kv[0].equals(HTTPStatus.SESSION_MARK) && session == null) {
                     buildSession(kv[1], null);
-                }
-                list = params.get(kv[0]);
-                if (list == null) {
-                    list = new ArrayList<>(1);
-                    list.add(kv[1]);
-                    params.put(kv[0], list);
+                } else if (kv[0].matches(HTTPStatus.LISTTYPE)) {
+                    i = kv[0].indexOf(HTTPStatus.LISTTYPESEPARATOR_PRE);
+                    key = kv[0].substring(0, i);
+                    map = listTypeParams.computeIfAbsent(key, k -> new HashMap<>(4));
+                    j = kv[0].indexOf(HTTPStatus.LISTTYPESEPARATOR_POS);
+                    key = kv[0].substring(i + 1, j);
+                    map = (Map) map.computeIfAbsent(Math.min(map.size(),Integer.valueOf(key)), k -> new HashMap<>(4));
+                    map.put(kv[0].substring(j + 2), kv[1]);
                 } else {
-                    list.add(kv[1]);
+                    list = params.get(kv[0]);
+                    if (list == null) {
+                        list = new ArrayList<>(1);
+                        list.add(kv[1]);
+                        params.put(kv[0], list);
+                    } else {
+                        list.add(kv[1]);
+                    }
                 }
             }
         }
@@ -510,6 +532,9 @@ public final class Request {
         jsonParser = dispatcher.server.getJsonParser();
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
+        }
+        if (CollectionUtil.isNotEmptry(listTypeParams)) {
+            listTypeParams.clear();
         }
         if (CollectionUtil.isNotEmptry(uploadFiles)) {
             uploadFiles.clear();

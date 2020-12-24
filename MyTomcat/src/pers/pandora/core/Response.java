@@ -285,7 +285,7 @@ public final class Response {
             } else if (StringUtils.isNotEmpty(servlet)) {
                 Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
-                Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool());
+                Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), true);
                 //requestScope
                 ClassUtils.initWithParams(handler, params);
                 //sessionScope
@@ -315,7 +315,7 @@ public final class Response {
                 }
             } else if (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206) {
                 src = true;
-                if(code == HTTPStatus.CODE_200){
+                if (code == HTTPStatus.CODE_200) {
                     code = HTTPStatus.CODE_304;
                 }
                 String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
@@ -323,20 +323,20 @@ public final class Response {
                 if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
                     dispatcher.request.getHeads().put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
                     dispatcher.request.getHeads().put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
-                    if(code == HTTPStatus.CODE_304){
+                    if (code == HTTPStatus.CODE_304) {
                         code = HTTPStatus.CODE_200;
                     }
                 }
                 String cahce = dispatcher.request.getHeads().get(HTTPStatus.CACAHE_CONTROL);
                 if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
-                    if(code == HTTPStatus.CODE_304){
+                    if (code == HTTPStatus.CODE_304) {
                         code = HTTPStatus.CODE_200;
                     }
                     src = false;
                 } else {
                     cahce = dispatcher.request.getHeads().get(HTTPStatus.PRAGMA);
                     if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
-                        if(code == HTTPStatus.CODE_304){
+                        if (code == HTTPStatus.CODE_304) {
                             code = HTTPStatus.CODE_200;
                         }
                         src = false;

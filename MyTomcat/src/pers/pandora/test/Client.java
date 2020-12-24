@@ -7,7 +7,11 @@ import pers.pandora.core.StartUper;
 import pers.pandora.utils.IdWorker;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 @Deprecated
 public class Client {
@@ -50,7 +54,6 @@ public class Client {
         //2.Relative path:It is relative to the current project directory. If it is under SRC, it should be src/ + your path  "src/Pandora_test_ws_1.properties"
         StartUper startUper = new StartUper("src/Pandora_test_1.properties","src/Pandora_test_ws_1.properties");
         startUper.start(true);
-
     }
 
     public static void main(String[] args) {

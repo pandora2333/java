@@ -417,7 +417,7 @@ public final class BeanPool {
                 return;
             }
             try {
-                initBean(ClassUtils.getClass(t, null), Character.toLowerCase(t.getSimpleName().charAt(0))
+                initBean(ClassUtils.getClass(t, null, true), Character.toLowerCase(t.getSimpleName().charAt(0))
                         + t.getSimpleName().substring(1));
             } catch (IllegalAccessException | InstantiationException e) {
                 logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
