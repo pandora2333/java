@@ -93,6 +93,8 @@ public final class StartUper {
 
     public static final String CLOSEMSG = "closeMsg";
 
+    public static final String SECURITYDIR = "secuiryDir";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -245,6 +247,10 @@ public final class StartUper {
             value = properties.getProperty(GCTIME, null);
             if (StringUtils.isNotEmpty(value)) {
                 server.setGcTime(Long.valueOf(value));
+            }
+            value = properties.getProperty(SECURITYDIR, null);
+            if (StringUtils.isNotEmpty(value)) {
+                server.setSecuiryDir(value);
             }
         } else {
             value = properties.getProperty(WSCLASS, null);

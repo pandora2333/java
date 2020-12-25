@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
@@ -59,7 +60,17 @@ public final class Request {
 
     private boolean redirect;
 
+    private boolean allowAccess;
+
     private Map<String, Map<Integer, Map<String, String>>> listTypeParams;
+
+    public boolean isAllowAccess() {
+        return allowAccess;
+    }
+
+    public void setAllowAccess(boolean allowAccess) {
+        this.allowAccess = allowAccess;
+    }
 
     public Map<String, Map<Integer, Map<String, String>>> getListTypeParams() {
         return listTypeParams;
@@ -280,8 +291,8 @@ public final class Request {
             method = HTTPStatus.OPTIONS;
             return HTTPStatus.OPTIONS;
         }
-        int i = msg.indexOf(HTTPStatus.SLASH),j = msg.indexOf(HTTPStatus.HTTP);
-        if(i > j){
+        int i = msg.indexOf(HTTPStatus.SLASH), j = msg.indexOf(HTTPStatus.HTTP);
+        if (i > j) {
             return null;
         }
         String reqToken = msg.substring(i, j).trim();
@@ -327,7 +338,7 @@ public final class Request {
             return null;
         }
         parseParams(reqToken, true);
-        if (reqUrl.contains(HTTPStatus.JSP)) {
+        if (reqUrl.contains(HTTPStatus.JSP) && (allowAccess || !reqUrl.contains(dispatcher.server.getSecuiryDir()))) {
             Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher.server.isHotLoadJSP());
             if (parse != null) {
                 dispatcher.addUrlMapping(parse.getK2(), parse.getV());
@@ -431,6 +442,40 @@ public final class Request {
                 return HTTPStatus.MP4_TYPE + HTTPStatus.COLON;
             } else if (reqToken.endsWith(HTTPStatus.MP3)) {
                 return HTTPStatus.MP3_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.TXT)) {
+                return HTTPStatus.TXT_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.SVG)) {
+                return HTTPStatus.SVG_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.ICO)) {
+                return HTTPStatus.ICO_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.BMP)) {
+                return HTTPStatus.BMP_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.WAV)) {
+                return HTTPStatus.WAV_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.M3U)) {
+                return HTTPStatus.M3U_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.AU)) {
+                return HTTPStatus.AU_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.ZIP)) {
+                return HTTPStatus.ZIP_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.CER)) {
+                return HTTPStatus.CER_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.CRT)) {
+                return HTTPStatus.CRT_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.PPT) || reqToken.endsWith(HTTPStatus.PPTX)) {
+                return HTTPStatus.PPT_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.XLS) || reqToken.endsWith(HTTPStatus.XLSX)) {
+                return HTTPStatus.XLS_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.DOC) || reqToken.endsWith(HTTPStatus.DOCX)) {
+                return HTTPStatus.DOC_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.SH)) {
+                return HTTPStatus.SH_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.TAR)) {
+                return HTTPStatus.TAR_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.AVI)) {
+                return HTTPStatus.AVI_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.SH)) {
+                return HTTPStatus.SH_TYPE + HTTPStatus.COLON;
             }
             //default binary data
             return HTTPStatus.BINARY_TYPE + HTTPStatus.COLON;
@@ -507,7 +552,7 @@ public final class Request {
                     map = listTypeParams.computeIfAbsent(key, k -> new HashMap<>(4));
                     j = kv[0].indexOf(HTTPStatus.LISTTYPESEPARATOR_POS);
                     key = kv[0].substring(i + 1, j);
-                    map = (Map) map.computeIfAbsent(Math.min(map.size(),Integer.valueOf(key)), k -> new HashMap<>(4));
+                    map = (Map) map.computeIfAbsent(Math.min(map.size(), Integer.valueOf(key)), k -> new HashMap<>(4));
                     map.put(kv[0].substring(j + 2), kv[1]);
                 } else {
                     list = params.get(kv[0]);
@@ -529,6 +574,7 @@ public final class Request {
         fileDesc = null;
         json = false;
         redirect = false;
+        allowAccess = false;
         jsonParser = dispatcher.server.getJsonParser();
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
@@ -584,6 +630,7 @@ public final class Request {
     }
 
     public void dispatcher(String path) {
+        allowAccess = true;
         dispatcher.dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + path + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
     }
 }

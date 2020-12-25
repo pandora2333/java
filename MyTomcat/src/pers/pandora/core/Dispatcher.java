@@ -64,6 +64,7 @@ abstract class Dispatcher {
                         if (mv.isJson() || request.isRedirect()) {
                             pushClient(response.handle(HTTPStatus.GET, false), null);
                         } else {
+                            request.setAllowAccess(true);
                             dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
                         }
                     } else {

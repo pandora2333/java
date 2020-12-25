@@ -115,12 +115,12 @@ public class WebSocketServer extends Server {
     }
 
     @Override
-    public final void start() {
+    public void start() {
         start(getPort());
     }
 
     @Override
-    public final void start(int port) {
+    public void start(int port) {
         setPort(port);
         try {
             long start = System.currentTimeMillis();

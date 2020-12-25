@@ -318,7 +318,10 @@ public final class RequestMappingHandler {
                 list = params.get(paramNames[i]);
                 objects[i] = list != null && list.size() == 1 ? list.get(0) : null;
                 if (objects[i] == null) {
-                    objects[i] = getValueByType(parameterTypes[i], defaultValues.get(paramNames[i]));
+                    objects[i] = defaultValues.get(paramNames[i]);
+                }
+                if (parameterTypes[i] != objects[i].getClass() && objects[i].getClass() == String.class) {
+                    objects[i] = getValueByType(parameterTypes[i], (String) objects[i]);
                 }
             } else if (restful && StringUtils.isNotEmpty(restfulParamNames[i])) {
                 objects[i] = getValueByType(parameterTypes[i], restfulParamValues.get(restfulParamNames[i]));

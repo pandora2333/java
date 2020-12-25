@@ -23,10 +23,12 @@ public abstract class Server {
     private int port = 8080;
 
     private String rootPath = "./WebRoot";
+    //JSP in the private directory needs to be forwarded to access
+    private String secuiryDir = "/WEB-INF/";
 
     private String resourceRootPath = "/static/";
 
-    private String webConfigPath = rootPath + "/WEB-INF/web.xml";
+    private String webConfigPath = rootPath + secuiryDir +  "web.xml";
 
     public String requestFileDir = resourceRootPath + "files/";
 
@@ -77,6 +79,14 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public String getSecuiryDir() {
+        return secuiryDir;
+    }
+
+    public void setSecuiryDir(String secuiryDir) {
+        this.secuiryDir = secuiryDir;
+    }
 
     public void setMaxUpBits(long maxUpBits) {
         this.maxUpBits = maxUpBits;

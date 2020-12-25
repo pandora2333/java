@@ -95,6 +95,68 @@ public class HTTPStatus {
 
     public static final String CSS = ".css";
 
+    public static final String TXT = ".txt";
+
+    public static final String SVG = ".svg";
+
+    public static final String ICO = ".ico";
+
+    public static final String BMP = ".bmp";
+
+    public static final String WAV = ".wav";
+
+    public static final String M3U = ".m3u";
+
+    public static final String MP4 = ".mp4";
+
+    public static final String MP3 = ".mp3";
+
+    public static final String AU = ".au";
+
+    public static final String ZIP = ".zip";
+
+    public static final String CER = ".cer";
+
+    public static final String CRT = ".crt";
+
+    public static final String PPT = ".ppt";
+
+    public static final String PPTX = ".pptx";
+
+    public static final String XLS = ".xls";
+
+    public static final String XLSX = ".xlsx";
+
+    public static final String DOC = ".doc";
+
+    public static final String DOCX = ".docx";
+
+    public static final String SH = ".sh";
+
+    public static final String TAR = ".tar";
+
+    public static final String AVI = ".avi";
+
+    public static final String SH_TYPE = "application/x-sh";
+
+    public static final String AVI_TYPE = "video/x-msvideo";
+
+    public static final String TAR_TYPE = "application/x-tar";
+
+    public static final String DOC_TYPE = "application/msword";
+
+    public static final String XLS_TYPE = "application/vnd.ms-excel";
+
+    public static final String PPT_TYPE = "application/vnd.ms-powerpoint";
+
+    public static final String ZIP_TYPE = "application/zip";
+
+    public static final String CER_TYPE = "application/x-x509-ca-cert";
+
+    public static final String CRT_TYPE = CER_TYPE;
+
+    public static final String AU_TYPE = "audio/basic";
+
     public static final String JPG_TYPE = "image/jpeg";
 
     public static final String PNG_TYPE = "image/png";
@@ -110,6 +172,22 @@ public class HTTPStatus {
     public static final String JS_TYPE = "application/javascript";
 
     public static final String CSS_TYPE = "text/css";
+
+    public static final String TXT_TYPE = PLAIN;
+
+    public static final String SVG_TYPE = "image/svg+xml";
+
+    public static final String ICO_TYPE = "image/x-icon";
+
+    public static final String BMP_TYPE = "image/bmp";
+
+    public static final String WAV_TYPE = "audio/x-wav";
+
+    public static final String M3U_TYPE = "audio/x-mpegurl";
+
+    public static final String MP4_TYPE = "video/mp4";
+
+    public static final String MP3_TYPE = "audio/mpeg";
 
     public static final int CODE_200 = 200;
 
@@ -210,14 +288,6 @@ public class HTTPStatus {
     public static final String ACCEPTRANGES = "Accept-Ranges";
 
     public static final String CONTENTRANGE = "Content-Range";
-
-    public static final String MP4_TYPE = "video/mp4";
-
-    public static final String MP3_TYPE = "video/mp3";
-
-    public static final String MP4 = ".mp4";
-
-    public static final String MP3 = ".mp3";
 
     public static final String IFRANGE = "If-Range";
 
