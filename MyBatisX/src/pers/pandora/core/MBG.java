@@ -242,21 +242,30 @@ public class MBG {
         }
         //Params required for traversing insert
         for (ColumnInfo columnInfo : tableInfo.getColumnInfos()) {
+            if (insertParams.length() > 0) {
+                insertParams.append(XML.COMMA);
+                if (!columnInfo.isPrimaryKeyId()) {
+                    updateParams.append(XML.COMMA);
+                }
+            }
+            if (autoPk && columnInfo.isPrimaryKeyId()) {
+                insertParams.append(XML.NULL);
+            }
             if (!autoPk || !columnInfo.isPrimaryKeyId()) {
-                insertParams.append(XML.VAR_MARK).append(ENTITY.LEFT_CURLY_BRACKET).append(columnInfo.getColumnName()).append(ENTITY.RIGHT_CURLY_BRACKET).append(XML.COMMA);
+                insertParams.append(XML.VAR_MARK).append(ENTITY.LEFT_CURLY_BRACKET).append(columnInfo.getColumnName()).append(ENTITY.RIGHT_CURLY_BRACKET);
             }
             if (!columnInfo.isPrimaryKeyId()) {
                 updateParams.append(columnInfo.getColumnName()).append(XML.EQUAL_SIGN).append(XML.VAR_MARK).append(ENTITY.LEFT_CURLY_BRACKET)
-                        .append(columnInfo.getColumnName()).append(ENTITY.RIGHT_CURLY_BRACKET).append(XML.COMMA);
+                        .append(columnInfo.getColumnName()).append(ENTITY.RIGHT_CURLY_BRACKET);
             }
         }
         xmlContent.append(XML.END).append(ENTITY.LINE).append(ENTITY.TAB).append(ENTITY.TAB).append(SQL.INSERT).append(XML.BLANK).append(XML.INTO).append(XML.BLANK)
-                .append(tableInfo.getTableName()).append(XML.BLANK).append(XML.VALUE).append(ENTITY.LEFT_BRACKET).append(buildInsertForPKS(tableInfo.getPks(), autoPk)).append(insertParams.substring(0, insertParams.length() - 1)).append(ENTITY.RIGHT_BRACKET)
+                .append(tableInfo.getTableName()).append(XML.BLANK).append(XML.VALUE).append(ENTITY.LEFT_BRACKET).append(insertParams).append(ENTITY.RIGHT_BRACKET)
                 .append(ENTITY.LINE).append(ENTITY.TAB).append(XML.INSERT_END).append(ENTITY.LINE);
         xmlContent.append(ENTITY.TAB).append(XML.DELETE).append(XML.BLANK).append(SQL.ID).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(ENTITY.DELETEBYID).append(XML.QUOTATION).append(XML.END).append(ENTITY.LINE).append(ENTITY.TAB).append(ENTITY.TAB).append(SQL.DELETE).append(XML.BLANK).append(SQL.FROM).append(XML.BLANK)
                 .append(tableInfo.getTableName()).append(XML.BLANK).append(XML.WHERE).append(XML.BLANK).append(pks).append(ENTITY.LINE).append(ENTITY.TAB).append(XML.DELETE_END).append(ENTITY.LINE);
         xmlContent.append(ENTITY.TAB).append(XML.UPDATE).append(XML.BLANK).append(SQL.ID).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(SQL.UPDATE).append(XML.QUOTATION).append(XML.END).append(ENTITY.LINE).append(ENTITY.TAB).append(ENTITY.TAB).append(SQL.UPDATE).append(XML.BLANK).append(tableInfo.getTableName())
-                .append(XML.BLANK).append(XML.SET).append(XML.BLANK).append(updateParams.substring(0, updateParams.length() - 1)).append(XML.BLANK).append(XML.WHERE).append(XML.BLANK).append(pks).append(ENTITY.LINE).append(ENTITY.TAB).append(XML.UPDATE_END).append(ENTITY.LINE);
+                .append(XML.BLANK).append(XML.SET).append(XML.BLANK).append(updateParams).append(XML.BLANK).append(XML.WHERE).append(XML.BLANK).append(pks).append(ENTITY.LINE).append(ENTITY.TAB).append(XML.UPDATE_END).append(ENTITY.LINE);
         xmlContent.append(XML.MAPPER_END);
         boolean singleton = writeFile(way, xmlPackage, mapperXML.toString() + ENTITY.MAPPER, xmlContent.toString(), tableInfo, false, "createMapperXML");
         mapperXML.delete(0, mapperXML.length());
@@ -264,14 +273,6 @@ public class MBG {
         insertParams.delete(0, insertParams.length());
         updateParams.delete(0, updateParams.length());
         return singleton;
-    }
-
-    private StringBuilder buildInsertForPKS(List<ColumnInfo> pks, boolean autoPk) {
-        StringBuilder sb = new StringBuilder();
-        if (pks.size() == 1 && autoPk) {
-            sb.append(XML.NULL).append(XML.COMMA);
-        }
-        return sb;
     }
 
     private StringBuilder buildWhereForPKS(List<ColumnInfo> pks) {

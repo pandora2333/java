@@ -474,8 +474,12 @@ public final class Request {
                 return HTTPStatus.TAR_TYPE + HTTPStatus.COLON;
             } else if (reqToken.endsWith(HTTPStatus.AVI)) {
                 return HTTPStatus.AVI_TYPE + HTTPStatus.COLON;
-            } else if (reqToken.endsWith(HTTPStatus.SH)) {
-                return HTTPStatus.SH_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.WOFF)) {
+                return HTTPStatus.WOFF_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.WOFF2)) {
+                return HTTPStatus.WOFF2_TYPE + HTTPStatus.COLON;
+            } else if (reqToken.endsWith(HTTPStatus.TTF)) {
+                return HTTPStatus.TTF_TYPE + HTTPStatus.COLON;
             }
             //default binary data
             return HTTPStatus.BINARY_TYPE + HTTPStatus.COLON;
@@ -542,8 +546,11 @@ public final class Request {
         List<Object> list;
         Map map;
         for (String str : temp) {
-            kv = str.split(HTTPStatus.PARAM_KV_SPLITER);
-            if (kv.length == 2) {
+            kv = str.split(HTTPStatus.PARAM_KV_SPLITER, -1);
+            if (kv.length >= 2) {
+                for (i = 2; i < kv.length; i++) {
+                    kv[1] += HTTPStatus.PARAM_KV_SPLITER + kv[i];
+                }
                 if (kv[0].equals(HTTPStatus.SESSION_MARK) && session == null) {
                     buildSession(kv[1], null);
                 } else if (kv[0].matches(HTTPStatus.LISTTYPE)) {

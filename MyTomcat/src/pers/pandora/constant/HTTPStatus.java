@@ -137,6 +137,20 @@ public class HTTPStatus {
 
     public static final String AVI = ".avi";
 
+    public static final String WOFF2 = ".woff2";
+
+    public static final String WOFF = ".woff";
+
+    public static final String TTF = ".ttf";
+
+    public static final String WOFF2_TYPE = "font/woff2";
+
+    public static final String WOFF_TYPE = "font/woff";
+
+    public static final String TTF_TYPE = "font/ttf";
+
+    public static final String JSON_TYPE = "application/json";
+
     public static final String SH_TYPE = "application/x-sh";
 
     public static final String AVI_TYPE = "video/x-msvideo";
@@ -250,8 +264,6 @@ public class HTTPStatus {
     public static final String SECURE = "Secure";
 
     public static final String ALLOW = "Allow";
-
-    public static final String JSON_TYPE = "application/json";
 
     public static final String REDIRECT = "@redirect:";
 
