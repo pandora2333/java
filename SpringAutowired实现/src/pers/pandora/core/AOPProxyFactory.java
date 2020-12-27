@@ -8,6 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public interface AOPProxyFactory {
 
+    char METHOD_SEPARATOR = '#';
+
+    char LEFT_BRACKET = '(';
+
+    char RIGHT_BRACKET = ')';
+
+    char COMMA = ',';
+
     Comparator<Tuple<Integer, String, Method>> CMP = (o1, o2) -> {
         int t = o1.getK1().compareTo(o2.getK1());
         if (t != 0) return t;

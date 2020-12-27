@@ -16,8 +16,6 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
 
     private static final Logger logger = LogManager.getLogger(JavassistAOPProxyFactory.class);
 
-    private static final char METHOD_SEPARATOR = '#';
-
     public static final String PROXY_MARK = "setHandler";
 
     @Override
@@ -57,7 +55,17 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         public Object invoke(Object self, Method parentMethod, Method proceed, Object[] args) throws InvocationTargetException, IllegalAccessException {
             JoinPoint joinPoint = new JoinPoint();
             joinPoint.setProxyClassName(className);
-            joinPoint.setMethodName(parentMethod.getName());
+            StringBuilder methodName = new StringBuilder(parentMethod.getName());
+            methodName.append(LEFT_BRACKET);
+            Class<?>[] types = parentMethod.getParameterTypes();
+            for(int i = 0;i < types.length;i++){
+                methodName.append(types[i].getName());
+                if(i != types.length - 1){
+                    methodName.append(COMMA);
+                }
+            }
+            methodName.append(RIGHT_BRACKET);
+            joinPoint.setMethodName(methodName.toString());
             joinPoint.setParams(args);
             //before
             try {

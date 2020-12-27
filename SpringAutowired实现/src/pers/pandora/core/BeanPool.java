@@ -7,10 +7,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.*;
-
 import javassist.util.proxy.MethodHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -417,7 +415,7 @@ public final class BeanPool {
                 return;
             }
             try {
-                initBean(ClassUtils.getClass(t, null, true), Character.toLowerCase(t.getSimpleName().charAt(0))
+                initBean(ClassUtils.getClass(t, null, false), Character.toLowerCase(t.getSimpleName().charAt(0))
                         + t.getSimpleName().substring(1));
             } catch (IllegalAccessException | InstantiationException e) {
                 logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
@@ -475,7 +473,16 @@ public final class BeanPool {
         Class<?> objTarget = obj.getClass();
         String target = obj.getClass().getName();
         int cnt = 1;
-        if (aopProxyFactory != null && interceptors.stream().anyMatch(target::matches)) {
+        if (aopProxyFactory != null && interceptors.stream().anyMatch(v -> {
+            int i = v.indexOf(AOPProxyFactory.METHOD_SEPARATOR);
+            if (i > 0) {
+                v = v.substring(0, i);
+            }
+            if (target.matches(v)) {
+                return true;
+            }
+            return false;
+        })) {
             try {
                 objTarget.getMethod(JavassistAOPProxyFactory.PROXY_MARK, MethodHandler.class);
             } catch (NoSuchMethodException e) {
@@ -531,37 +538,41 @@ public final class BeanPool {
                 if (field.isAnnotationPresent(Value.class)) {
                     scanBean(tClass, field, Value.class, prop.get());
                 } else if (field.isAnnotationPresent(Autowired.class)) {
-                    Autowired fieldSrc = field.getAnnotation(Autowired.class);
-                    if (beans.containsKey(fieldSrc.value())) {
-                        try {
-                            field.set(singleton.get(), beans.get(fieldSrc.value()));
-                        } catch (IllegalAccessException e) {
-                            //ignore
-                        }
-                    } else if (!StringUtils.isNotEmpty(fieldSrc.value()) && typeBeans.containsKey(field.getType())) {
-                        if (typeBeans.get(field.getType()).size() == 1) {
-                            try {
-                                field.set(singleton.get(), typeBeans.get(field.getType()).get(0));
-                            } catch (IllegalAccessException e) {
-                                //ignore
-                            }
-                        } else {
-                            logger.warn("Multiple bean injections of the same type were detected, and the bean name needs to be specified:"
-                                    + LOG.LOG_POS, LOG.ERROR_DESC, field.getType());
-                        }
-                    } else {
-                        if (unBeanInjectMap.containsKey(singleton.get())) {
-                            unBeanInjectMap.get(singleton.get()).add(field);
-                        } else {
-                            List<Field> tmp = new CopyOnWriteArrayList<>();
-                            tmp.add(field);
-                            unBeanInjectMap.put(singleton.get(), tmp);
-                        }
-                    }
+                    injectAutowired(field);
                 }
             }
         } catch (IOException e) {
             logger.error("loadProperties" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+        }
+    }
+
+    private void injectAutowired(Field field) {
+        Autowired fieldSrc = field.getAnnotation(Autowired.class);
+        if (beans.containsKey(fieldSrc.value())) {
+            try {
+                field.set(singleton.get(), beans.get(fieldSrc.value()));
+            } catch (IllegalAccessException e) {
+                //ignore
+            }
+        } else if (!StringUtils.isNotEmpty(fieldSrc.value()) && typeBeans.containsKey(field.getType())) {
+            if (typeBeans.get(field.getType()).size() == 1) {
+                try {
+                    field.set(singleton.get(), typeBeans.get(field.getType()).get(0));
+                } catch (IllegalAccessException e) {
+                    //ignore
+                }
+            } else {
+                logger.warn("Multiple bean injections of the same type were detected, and the bean name needs to be specified:"
+                        + LOG.LOG_POS, LOG.ERROR_DESC, field.getType());
+            }
+        } else {
+            if (unBeanInjectMap.containsKey(singleton.get())) {
+                unBeanInjectMap.get(singleton.get()).add(field);
+            } else {
+                List<Field> tmp = new CopyOnWriteArrayList<>();
+                tmp.add(field);
+                unBeanInjectMap.put(singleton.get(), tmp);
+            }
         }
     }
 
