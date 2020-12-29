@@ -36,9 +36,7 @@ public final class Request {
 
     private String charset = HTTPStatus.DEFAULTENCODING;
     //fileVarName -> {fileName,fileType,byte[] data}
-    private Map<String, Tuple<String, String, byte[]>> uploadFiles;
-    //up file need save in local paths
-    private Map<String, String> filePaths;
+    private Map<String, List<Tuple<String, String, byte[]>>> uploadFiles;
 
     private Map<String, String> heads;
     //support mvc model
@@ -130,21 +128,7 @@ public final class Request {
         return dispatcher.server.getServerName();
     }
 
-    public Map<String, String> getFilePaths() {
-        return filePaths;
-    }
-
-    public void setFilePaths(Map<String, String> filePaths) {
-        this.filePaths = filePaths;
-    }
-
-    public void addFilePath(String fileVarName, String filePath) {
-        if (StringUtils.isNotEmpty(fileVarName) && StringUtils.isNotEmpty(filePath)) {
-            filePaths.put(fileVarName, filePath);
-        }
-    }
-
-    public Map<String, Tuple<String, String, byte[]>> getUploadFiles() {
+    public Map<String, List<Tuple<String, String, byte[]>>> getUploadFiles() {
         return uploadFiles;
     }
 
@@ -174,7 +158,7 @@ public final class Request {
         this.session = session;
     }
 
-    public void setUploadFiles(Map<String, Tuple<String, String, byte[]>> uploadFiles) {
+    public void setUploadFiles(Map<String, List<Tuple<String, String, byte[]>>> uploadFiles) {
         this.uploadFiles = uploadFiles;
     }
 
@@ -209,7 +193,6 @@ public final class Request {
         cookies = new ArrayList<>(1);
         heads = new HashMap<>(16);
         this.dispatcher = dispatcher;
-        filePaths = new HashMap<>(4);
         listTypeParams = new HashMap<>(4);
     }
 
@@ -246,12 +229,10 @@ public final class Request {
     }
 
 
-    public void saveFileData(String fileVarName, String fileName) {
-        if (!StringUtils.isNotEmpty(fileVarName) || !uploadFiles.containsKey(fileVarName)) {
-            logger.warn(LOG.LOG_PRE + "saveFileData" + LOG.LOG_PRE + "NO DATAS!", dispatcher.server.getServerName(), LOG.ERROR_DESC);
+    public void saveFileData(String filePath, Tuple<String,String,byte[]> file) {
+        if (file == null) {
             return;
         }
-        String filePath = filePaths.get(fileVarName);
         if (!StringUtils.isNotEmpty(filePath)) {
             filePath = dispatcher.server.getRootPath() + dispatcher.server.requestFileDir;
         }
@@ -259,23 +240,16 @@ public final class Request {
         if (!path.exists()) {
             path.mkdirs();
         }
-        Tuple<String, String, byte[]> file = uploadFiles.get(fileVarName);
-        if (file.getV() != null && StringUtils.isNotEmpty(file.getK1())) {
-            //if file name is "",it will cause a excetion that file manager refuse to create the file
-            if (!StringUtils.isNotEmpty(fileName)) {
-                fileName = file.getK1();
-            }
-            try {
-                //base on mapped memeroy  file
-                FileChannel outChannel = FileChannel.open(Paths.get(filePath + fileName),
-                        StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
-                MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
-                outMappedBuf.put(file.getV());
-                outChannel.close();
-            } catch (IOException e) {
-                logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS,
-                        dispatcher.server.getServerName(), fileName, LOG.EXCEPTION_DESC, e);
-            }
+        try {
+            //base on mapped memeroy  file
+            FileChannel outChannel = FileChannel.open(Paths.get(filePath + file.getK1()),
+                    StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
+            MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
+            outMappedBuf.put(file.getV());
+            outChannel.close();
+        } catch (IOException e) {
+            logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS,
+                    dispatcher.server.getServerName(), file.getK1(), LOG.EXCEPTION_DESC, e);
         }
     }
 
@@ -595,18 +569,12 @@ public final class Request {
         if (CollectionUtil.isNotEmptry(cookies)) {
             cookies.clear();
         }
-        if (CollectionUtil.isNotEmptry(filePaths)) {
-            filePaths.clear();
-        }
         if (CollectionUtil.isNotEmptry(objectList)) {
             objectList.clear();
         }
         isMultipart = false;
         if (CollectionUtil.isNotEmptry(heads)) {
             heads.clear();
-        }
-        if (CollectionUtil.isNotEmptry(filePaths)) {
-            filePaths.clear();
         }
         pathParams = null;
         session = null;

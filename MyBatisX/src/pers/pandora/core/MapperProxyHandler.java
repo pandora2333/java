@@ -183,7 +183,7 @@ public final class MapperProxyHandler {
                 }
             }
             logger.debug("DEBUG SQL:" + LOG.LOG_PRE, sql);
-            PoolConnection connection = TransactionProxyFactory.TRANSACTIONS.get();
+            PoolConnection connection = AOPProxyFactory.TRANSACTIONS.get();
             boolean transation = false;
             if (connection == null || connection.getTransNew() > ZERO) {
                 connection = configuration.getDbPool().getConnection();

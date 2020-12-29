@@ -36,7 +36,9 @@ public class MBG {
     private final Map<String, TableInfo> tables = new HashMap<>(16);
 
     public MBG(String dbProperties) {
-        dbPool = new DBPool(dbProperties);
+        if(StringUtil.isNotEmpty(dbProperties)) {
+            dbPool = new DBPool(dbProperties);
+        }
     }
 
     public DataBaseCoder getDataBaseCoder() {

@@ -68,22 +68,5 @@ public class testMyBatisX {
     public static void main(String[] args) {
 //        test02();
 //        test03();
-        test04();
-    }
-
-    private static void test04() {
-        Configuration configuration = new Configuration();
-        //firstly, set dbProperties file
-        configuration.setDbPoolProperties("src/dd_test.properties");
-        //secondly, set DataBaseCoder
-        configuration.setDataBaseCoder(new PBEDataBaseCoder(null,null));
-        configuration.setTransactionProxyFactory(new JDKTransactionProxyFactory());
-        configuration.init("pers.pandora.test.dd");
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactory(configuration);
-        SqlSession sqlSession = sqlSessionFactory.createSqlSession("test/dd/mapper/TestMapper.xml");
-        TestMapper mapper = sqlSession.createMapper(TestMapper.class);
-        //System.out.println(mapper.queryForOne(3));
-        TestTransaction proxy = configuration.getTransactionProxyByType(TestTransaction.class);
-        proxy.test(3,4,13,3,mapper);
     }
 }

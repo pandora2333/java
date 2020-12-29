@@ -8,8 +8,6 @@ import pers.pandora.constant.LOG;
 import pers.pandora.utils.StringUtil;
 
 import java.io.File;
-
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.*;
@@ -20,8 +18,6 @@ public final class Configuration {
     private static Logger logger = LogManager.getLogger(Configuration.class);
     //Entity class and attribute corresponding table associated with field alias
     private final Map<String, String> alias = new ConcurrentHashMap<>(16);
-    //Transaction Proxy Factory
-    private TransactionProxyFactory transactionProxyFactory;
     //Transactional Class
     private final Map<Class<?>, Object> transactions = new ConcurrentHashMap<>(16);
 
@@ -40,47 +36,21 @@ public final class Configuration {
     private long timeOut = 5;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
-    //DBPool
-    private DBPool dbPool;
 
     private static final String CONFIGURATION_CLASS = "pers.pandora.core.Configuration";
 
-    public Map<String, String> getAlias() {
-        return alias;
+    private DBPool dbPool;
+
+    public void setDbPool(DBPool dbPool) {
+        this.dbPool = dbPool;
     }
 
-    public String getDbPoolProperties() {
-        return dbPool != null ? dbPool.getDbProperties() : null;
-    }
-
-    public DataBaseCoder getDataBaseCoder() {
-        return dbPool != null ? dbPool.getDataBaseCoder() : null;
-    }
-
-    public void setDataBaseCoder(DataBaseCoder dataBaseCoder) {
-        if (dbPool != null) {
-            dbPool.setDataBaseCoder(dataBaseCoder);
-        }
-    }
-
-    public Map<Class<?>, Object> getTransactions() {
-        return transactions;
-    }
-
-    DBPool getDbPool() {
+    public DBPool getDbPool() {
         return dbPool;
     }
 
-    public void setDbPoolProperties(String dbPoolProperties) {
-        this.dbPool = new DBPool(dbPoolProperties);
-    }
-
-    public TransactionProxyFactory getTransactionProxyFactory() {
-        return transactionProxyFactory;
-    }
-
-    public void setTransactionProxyFactory(TransactionProxyFactory transactionProxyFactory) {
-        this.transactionProxyFactory = transactionProxyFactory;
+    public Map<String, String> getAlias() {
+        return alias;
     }
 
     public void initThreadPool(int minCore, int maxCore, long keepAlive, TimeUnit timeUnit, long timeout, TimeUnit timeOutUnit) {
@@ -130,7 +100,6 @@ public final class Configuration {
             return;
         }
         assert dbPool != null;
-        dbPool.init();
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         result = new ArrayList<>(10);
         for (String path : paths) {
@@ -189,7 +158,7 @@ public final class Configuration {
                     String fieldValue = null;
                     if (template == Id.class) {
                         Id id = field.getAnnotation(Id.class);
-                        if(id != null) {
+                        if (id != null) {
                             fieldValue = id.value();
                         }
                     } else {
@@ -198,7 +167,7 @@ public final class Configuration {
                             fieldValue = column.value();
                         }
                     }
-                    if(StringUtil.isNotEmpty(fieldValue)){
+                    if (StringUtil.isNotEmpty(fieldValue)) {
                         alias.put(fieldValue, field.getName());
                     }
                 } catch (Exception e) {
@@ -236,9 +205,6 @@ public final class Configuration {
             try {
                 Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
                 scanBean(tClass, null, Table.class);
-                if (transactionProxyFactory != null) {
-                    scanTransaction(tClass);
-                }
             } catch (Exception e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                         this, className, LOG.EXCEPTION_DESC, e.getCause());
@@ -246,15 +212,5 @@ public final class Configuration {
             }
             return true;
         }
-    }
-
-    private void scanTransaction(Class<?> tClass) {
-        if (tClass.isAnnotationPresent(Transaction.class) && tClass.getInterfaces().length == 1) {
-            transactions.put(tClass.getInterfaces()[0], transactionProxyFactory.createProxyClass(tClass, dbPool));
-        }
-    }
-
-    public <T> T getTransactionProxyByType(Class<T> tClass) {
-        return (T) transactions.get(tClass);
     }
 }

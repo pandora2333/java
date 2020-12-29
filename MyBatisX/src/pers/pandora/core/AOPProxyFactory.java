@@ -33,7 +33,7 @@ public interface AOPProxyFactory {
     //Lazy loading creates implementation objects
     Map<Method, Object> OBJECTS = new ConcurrentHashMap<>(4);
 
-    Map<String,DBPool> DBPOOLS = new ConcurrentHashMap<>(4);
+    Map<String, DBPool> DBPOOLS = new ConcurrentHashMap<>(4);
 
     <T> T createProxyClass(final Class<T> t);
 

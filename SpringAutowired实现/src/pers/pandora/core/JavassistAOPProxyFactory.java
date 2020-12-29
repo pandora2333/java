@@ -5,11 +5,15 @@ import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import pers.pandora.Enum.Propagation;
+import pers.pandora.annotation.Transactional;
 import pers.pandora.constant.LOG;
+import pers.pandora.utils.StringUtils;
 import pers.pandora.vo.Tuple;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Set;
 
 public class JavassistAOPProxyFactory implements AOPProxyFactory {
@@ -18,11 +22,13 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
 
     public static final String PROXY_MARK = "setHandler";
 
+    public static final String DBNAME = "dBPool";
+
     @Override
-    public <T> T createProxyClass(Class<T> t) {
-        ProxyFactory proxyFactory = new ProxyFactory();
+    public <T> T createProxyClass(final Class<T> t) {
+        final ProxyFactory proxyFactory = new ProxyFactory();
         proxyFactory.setSuperclass(t);
-        Class<?> proxyClass = proxyFactory.createClass();
+        final Class<?> proxyClass = proxyFactory.createClass();
         T javassistProxy = null;
         try {
             javassistProxy = (T) proxyClass.getDeclaredConstructor().newInstance();
@@ -42,14 +48,88 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         BEFOREHANDlES.clear();
         THROWHANDlES.clear();
         OBJECTS.clear();
+        TRANSACTIONS.remove();
+        DBPOOLS.clear();
     }
 
-    private static class JavassistInterceptor implements MethodHandler {
+    private class JavassistInterceptor implements MethodHandler {
 
         private String className;
 
         public void setClassName(String className) {
             this.className = className;
+        }
+
+        private boolean checkNoRollBackException(String message, String[] no_roll_backs) {
+            for (String no_roll_back : no_roll_backs) {
+                if (message.startsWith(no_roll_back)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private Object proxyTransaction(Object target, Object[] args, Method method, Transactional transactional) throws SQLException {
+            Object result = null;
+            PoolConnection connection;
+            String dbName = transactional.dbPool();
+            if (!StringUtils.isNotEmpty(dbName)) {
+                dbName = DBNAME;
+            }
+            final DBPool dbPool = DBPOOLS.get(dbName);
+            assert dbPool != null;
+            int level = 0;
+            //close db auto-commit
+            try {
+                connection = dbPool.getConnection();
+            } catch (SQLException e) {
+                logger.error("proxy invoke" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                throw e;
+            }
+            if (connection != null) {
+                try {
+                    connection.getConnection().setAutoCommit(false);
+                    level = connection.getConnection().getTransactionIsolation();
+                    connection.getConnection().setTransactionIsolation(transactional.isolation());
+                    //Binding transactions through ThreadLocal
+                    if (transactional.propagation() == Propagation.REQUIRES_NEW) {
+                        connection.setTransNew((byte) 0);
+                    }
+                    TRANSACTIONS.set(connection);
+                } catch (SQLException e) {
+                    logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                    throw e;
+                }
+            }
+
+            try {
+                result = method.invoke(target, args);
+                //commit
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                //execute rollback
+                if (checkNoRollBackException(e.getCause().toString(), transactional.no_rollback_exception())) {
+                    try {
+                        assert connection != null;
+                        connection.getConnection().rollback();
+                        logger.debug("method:" + LOG.LOG_PRE + "trigger connection rollback" + LOG.LOG_POS, method.getName(), LOG.ERROR_DESC, e.getCause());
+                    } catch (SQLException e1) {
+                        logger.error("connection rollback" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
+                        throw e1;
+                    }
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.getConnection().setAutoCommit(true);
+                    connection.getConnection().setTransactionIsolation(level);
+                    TRANSACTIONS.remove();
+                    dbPool.commit(connection);
+                } catch (SQLException e) {
+                    logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                    throw e;
+                }
+            }
+            return result;
         }
 
         public Object invoke(Object self, Method parentMethod, Method proceed, Object[] args) throws InvocationTargetException, IllegalAccessException {
@@ -58,9 +138,9 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             StringBuilder methodName = new StringBuilder(parentMethod.getName());
             methodName.append(LEFT_BRACKET);
             Class<?>[] types = parentMethod.getParameterTypes();
-            for(int i = 0;i < types.length;i++){
+            for (int i = 0; i < types.length; i++) {
                 methodName.append(types[i].getName());
-                if(i != types.length - 1){
+                if (i != types.length - 1) {
                     methodName.append(COMMA);
                 }
             }
@@ -75,11 +155,16 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             }
             Object ret = null;
             try {
-                ret = proceed.invoke(self, joinPoint.getParams());
+                Transactional transactional = parentMethod.getAnnotation(Transactional.class);
+                if (transactional != null) {
+                    ret = proxyTransaction(self, args, proceed, transactional);
+                } else {
+                    ret = proceed.invoke(self, joinPoint.getParams());
+                }
                 //after
                 joinPoint.setReturnValue(ret);
                 exec(AFTERHANDlES, joinPoint);
-            } catch (IllegalAccessException | InvocationTargetException e) {
+            } catch (IllegalAccessException | InvocationTargetException | SQLException e) {
                 //throw
                 joinPoint.setException(e.getCause());
                 exec(THROWHANDlES, joinPoint);

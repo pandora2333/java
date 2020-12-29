@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import static javax.swing.UIManager.put;
+
 public final class AIOServerlDispatcher extends Dispatcher implements CompletionHandler<Integer, Attachment> {
 
     private Attachment att;
@@ -188,7 +190,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                             tmpData = new byte[k];
                             System.arraycopy(data, i, tmpData, 0, k);
                             Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, tmpData);
-                            request.getUploadFiles().put(varName, file);//the same varname just save one file
+                            List<Tuple<String, String, byte[]>> tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
+                            tuple.add(file);
                         }
                         i = j + HTTPStatus.LINE_SPLITER;
                     } else {//form value

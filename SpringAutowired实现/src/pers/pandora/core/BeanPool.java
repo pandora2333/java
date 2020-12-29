@@ -415,7 +415,7 @@ public final class BeanPool {
                 return;
             }
             try {
-                initBean(ClassUtils.getClass(t, null, false), Character.toLowerCase(t.getSimpleName().charAt(0))
+                initBean(ClassUtils.getClass(t, this, false), Character.toLowerCase(t.getSimpleName().charAt(0))
                         + t.getSimpleName().substring(1));
             } catch (IllegalAccessException | InstantiationException e) {
                 logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
@@ -472,7 +472,6 @@ public final class BeanPool {
         assert obj != null;
         Class<?> objTarget = obj.getClass();
         String target = obj.getClass().getName();
-        int cnt = 1;
         if (aopProxyFactory != null && interceptors.stream().anyMatch(v -> {
             int i = v.indexOf(AOPProxyFactory.METHOD_SEPARATOR);
             if (i > 0) {
@@ -488,29 +487,15 @@ public final class BeanPool {
             } catch (NoSuchMethodException e) {
                 //The bean has not yet been represented
                 obj = ClassUtils.copy(obj.getClass(), obj, aopProxyFactory.createProxyClass(obj.getClass()));
-                cnt++;
             }
         }
         singleton.set(obj);
         injectValue(objTarget);
         beans.put(objName, obj);
-        List<Class<?>> parents = new ArrayList<>(objTarget.getInterfaces().length + cnt);
-        Collections.addAll(parents, objTarget.getInterfaces());
-        while (objTarget != Object.class) {
-            parents.add(objTarget);
-            objTarget = objTarget.getSuperclass();
+        if(obj instanceof DBPool && aopProxyFactory != null){
+            aopProxyFactory.DBPOOLS.put(objName, (DBPool) obj);
         }
-        for (Class<?> parent : parents) {
-            //DCL
-            if (!typeBeans.containsKey(parent)) {
-                synchronized (typeBeans) {
-                    if (!typeBeans.containsKey(parent)) {
-                        typeBeans.put(parent, new CopyOnWriteArrayList<>());
-                    }
-                }
-            }
-            typeBeans.get(parent).add(obj);
-        }
+        addTypeBeans(objTarget, obj);
     }
 
     //Automatic injection of attribute values
@@ -592,7 +577,6 @@ public final class BeanPool {
 
         @Override
         public Boolean call() {
-            singleton.remove();
             try {
                 Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
                 if (aop) {
@@ -603,8 +587,10 @@ public final class BeanPool {
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                         this, className, LOG.EXCEPTION_DESC, e);
+                singleton.remove();
                 return false;
             }
+            singleton.remove();
             return true;
         }
     }
@@ -613,40 +599,78 @@ public final class BeanPool {
         if (aopProxyFactory == null) {
             return;
         }
+        Integer order = null;
         Annotation annotation = tClass.getAnnotation(Aspect.class);
         if (annotation != null) {
-            int order = ((Aspect) annotation).value();
+            order = ((Aspect)annotation).value();
+        }
+        boolean transaction = tClass.isAnnotationPresent(Transaction.class),aop;
+        if (annotation != null || transaction) {
             String cutPonit;
+            Object proxyClass;
             //current class all methods
             for (Method method : tClass.getDeclaredMethods()) {
+                aop = false;
                 method.setAccessible(true);
-                annotation = method.getAnnotation(Before.class);
-                boolean aop = false;
-                if (annotation != null) {
-                    cutPonit = ((Before) annotation).value();
-                    interceptors.add(cutPonit);
-                    aop = true;
-                    aopProxyFactory.BEFOREHANDlES.add(new Tuple<>(order, cutPonit, method));
+                if (order != null) {
+                    annotation = method.getAnnotation(Before.class);
+                    if (annotation != null) {
+                        cutPonit = ((Before) annotation).value();
+                        interceptors.add(cutPonit);
+                        aop = true;
+                        aopProxyFactory.BEFOREHANDlES.add(new Tuple<>(order, cutPonit, method));
+                    }
+                    annotation = method.getAnnotation(After.class);
+                    if (annotation != null) {
+                        cutPonit = ((After) annotation).value();
+                        interceptors.add(cutPonit);
+                        aop = true;
+                        aopProxyFactory.AFTERHANDlES.add(new Tuple<>(order, cutPonit, method));
+                    }
+                    annotation = method.getAnnotation(Throw.class);
+                    if (annotation != null) {
+                        cutPonit = ((Throw) annotation).value();
+                        interceptors.add(cutPonit);
+                        aop = true;
+                        aopProxyFactory.THROWHANDlES.add(new Tuple<>(order, cutPonit, method));
+                    }
                 }
-                annotation = method.getAnnotation(After.class);
-                if (annotation != null) {
-                    cutPonit = ((After) annotation).value();
-                    interceptors.add(cutPonit);
-                    aop = true;
-                    aopProxyFactory.AFTERHANDlES.add(new Tuple<>(order, cutPonit, method));
-                }
-                annotation = method.getAnnotation(Throw.class);
-                if (annotation != null) {
-                    cutPonit = ((Throw) annotation).value();
-                    interceptors.add(cutPonit);
-                    aop = true;
-                    aopProxyFactory.THROWHANDlES.add(new Tuple<>(order, cutPonit, method));
+                if (transaction) {
+                    annotation = method.getAnnotation(Transactional.class);
+                    if(annotation != null){
+                        aop = true;
+                        proxyClass = aopProxyFactory.createProxyClass(tClass);
+                        singleton.set(proxyClass);
+                        injectValue(tClass);
+                        addTypeBeans(tClass, proxyClass);
+                        beans.put(Character.toLowerCase(tClass.getSimpleName().charAt(0)) + tClass.getSimpleName().substring(1), proxyClass);
+                    }
                 }
                 //No AOP Method,No Create Executable Object
                 if (aop) {
-                    aopProxyFactory.OBJECTS.put(method, aopProxyFactory.OBJECTS.getOrDefault(method, tClass.newInstance()));
+                    aopProxyFactory.OBJECTS.put(method, aopProxyFactory.OBJECTS.getOrDefault(method, ClassUtils.getClass(tClass, this, true)));
                 }
             }
+        }
+    }
+
+    private void addTypeBeans(Class<?> objTarget, final Object proxyClass) {
+        final List<Class<?>> parents = new ArrayList<>(objTarget.getInterfaces().length + 1);
+        Collections.addAll(parents, objTarget.getInterfaces());
+        while (objTarget != Object.class) {
+            parents.add(objTarget);
+            objTarget = objTarget.getSuperclass();
+        }
+        for (Class<?> parent : parents) {
+            //DCL
+            if (!typeBeans.containsKey(parent)) {
+                synchronized (typeBeans) {
+                    if (!typeBeans.containsKey(parent)) {
+                        typeBeans.put(parent, new CopyOnWriteArrayList<>());
+                    }
+                }
+            }
+            typeBeans.get(parent).add(proxyClass);
         }
     }
 }
