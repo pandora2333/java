@@ -229,7 +229,7 @@ public final class Request {
     }
 
 
-    public void saveFileData(String filePath, Tuple<String,String,byte[]> file) {
+    public void saveFileData(String filePath, final Tuple<String,String,byte[]> file) {
         if (file == null) {
             return;
         }
@@ -327,11 +327,11 @@ public final class Request {
 
     }
 
-    private void addJSON(String param) {
+    private void addJSON(final String param) {
         if (jsonParser == null || !StringUtils.isNotEmpty(param)) {
             return;
         }
-        List<Object> tmp = new ArrayList<>(1);
+        final List<Object> tmp = new ArrayList<>(1);
         tmp.add(param);
         params.put(HTTPStatus.JSON_TYPE, tmp);
     }
@@ -358,7 +358,7 @@ public final class Request {
         return sessionID;
     }
 
-    void initCookies(String cookie_str) {
+    void initCookies(final String cookie_str) {
         boolean initSession = false;
         if (StringUtils.isNotEmpty(cookie_str)) {
             Cookie cookie;
@@ -383,15 +383,15 @@ public final class Request {
         }
     }
 
-    boolean checkSessionInvalid(String sessionID) {
+    boolean checkSessionInvalid(final String sessionID) {
         if (!dispatcher.server.getSessionMap().containsKey(sessionID)) {
             return false;
         }
-        Session session = dispatcher.server.getSessionMap().get(sessionID);
+        final Session session = dispatcher.server.getSessionMap().get(sessionID);
         return session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0;
     }
 
-    private String judgeStatic(String reqToken) {
+    private String judgeStatic(final String reqToken) {
         if (reqToken.startsWith(dispatcher.server.getResourceRootPath())) {
             if (reqToken.endsWith(HTTPStatus.HTML_MARK) || reqToken.endsWith(HTTPStatus.HTM_MARK)) {
                 return HTTPStatus.TEXT_HTML + HTTPStatus.COLON;
@@ -461,7 +461,7 @@ public final class Request {
         return null;
     }
 
-    private void parseParams(String reqToken, boolean isGet) {
+    private void parseParams(final String reqToken, final boolean isGet) {
         if (StringUtils.isNotEmpty(reqToken)) {
             String[] temp = null;
             if (isGet) {
@@ -482,7 +482,7 @@ public final class Request {
         }
     }
 
-    private boolean isMVC(String reqUrl) {
+    private boolean isMVC(final String reqUrl) {
         for (Map.Entry<String, String> entry : dispatcher.server.getContext().entrySet()) {
             if (entry.getValue().equals(RequestMappingHandler.MVC_CLASS) && reqUrl.matches(entry.getKey())) {// /.*.do //.do
                 return true;
@@ -491,7 +491,7 @@ public final class Request {
         return false;
     }
 
-    private void buildSession(String sessionID, Cookie cookie) {
+    private void buildSession(String sessionID, final Cookie cookie) {
         if (checkSessionInvalid(sessionID)) {
             session = dispatcher.server.getSessionMap().get(sessionID);
         } else {
@@ -510,7 +510,7 @@ public final class Request {
         }
     }
 
-    private void handleData(String[] temp) {
+    private void handleData(final String[] temp) {
         if (temp == null) {
             return;
         }
@@ -585,7 +585,7 @@ public final class Request {
         if (jsonParser == null) {
             return;
         }
-        List<Object> list = params.get(HTTPStatus.JSON_TYPE);
+        final List<Object> list = params.get(HTTPStatus.JSON_TYPE);
         if (CollectionUtil.isNotEmptry(list)) {
             Map<String, Object> objectMap = null;
             try {
@@ -604,7 +604,7 @@ public final class Request {
         }
     }
 
-    public void dispatcher(String path) {
+    public void dispatcher(final String path) {
         allowAccess = true;
         dispatcher.dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + path + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
     }

@@ -14,6 +14,7 @@ import pers.pandora.utils.StringUtil;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SqlSession {
 
@@ -38,14 +39,14 @@ public class SqlSession {
     }
 
     //Return Mapper Proxy
-    private <T> T createMapperProxy(String mapperFile, Class<T> template) throws Exception {
-        Document doc = Dom4JUtil.getDocument(ENTITY.ROOTPATH + mapperFile);
-        String proxyClass = doc.getRootElement().attributeValue(XML.NAMESPACE);
-        List<Element> selects = doc.getRootElement().elements(SQL.SELECT);
-        List<Element> inserts = doc.getRootElement().elements(SQL.INSERT);
-        List<Element> updates = doc.getRootElement().elements(SQL.UPDATE);
-        List<Element> deletes = doc.getRootElement().elements(SQL.DELETE);
-        List<DynamicSql> proxys = new ArrayList<>(4);
+    private <T> T createMapperProxy(final String mapperFile, final Class<T> template) throws Exception {
+        final Document doc = Dom4JUtil.getDocument(ENTITY.ROOTPATH + mapperFile);
+        final String proxyClass = doc.getRootElement().attributeValue(XML.NAMESPACE);
+        final List<Element> selects = doc.getRootElement().elements(SQL.SELECT);
+        final List<Element> inserts = doc.getRootElement().elements(SQL.INSERT);
+        final List<Element> updates = doc.getRootElement().elements(SQL.UPDATE);
+        final List<Element> deletes = doc.getRootElement().elements(SQL.DELETE);
+        final Map<String, DynamicSql> proxys = new HashMap<>(8);
         selects.forEach(element -> {
             String select = element.attributeValue(SQL.ID);
             String resultType = element.attributeValue(XML.RESULTTYPE);
@@ -55,7 +56,7 @@ public class SqlSession {
                 selectSql = new DynamicSql(SQL.SELECT, select, resultType, sql);
             }
             if (selectSql != null) {
-                proxys.add(selectSql);
+                proxys.put(selectSql.getId(), selectSql);
             }
         });
         inserts.forEach(element -> {
@@ -71,7 +72,7 @@ public class SqlSession {
                 }
             }
             if (insertSql != null) {
-                proxys.add(insertSql);
+                proxys.put(insertSql.getId(), insertSql);
             }
         });
         deletes.forEach(element -> {
@@ -82,7 +83,7 @@ public class SqlSession {
                 deleteSql = new DynamicSql(SQL.DELETE, delete, null, sql);
             }
             if (deleteSql != null) {
-                proxys.add(deleteSql);
+                proxys.put(deleteSql.getId(), deleteSql);
             }
         });
         updates.forEach(element -> {
@@ -93,18 +94,18 @@ public class SqlSession {
                 updateSql = new DynamicSql(SQL.UPDATE, update, null, sql);
             }
             if (updateSql != null) {
-                proxys.add(updateSql);
+                proxys.put(updateSql.getId(), updateSql);
             }
         });
         try {
-            Map<String,DynamicSql> makeMethod = new HashMap<>(8);
+            Map<String, DynamicSql> makeMethod = new HashMap<>(8);
             Class tClass = Class.forName(proxyClass);
             if (tClass.isInterface()) {
+                DynamicSql dynamicSql;
                 for (Method method : tClass.getDeclaredMethods()) {
-                    for (DynamicSql dynamicSql : proxys) {
-                        if (dynamicSql.getId().equals(method.getName())) {
-                            makeMethod.put(dynamicSql.getId(),dynamicSql);
-                        }
+                    dynamicSql = proxys.get(method.getName());
+                    if (dynamicSql != null) {
+                        makeMethod.put(dynamicSql.getId(), dynamicSql);
                     }
                 }
                 return mapperProxyHandler.parseMethod(makeMethod, template);

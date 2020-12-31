@@ -384,7 +384,7 @@ public abstract class Server {
             if (att.getClient().isOpen()) {
                 SocketAddress address = att.getClient().getRemoteAddress();
                 keepClients.remove(address.toString());
-                logger.info(LOG.LOG_POS + " will be closed!", getServerName(), address);
+                logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), address);
                 att.getClient().close();
             }
         } catch (IOException e) {

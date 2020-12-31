@@ -187,7 +187,7 @@ public final class JspParser {
         ct.addMethod(CtMethod.make(buildDoGet(jsp), ct));
         ct.addMethod(CtMethod.make(buildDoPost(), ct));
         ct.writeFile(CLASSDIR);
-        logger.info("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
+        logger.debug("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
     }
 
     private String buildDoPost() {

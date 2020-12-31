@@ -61,16 +61,16 @@ public final class AIOServer extends Server {
             mainPool = Executors.newFixedThreadPool(getMainPoolSize());
             //slave thread pool should do to I/O disk receiving client's datas
             slavePool = Executors.newFixedThreadPool(getSlavePoolSize());
-            AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
-            AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
+            final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
+            final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             asyncServerSocketChannel = serverSocketChannel;
             //When work on TIME_WAIT status,quicky release the port
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             //set receive buffer,default value is 64kB
             serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getReceiveBuffer());
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port));
-            Attachment att = new Attachment();
-            long start = System.currentTimeMillis();
+            final Attachment att = new Attachment();
+            final long start = System.currentTimeMillis();
             //init web.xml
             setContext(new XMLFactory().parse(getWebConfigPath()));
             att.setServer(this);
@@ -85,14 +85,14 @@ public final class AIOServer extends Server {
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
-                    Attachment newAtt = new Attachment();
+                    final Attachment newAtt = new Attachment();
                     SocketAddress clientAddr = null;
                     try {
                         clientAddr = client.getRemoteAddress();
                     } catch (IOException e) {
                         logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
                     }
-                    logger.info(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
+                    logger.debug(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
                     newAtt.setReadBuffer(ByteBuffer.allocate(getCapcity()));

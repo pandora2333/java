@@ -44,7 +44,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         }
         att.setKeepTime(Instant.now());
         setKeepAlive(att.isKeep());
-        ByteBuffer buffer = att.getReadBuffer();
+        final ByteBuffer buffer = att.getReadBuffer();
         //model change:write -> read
         buffer.flip();
         //set JSON_TYPE parser
@@ -117,7 +117,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 request.initSession();
             }
             //handle files and variable
-            String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
+            final String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
             if (StringUtils.isNotEmpty(contentType)) {
                 k = contentType.indexOf(HTTPStatus.FILEMARK);
                 if (k >= 0) fileSeparator = contentType.substring(k + HTTPStatus.FILEMARK.length());
@@ -126,7 +126,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     request.setMultipart(true);
                 }
             }
-            String dataSize = request.getHeads().get(HTTPStatus.CONTENTLENGTH);
+            final String dataSize = request.getHeads().get(HTTPStatus.CONTENTLENGTH);
             remain = StringUtils.isNotEmpty(dataSize) ? Long.valueOf(dataSize) : 0;
             //Directly refuse to receive data after exceeding the maximum transmission bit
             if (remain > server.getMaxUpBits()) {
@@ -225,7 +225,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     }
 
     @Override
-    protected void pushClient(byte[] content, java.io.File staticFile) {
+    protected void pushClient(final byte[] content, final java.io.File staticFile) {
         if (content != null) {
             if (att.getWriteBuffer().capacity() < content.length) {
                 att.setWriteBuffer(ByteBuffer.allocateDirect(content.length));
@@ -293,7 +293,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         }
     }
 
-    public boolean write(ByteBuffer by, String file) {
+    public boolean write(final ByteBuffer by, final String file) {
         try {
             if (att.getClient().isOpen()) {
                 att.getClient().write(by).get();

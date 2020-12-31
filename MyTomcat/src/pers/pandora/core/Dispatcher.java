@@ -130,7 +130,7 @@ abstract class Dispatcher {
         }
     }
 
-    void initRequest(ByteBuffer data) {
+    void initRequest(final ByteBuffer data) {
         for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
@@ -159,6 +159,6 @@ abstract class Dispatcher {
         }
     }
 
-    protected abstract void pushClient(byte[] content, java.io.File staticFile);
+    protected abstract void pushClient(final byte[] content, final java.io.File staticFile);
 
 }
