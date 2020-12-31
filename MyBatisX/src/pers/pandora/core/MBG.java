@@ -17,6 +17,10 @@ import pers.pandora.utils.StringUtil;
 import pers.pandora.utils.TypeConverter;
 
 import java.io.*;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,8 +39,8 @@ public class MBG {
     //The table name is key and the table information object is value
     private final Map<String, TableInfo> tables = new HashMap<>(16);
 
-    public MBG(String dbProperties) {
-        if(StringUtil.isNotEmpty(dbProperties)) {
+    public MBG(final String dbProperties) {
+        if (StringUtil.isNotEmpty(dbProperties)) {
             dbPool = new DBPool(dbProperties);
         }
     }
@@ -51,7 +55,7 @@ public class MBG {
         }
     }
 
-    public Map<String, TableInfo> getTables() {//对外提供使用
+    public Map<String, TableInfo> getTables() {
         return tables;
     }
 
@@ -68,25 +72,29 @@ public class MBG {
      * @param way
      * @param xmlPackage
      */
-    private void parseTables(String poPackage, String mapperPackage, String way, String xmlPackage) {
+    private void parseTables(final String poPackage, final String mapperPackage, final String way, final String xmlPackage) {
         PoolConnection connection = null;
         try {
             connection = dbPool.getConnection();
-            DatabaseMetaData dbmd = connection.getConnection().getMetaData();
-            String percent = String.valueOf(SQL.PERCENT);
-            ResultSet tableRet = dbmd.getTables(null, percent, percent, new String[]{SQL.TABLE});
+            final DatabaseMetaData dbmd = connection.getConnection().getMetaData();
+            final String percent = String.valueOf(SQL.PERCENT);
+            final ResultSet tableRet = dbmd.getTables(null, percent, percent, new String[]{SQL.TABLE});
+            String tableName;
+            TableInfo tableInfo;
+            ResultSet set, set2;
+            ColumnInfo ci;
             while (tableRet.next()) {
-                String tableName = (String) tableRet.getObject(SQL.TABLE_NAME);
-                TableInfo tableInfo = new TableInfo(tableName, new ArrayList<>());
+                tableName = (String) tableRet.getObject(SQL.TABLE_NAME);
+                tableInfo = new TableInfo(tableName, new ArrayList<>());
                 tables.put(tableName, tableInfo);
                 //Query all fields in the table
-                ResultSet set = dbmd.getColumns(null, percent, tableName, percent);
+                set = dbmd.getColumns(null, percent, tableName, percent);
                 while (set.next()) {
-                    ColumnInfo ci = new ColumnInfo(set.getString(SQL.COLUMN_NAME), set.getString(SQL.TYPE_NAME), false);
+                    ci = new ColumnInfo(set.getString(SQL.COLUMN_NAME), set.getString(SQL.TYPE_NAME), false);
                     tableInfo.getColumnInfos().add(ci);
                 }
                 //Query annotations in a table
-                ResultSet set2 = dbmd.getPrimaryKeys(null, percent, tableName);
+                set2 = dbmd.getPrimaryKeys(null, percent, tableName);
                 while (set2.next()) {
                     for (ColumnInfo columnInfo : tableInfo.getColumnInfos()) {
                         if (set2.getObject(SQL.COLUMN_NAME).equals(columnInfo.getColumnName())) {
@@ -120,9 +128,10 @@ public class MBG {
         final StringBuilder mapper = new StringBuilder();
         final StringBuilder entityContent = new StringBuilder();
         final StringBuilder entity = new StringBuilder();
+        boolean singleton;
         for (TableInfo tableInfo : tables.values()) {
             //Generate Java entity class source file
-            boolean singleton = createEntity(way, poPackage, entity, entityContent, tableInfo);
+            singleton = createEntity(way, poPackage, entity, entityContent, tableInfo);
             //Generate mapper interface source file
             createMapper(way, poPackage, mapperPackage, mapper, mapperContent, tableInfo);
             //Generate mapper corresponding XML file
@@ -144,7 +153,7 @@ public class MBG {
      * @param tableInfo
      * @return singleton pattern
      */
-    private boolean createEntity(String way, String poPackage, StringBuilder entity, StringBuilder entityContent, TableInfo tableInfo) {
+    private boolean createEntity(final String way, final String poPackage, final StringBuilder entity, final StringBuilder entityContent, final TableInfo tableInfo) {
         entity.append(Character.toUpperCase(tableInfo.getTableName().charAt(0))).append(tableInfo.getTableName().substring(1));
         entityContent.append(ENTITY.PACKAGE).append(XML.BLANK).append(poPackage).append(ENTITY.SEMICOLON).append(ENTITY.LINE);
         entityContent.append(ENTITY.IMPORT).append(XML.BLANK).append(ENTITY.IMPORT_HEAD).append(ENTITY.SEMICOLON).append(ENTITY.LINE).append(ENTITY.LINE);
@@ -154,7 +163,7 @@ public class MBG {
             entityContent.append(JavaGetSetter.fieldDefined(columnInfo)).append(JavaGetSetter.getter(columnInfo)).append(JavaGetSetter.setter(columnInfo)).append(ENTITY.LINE);
         }
         entityContent.append(ENTITY.LINE).append(ENTITY.RIGHT_CURLY_BRACKET);
-        boolean singleton = writeFile(way, poPackage, entity.toString(), entityContent.toString(), tableInfo, true, "createEntity");
+        final boolean singleton = writeFile(way, poPackage, entity.toString(), entityContent.toString(), tableInfo, true, "createEntity");
         entity.delete(0, entity.length());
         entityContent.delete(0, entityContent.length());
         return singleton;
@@ -171,7 +180,7 @@ public class MBG {
      * @param tableInfo
      * @return singleton pattern
      */
-    private boolean createMapper(String way, String poPackage, String mapperPackage, StringBuilder mapper, StringBuilder mapperContent, TableInfo tableInfo) {
+    private boolean createMapper(final String way, final String poPackage, final String mapperPackage, final StringBuilder mapper, final StringBuilder mapperContent, final TableInfo tableInfo) {
         mapper.append(Character.toUpperCase(tableInfo.getTableName().charAt(0))).append(tableInfo.getTableName().substring(1));
         mapperContent.append(ENTITY.PACKAGE).append(XML.BLANK).append(mapperPackage).append(ENTITY.SEMICOLON).append(ENTITY.LINE);
         mapperContent.append(ENTITY.IMPORT).append(XML.BLANK).append(poPackage).append(ENTITY.POINT).append(mapper).append(ENTITY.SEMICOLON).append(ENTITY.LINE).append(ENTITY.LINE);
@@ -182,14 +191,14 @@ public class MBG {
         mapperContent.append(ENTITY.LINE).append(ENTITY.TAB).append(XML.BLANK).append(ENTITY.VOID).append(XML.BLANK).append(SQL.INSERT).append(ENTITY.LEFT_BRACKET).append(mapper).append(XML.BLANK).append(ENTITY.ENTITY).append(ENTITY.RIGHT_BRACKET).append(ENTITY.SEMICOLON);
         mapperContent.append(ENTITY.LINE).append(ENTITY.TAB).append(XML.BLANK).append(ENTITY.VOID).append(XML.BLANK).append(ENTITY.DELETEBYID).append(ENTITY.LEFT_BRACKET).append(pks).append(ENTITY.RIGHT_BRACKET).append(ENTITY.SEMICOLON);
         mapperContent.append(ENTITY.LINE).append(ENTITY.RIGHT_CURLY_BRACKET);
-        boolean singleton = writeFile(way, mapperPackage, mapper.toString() + ENTITY.MAPPER, mapperContent.toString(), tableInfo, true, "createMapper");
+        final boolean singleton = writeFile(way, mapperPackage, mapper.toString() + ENTITY.MAPPER, mapperContent.toString(), tableInfo, true, "createMapper");
         mapper.delete(0, mapper.length());
         mapperContent.delete(0, mapperContent.length());
         return singleton;
     }
 
-    private StringBuilder buildPKS(List<ColumnInfo> pks) {
-        StringBuilder sb = new StringBuilder();
+    private StringBuilder buildPKS(final List<ColumnInfo> pks) {
+        final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < pks.size(); i++) {
             sb.append(TypeConverter.databaseType2JavaType(pks.get(i).getDataType())).append(XML.BLANK).append(pks.get(i).getColumnName());
             if (i != pks.size() - 1) {
@@ -200,9 +209,9 @@ public class MBG {
     }
 
     //Only judge the type of self increasing number,the method used in the case of non federated primary keys
-    private String checkPKType(TableInfo tableInfo) {
+    private String checkPKType(final TableInfo tableInfo) {
         if (tableInfo.getPks().size() == 1) {
-            String autoPk = TypeConverter.databaseType2JavaType(tableInfo.getPks().get(0).getDataType());
+            final String autoPk = TypeConverter.databaseType2JavaType(tableInfo.getPks().get(0).getDataType());
             if (StringUtil.isNotEmpty(autoPk) && (autoPk.equals(ENTITY.INTEGER) || autoPk.equals(ENTITY.LONG))) {
                 return autoPk;
             }
@@ -224,7 +233,7 @@ public class MBG {
      * @param tableInfo
      * @return singleton pattern
      */
-    private boolean createMapperXML(String way, String poPackage, String xmlPackage, String mapperPackage, StringBuilder mapperXML, StringBuilder xmlContent, StringBuilder insertParams, StringBuilder updateParams, TableInfo tableInfo) {
+    private boolean createMapperXML(final String way, final String poPackage, final String xmlPackage, final String mapperPackage, final StringBuilder mapperXML, final StringBuilder xmlContent, final StringBuilder insertParams, final StringBuilder updateParams, final TableInfo tableInfo) {
         mapperXML.append(Character.toUpperCase(tableInfo.getTableName().charAt(0))).append(tableInfo.getTableName().substring(1));
 //                javaType.append("<!DOCTYPE MyMapper SYSTEM \"mapper.dtd\">\n");
         xmlContent.append(XML.MAPPER_HEAD).append(XML.BLANK).append(XML.NAMESPACE).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(mapperPackage).append(ENTITY.POINT).append(mapperXML).append(ENTITY.MAPPER).append(XML.QUOTATION).append(XML.END).append(ENTITY.LINE);
@@ -269,7 +278,7 @@ public class MBG {
         xmlContent.append(ENTITY.TAB).append(XML.UPDATE).append(XML.BLANK).append(SQL.ID).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(SQL.UPDATE).append(XML.QUOTATION).append(XML.END).append(ENTITY.LINE).append(ENTITY.TAB).append(ENTITY.TAB).append(SQL.UPDATE).append(XML.BLANK).append(tableInfo.getTableName())
                 .append(XML.BLANK).append(XML.SET).append(XML.BLANK).append(updateParams).append(XML.BLANK).append(XML.WHERE).append(XML.BLANK).append(pks).append(ENTITY.LINE).append(ENTITY.TAB).append(XML.UPDATE_END).append(ENTITY.LINE);
         xmlContent.append(XML.MAPPER_END);
-        boolean singleton = writeFile(way, xmlPackage, mapperXML.toString() + ENTITY.MAPPER, xmlContent.toString(), tableInfo, false, "createMapperXML");
+        final boolean singleton = writeFile(way, xmlPackage, mapperXML.toString() + ENTITY.MAPPER, xmlContent.toString(), tableInfo, false, "createMapperXML");
         mapperXML.delete(0, mapperXML.length());
         xmlContent.delete(0, xmlContent.length());
         insertParams.delete(0, insertParams.length());
@@ -277,8 +286,8 @@ public class MBG {
         return singleton;
     }
 
-    private StringBuilder buildWhereForPKS(List<ColumnInfo> pks) {
-        StringBuilder sb = new StringBuilder();
+    private StringBuilder buildWhereForPKS(final List<ColumnInfo> pks) {
+        final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < pks.size(); i++) {
             sb.append(pks.get(i).getColumnName()).append(XML.EQUAL_SIGN).append(XML.VAR_MARK).append(ENTITY.LEFT_CURLY_BRACKET).append(pks.get(i).getColumnName()).append(ENTITY.RIGHT_CURLY_BRACKET);
             if (i != pks.size() - 1) {
@@ -288,13 +297,13 @@ public class MBG {
         return sb;
     }
 
-    private void judgePK(StringBuilder xmlContent, String pkName) {
+    private void judgePK(final StringBuilder xmlContent, final String pkName) {
         xmlContent.append(XML.BLANK).append(XML.USEGENERATEDKKEYS).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(XML.TRUE).append(XML.QUOTATION)
                 .append(XML.BLANK).append(XML.KEPPROPERTY).append(XML.EQUAL_SIGN).append(XML.QUOTATION).append(pkName).append(XML.QUOTATION);
     }
 
     //Database table name cannot be the same as all
-    private boolean writeFile(String way, String filePackage, String fileName, String fileContent, TableInfo tableInfo, boolean isJava, String methodName) {
+    private boolean writeFile(final String way, final String filePackage, final String fileName, final String fileContent, final TableInfo tableInfo, final boolean isJava, final String methodName) {
         if (way.equals(tableInfo.getTableName())) {
             try {
                 createFile(filePackage, fileName, fileContent, isJava);
@@ -321,23 +330,25 @@ public class MBG {
      * @param isJava
      * @throws IOException
      */
-    private void createFile(String poPackage, String javaFile, String content, boolean isJava) throws IOException {
-        String slash = String.valueOf(ENTITY.SLASH);
+    private void createFile(final String poPackage, final String javaFile, final String content, final boolean isJava) throws IOException {
+        final String slash = String.valueOf(ENTITY.SLASH);
         File temp = new File(ENTITY.ROOTPATH + poPackage.replaceAll(ENTITY.POINT_REGEX, slash));
         if (!temp.exists()) {
             temp.mkdirs();
         }
-        FileWriter fw;
+        //base on mapped memeroy  file ,use NIO pattern
+        String file;
         if (isJava) {
-            fw = new FileWriter(temp.toPath() + slash + javaFile + ENTITY.POINT + ENTITY.JAVA_MARK);
+            file = temp.toPath() + slash + javaFile + ENTITY.POINT + ENTITY.JAVA_MARK;
         } else {
-            fw = new FileWriter(temp.toPath() + slash + javaFile + ENTITY.POINT + XML.XML_MARK);
+            file = temp.toPath() + slash + javaFile + ENTITY.POINT + XML.XML_MARK;
         }
-        BufferedWriter bw = new BufferedWriter(fw);
-        bw.write(content);
-        bw.flush();
-        bw.close();
-        fw.close();
+        final FileChannel outChannel = FileChannel.open(Paths.get(file),
+                StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
+        final byte[] data = content.getBytes();
+        final MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, data.length);
+        outMappedBuf.put(data);
+        outChannel.close();
     }
 
     /**
@@ -346,15 +357,15 @@ public class MBG {
      *
      * @param xmlPath
      */
-    public void parseXML(String xmlPath) throws DocumentException {
+    public void parseXML(final String xmlPath) throws DocumentException {
         assert dbPool != null;
         dbPool.init();
-        Document doc = Dom4JUtil.getDocument(xmlPath);
-        Element rootElement = doc.getRootElement();
-        String poPackage = rootElement.element(XML.POPACKAGE).getTextTrim();
-        String mapperPackage = rootElement.element(XML.MAPPERPACKAGE).getTextTrim();
-        String xmlPackage = rootElement.element(XML.XMLPACKAGE).getTextTrim();
-        Element table = rootElement.element(XML.TABLE);
+        final Document doc = Dom4JUtil.getDocument(xmlPath);
+        final Element rootElement = doc.getRootElement();
+        final String poPackage = rootElement.element(XML.POPACKAGE).getTextTrim();
+        final String mapperPackage = rootElement.element(XML.MAPPERPACKAGE).getTextTrim();
+        final String xmlPackage = rootElement.element(XML.XMLPACKAGE).getTextTrim();
+        final Element table = rootElement.element(XML.TABLE);
         String way = table.attributeValue(XML.WAY);
         if (StringUtil.isNotEmpty(way) && way.equals(XML.SINGLETON)) {
             way = table.getTextTrim();

@@ -33,7 +33,7 @@ abstract class Dispatcher {
         this.keepAlive = keepAlive;
     }
 
-    void addUrlMapping(String url, String mvcClass) {
+    void addUrlMapping(final String url, final String mvcClass) {
         if (StringUtils.isNotEmpty(url)) {
             server.getContext().put(url, mvcClass);
         }
@@ -45,16 +45,16 @@ abstract class Dispatcher {
     }
 
     //main handle HTTP message
-    final void dispatcher(String reqMsg) {
+    final void dispatcher(final String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
-            String servlet = request.handle(reqMsg);
+            final String servlet = request.handle(reqMsg);
             if (servlet != null) {
                 if (servlet.equals(HTTPStatus.OPTIONS)) {
                     pushClient(response.handle(HTTPStatus.OPTIONS, true), null);
                 } else if (servlet.equals(RequestMappingHandler.MVC_CLASS)) {
                     //exec mvc operation
                     //add mvc path into the map
-                    ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
+                    final ModelAndView mv = new ModelAndView(request.getReqUrl(), false);
                     mv.setRequest(request);
                     mv.setResponse(response);
                     handlePre();
@@ -72,7 +72,7 @@ abstract class Dispatcher {
                         pushClient(response.handle(null, true), null);
                     }
                 } else {
-                    String ss[] = servlet.split(HTTPStatus.HEAD_INFO_SPLITER);
+                    final String ss[] = servlet.split(HTTPStatus.HEAD_INFO_SPLITER);
                     java.io.File file = null;
                     if (ss.length == 2) {
                         file = new java.io.File(server.getRootPath() + ss[1]);
@@ -85,7 +85,7 @@ abstract class Dispatcher {
                             response.setCode(HTTPStatus.CODE_200);
                             response.setType(ss[0]);
                             long len = file.length();
-                            String range = request.getHeads().get(HTTPStatus.RANGE);
+                            final String range = request.getHeads().get(HTTPStatus.RANGE);
                             if (StringUtils.isNotEmpty(range)) {
                                 String tmp[] = range.split(HTTPStatus.PARAM_KV_SPLITER);
                                 //Currently only bytes are processed
@@ -95,7 +95,7 @@ abstract class Dispatcher {
                                         response.setTotal(len);
                                         if (tmp.length == 2) {
                                             response.setCode(HTTPStatus.CODE_206);
-                                            long start = Long.valueOf(tmp[0]);
+                                            final long start = Long.valueOf(tmp[0]);
                                             response.setStart(start);
                                             if (StringUtils.isNotEmpty(tmp[1])) {
                                                 response.setEnd(Long.valueOf(tmp[1]));
@@ -159,6 +159,6 @@ abstract class Dispatcher {
         }
     }
 
-    protected abstract void pushClient(final byte[] content, final java.io.File staticFile);
+    protected abstract void pushClient(byte[] content, java.io.File staticFile);
 
 }

@@ -20,16 +20,16 @@ public class SerialSessionSupportSimpler extends SerialSessionSupport {
     private static final Logger logger = LogManager.getLogger(SerialSessionSupportSimpler.class);
 
     @Override
-    public void serialSession(String serverName) throws IOException {
-        final Map<String, Session> tmp = new HashMap<>();
-        Set<String> excludesessions = getExcludeSessions();
+    public void serialSession(final String serverName) throws IOException {
+        final Map<String, Session> tmp = new HashMap<>(16);
+        final Set<String> excludesessions = getExcludeSessions();
         Optional.ofNullable(getSessionPool().get(serverName)).get().forEach((k, v) -> {
             if (!excludesessions.contains(serverName + HTTPStatus.TRANSVERSE + k)) {
                 tmp.put(k, v);
             }
         });
         if (CollectionUtil.isNotEmptry(tmp)) {
-            ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
+            final ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(
                     new File(SESSIONPATH + serverName + HTTPStatus.TRANSVERSE + SESSIONFILE_POS)));
             oo.writeObject(tmp);
             oo.close();
@@ -37,14 +37,14 @@ public class SerialSessionSupportSimpler extends SerialSessionSupport {
     }
 
     @Override
-    public Map<String, Session> deserialSession(String serverName) throws IOException, ClassNotFoundException {
-        File file = new File(SESSIONPATH + serverName + HTTPStatus.TRANSVERSE + SESSIONFILE_POS);
+    public Map<String, Session> deserialSession(final String serverName) throws IOException, ClassNotFoundException {
+        final File file = new File(SESSIONPATH + serverName + HTTPStatus.TRANSVERSE + SESSIONFILE_POS);
         if (!file.exists()) {
             logger.warn(LOG.LOG_PRE + "Not Found Session File", serverName);
             return new HashMap<>();
         }
-        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
-        Map<String, Session> map = (Map<String, Session>) ois.readObject();
+        final ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+        final Map<String, Session> map = (Map<String, Session>) ois.readObject();
         ois.close();
         //init session and delete source file
         file.delete();
@@ -52,12 +52,12 @@ public class SerialSessionSupportSimpler extends SerialSessionSupport {
     }
 
     @Override
-    public void excliudeSession(String serverName, String sessionID) {
+    public void excliudeSession(final String serverName, final String sessionID) {
         getExcludeSessions().add(serverName + HTTPStatus.TRANSVERSE + sessionID);
     }
 
     @Override
-    public void invalidSession(String serverName, String sessionID) {
+    public void invalidSession(final String serverName, final String sessionID) {
         getExcludeSessions().remove(serverName + HTTPStatus.TRANSVERSE + sessionID);
     }
 }

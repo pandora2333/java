@@ -28,7 +28,7 @@ public abstract class Server {
 
     private String resourceRootPath = "/static/";
 
-    private String webConfigPath = rootPath + secuiryDir +  "web.xml";
+    private String webConfigPath = rootPath + secuiryDir + "web.xml";
 
     public String requestFileDir = resourceRootPath + "files/";
 
@@ -144,7 +144,7 @@ public abstract class Server {
         this.hotLoadJSP = hotLoadJSP;
     }
 
-    public void addClients(String ip, Attachment attachment) {
+    public void addClients(final String ip, final Attachment attachment) {
         if (StringUtils.isNotEmpty(ip) && attachment != null) {
             this.keepClients.put(ip, attachment);
         }
@@ -203,7 +203,7 @@ public abstract class Server {
         return invalidSessionMap;
     }
 
-    public boolean addInvalidSessionMap(String key, Session session) {
+    public boolean addInvalidSessionMap(final String key, final Session session) {
         if (StringUtils.isNotEmpty(key)) {
             invalidSessionMap.put(key, session);
             return true;
@@ -271,7 +271,7 @@ public abstract class Server {
         return sessionMap;
     }
 
-    public boolean addSessionMap(String key, Session session) {
+    public boolean addSessionMap(final String key, final Session session) {
         if (StringUtils.isNotEmpty(key) && session != null) {
             sessionMap.put(key, session);
             if (session.getMax_age() != null) {
@@ -317,7 +317,7 @@ public abstract class Server {
     protected void execExpelThread() {
         final List<String> invalidKey = new ArrayList<>(10);
         final List<String> validKey = new ArrayList<>(1);
-        Thread invalidResourceExecutor = new Thread(() -> {
+        final Thread invalidResourceExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
                 try {
@@ -326,7 +326,7 @@ public abstract class Server {
                 } catch (InterruptedException e) {
                     logger.error(LOG.LOG_PRE + "execExpelThread" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
                 }
-                Instant now = Instant.now();
+                final Instant now = Instant.now();
                 startTime = now.getEpochSecond();
                 invalidSessionMap.forEach((k, v) -> {
                     if (v.getMax_age() != null) {
@@ -356,7 +356,7 @@ public abstract class Server {
     }
 
     public void gc() {
-        Thread invalidClientExecutor = new Thread(() -> {
+        final Thread invalidClientExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
                 try {
@@ -365,7 +365,7 @@ public abstract class Server {
                 } catch (InterruptedException e) {
                     logger.error(LOG.LOG_PRE + "gc" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
                 }
-                Instant now = Instant.now();
+                final Instant now = Instant.now();
                 startTime = now.getEpochSecond();
                 keepClients.forEach((k, v) -> {
                     if (now.toEpochMilli() - v.getKeepTime().toEpochMilli() >= gcTime) {

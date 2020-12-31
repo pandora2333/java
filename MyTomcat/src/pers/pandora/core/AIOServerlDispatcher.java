@@ -249,7 +249,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             FileInputStream in = null;
             if (staticFile != null) {
                 by = att.getWriteBuffer();
-                boolean part = response.getCode() == HTTPStatus.CODE_206;
+                final boolean part = response.getCode() == HTTPStatus.CODE_206;
                 try {
                     if (part) {
                         fin = ins.get(staticFile.getAbsolutePath());

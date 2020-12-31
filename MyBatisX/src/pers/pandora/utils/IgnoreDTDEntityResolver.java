@@ -8,10 +8,10 @@ import org.xml.sax.InputSource;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.XML;
 
-public class IgnoreDTDEntityResolver implements EntityResolver {
+public final class IgnoreDTDEntityResolver implements EntityResolver {
 
     @Override
-    public InputSource resolveEntity(String publicId, String systemId) {
+    public InputSource resolveEntity(final String publicId, final String systemId) {
         return new InputSource(new ByteArrayInputStream(XML.HEAD_DTD.getBytes(Charset.forName(LOG.DEFAULTENCODING))));
     }
 }

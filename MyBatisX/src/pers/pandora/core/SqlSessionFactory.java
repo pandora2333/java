@@ -10,7 +10,7 @@ public class SqlSessionFactory {
         mapperProxyHandler.setCacheFactory(cacheFactory);
     }
 
-    public SqlSessionFactory(Configuration configuration) {
+    public SqlSessionFactory(final Configuration configuration) {
         this.configuration = configuration;
         mapperProxyHandler = new MapperProxyHandler();
         mapperProxyHandler.setConfiguration(configuration);

@@ -66,7 +66,7 @@ public class testMyBatisX {
 //    }
 
     public static void main(String[] args) {
-//        test02();
+        test02();
 //        test03();
     }
 }

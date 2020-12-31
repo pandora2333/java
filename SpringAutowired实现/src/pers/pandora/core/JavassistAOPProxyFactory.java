@@ -35,7 +35,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             logger.error("createProxyClass" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getMessage());
         }
-        JavassistInterceptor interceptor = new JavassistInterceptor();
+        final JavassistInterceptor interceptor = new JavassistInterceptor();
         interceptor.setClassName(t.getName());
         assert javassistProxy != null;
         ((ProxyObject) javassistProxy).setHandler(interceptor);
@@ -52,7 +52,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         DBPOOLS.clear();
     }
 
-    private class JavassistInterceptor implements MethodHandler {
+    private final class JavassistInterceptor implements MethodHandler {
 
         private String className;
 
@@ -60,7 +60,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             this.className = className;
         }
 
-        private boolean checkNoRollBackException(String message, String[] no_roll_backs) {
+        private boolean checkNoRollBackException(final String message, final String[] no_roll_backs) {
             for (String no_roll_back : no_roll_backs) {
                 if (message.startsWith(no_roll_back)) {
                     return false;
@@ -69,7 +69,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             return true;
         }
 
-        private Object proxyTransaction(Object target, Object[] args, Method method, Transactional transactional) throws SQLException {
+        private Object proxyTransaction(final Object target, final Object[] args, final Method method, final Transactional transactional) throws SQLException {
             Object result = null;
             PoolConnection connection;
             String dbName = transactional.dbPool();
@@ -133,11 +133,11 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
         }
 
         public Object invoke(Object self, Method parentMethod, Method proceed, Object[] args) throws InvocationTargetException, IllegalAccessException {
-            JoinPoint joinPoint = new JoinPoint();
+            final JoinPoint joinPoint = new JoinPoint();
             joinPoint.setProxyClassName(className);
-            StringBuilder methodName = new StringBuilder(parentMethod.getName());
+            final StringBuilder methodName = new StringBuilder(parentMethod.getName());
             methodName.append(LEFT_BRACKET);
-            Class<?>[] types = parentMethod.getParameterTypes();
+            final Class<?>[] types = parentMethod.getParameterTypes();
             for (int i = 0; i < types.length; i++) {
                 methodName.append(types[i].getName());
                 if (i != types.length - 1) {
@@ -155,7 +155,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             }
             Object ret = null;
             try {
-                Transactional transactional = parentMethod.getAnnotation(Transactional.class);
+                final Transactional transactional = parentMethod.getAnnotation(Transactional.class);
                 if (transactional != null) {
                     ret = proxyTransaction(self, args, proceed, transactional);
                 } else {
@@ -172,8 +172,8 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             return ret;
         }
 
-        private void exec(Set<Tuple<Integer, String, Method>> set, JoinPoint joinPoint) throws InvocationTargetException, IllegalAccessException {
-            String proxyMethod = joinPoint.getProxyClassName() + METHOD_SEPARATOR + joinPoint.getMethodName();
+        private void exec(final Set<Tuple<Integer, String, Method>> set, final JoinPoint joinPoint) throws InvocationTargetException, IllegalAccessException {
+            final String proxyMethod = joinPoint.getProxyClassName() + METHOD_SEPARATOR + joinPoint.getMethodName();
             for (Tuple<Integer, String, Method> tuple : set) {
                 if (proxyMethod.matches(tuple.getK2())) {
                     tuple.getV().invoke(OBJECTS.get(tuple.getV()), joinPoint);

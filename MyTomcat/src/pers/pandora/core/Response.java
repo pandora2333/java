@@ -81,7 +81,7 @@ public final class Response {
         return code;
     }
 
-    public Response(Dispatcher dispatcher) {
+    public Response(final Dispatcher dispatcher) {
         heads = new HashMap<>();
         this.dispatcher = dispatcher;
     }
@@ -106,7 +106,7 @@ public final class Response {
         return heads;
     }
 
-    public boolean addHeads(String key, String value) {
+    public boolean addHeads(final String key, final String value) {
         if (StringUtils.isNotEmpty(key)) {
             String t = key.toLowerCase();
             if (!t.equals(HTTPStatus.SERVER.toLowerCase()) && !t.equals(HTTPStatus.DATE.toLowerCase()) &&
@@ -131,7 +131,7 @@ public final class Response {
         this.charset = charset;
     }
 
-    public void setType(String type) {
+    public void setType(final String type) {
         if (type == null && servlet == null) {
             content = String.format("request uri params " + LOG.LOG_PRE, LOG.ERROR_DESC).getBytes(Charset.forName(charset));
         }
@@ -144,7 +144,7 @@ public final class Response {
         return type;
     }
 
-    public void setServlet(String servlet) {
+    public void setServlet(final String servlet) {
         if (StringUtils.isNotEmpty(servlet) && !servlet.contains(String.valueOf(HTTPStatus.COLON))) {
             this.servlet = servlet;
         }
@@ -154,8 +154,8 @@ public final class Response {
         return servlet;
     }
 
-    private byte[] createHeadInfo(List<Cookie> cookies, boolean options, boolean src) {
-        StringBuilder headInfo = new StringBuilder();
+    private byte[] createHeadInfo(final List<Cookie> cookies, final boolean options, final boolean src) {
+        final StringBuilder headInfo = new StringBuilder();
         //http version，status code，description
         headInfo.append(HTTPStatus.HTTP1_1).append(HTTPStatus.BLANK).append(code).append(HTTPStatus.BLANK);
         switch (code) {
@@ -216,7 +216,7 @@ public final class Response {
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
-            StringBuilder sb = new StringBuilder();
+            final StringBuilder sb = new StringBuilder();
             cookies.forEach(cookie -> {
                 if (cookie != null && cookie.isNeedUpdate()) {
                     sb.append(HTTPStatus.SET_COOKIE);
@@ -255,7 +255,7 @@ public final class Response {
         return headInfo.toString().getBytes(Charset.forName(charset));
     }
 
-    public byte[] handle(String method, boolean interceptor) {
+    public byte[] handle(final String method, final boolean interceptor) {
         //OPTIONS is HTTP pre-request，just return ok signal or other bad request
         boolean options = StringUtils.isNotEmpty(method) && method.equals(HTTPStatus.OPTIONS), src = false;
         if (code == HTTPStatus.CODE_400 || code == HTTPStatus.CODE_405 || options) {
@@ -283,9 +283,9 @@ public final class Response {
                 }
                 code = HTTPStatus.CODE_200;
             } else if (StringUtils.isNotEmpty(servlet)) {
-                Map<String, List<Object>> params = dispatcher.request.getParams();
+                final Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
-                Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), true);
+                final Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), true);
                 //requestScope
                 ClassUtils.initWithParams(handler, params);
                 //sessionScope
@@ -318,8 +318,8 @@ public final class Response {
                 if (code == HTTPStatus.CODE_200) {
                     code = HTTPStatus.CODE_304;
                 }
-                String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
-                String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
+                final String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
+                final String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
                 if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
                     dispatcher.request.getHeads().put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
                     dispatcher.request.getHeads().put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
@@ -352,8 +352,8 @@ public final class Response {
         if (interceptor) {
             dispatcher.handleAfter();
         }
-        byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false, src);
-        byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
+        final byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false, src);
+        final byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
         if (content != null) {
             System.arraycopy(content, 0, datas, heads.length, content.length);

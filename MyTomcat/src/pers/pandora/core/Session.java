@@ -18,7 +18,7 @@ public final class Session implements Serializable {
 
     private static final String DEFAULTFORMAT = "yyyy-MM-dd HH:mm:ss";
 
-    public Session(String sessionID) {
+    public Session(final String sessionID) {
         this.sessionID = sessionID;
     }
 
@@ -38,7 +38,7 @@ public final class Session implements Serializable {
         return attrbuites;
     }
 
-    public void addAttrbuites(String key, Object value) {
+    public void addAttrbuites(final String key, final Object value) {
         if (StringUtils.isNotEmpty(key)) {
             attrbuites.put(key, value);
         }

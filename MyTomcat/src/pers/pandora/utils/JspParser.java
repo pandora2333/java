@@ -54,7 +54,7 @@ public final class JspParser {
     }
 
     //It's lazy loading, no generation without access
-    public Tuple<String, String, String> parse(String jspFile, boolean hotLoadJSP) {
+    public Tuple<String, String, String> parse(final String jspFile, final boolean hotLoadJSP) {
         //JSP source file
         File file = new File(jspFile);
         if (!file.exists()) {
@@ -78,7 +78,7 @@ public final class JspParser {
         try {
             if(!StringUtils.isNotEmpty(query)){
                 inFifle = new FileReader(file);
-                BufferedReader inputStream = new BufferedReader(inFifle);
+                final BufferedReader inputStream = new BufferedReader(inFifle);
                 buf = new StringBuilder();
                 String temp;
                 while ((temp = inputStream.readLine()) != null) {
@@ -103,8 +103,8 @@ public final class JspParser {
                     }
                 }
             }
-            int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
-            String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
+            final int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
+            final String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = Character.toUpperCase(servletName.charAt(0)) + servletName.substring(1);
             className = className + LOG.CLASS_NAME_SPLITER + query;
             file = new File(CLASSDIR + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
@@ -112,22 +112,22 @@ public final class JspParser {
             if (file.exists()) {
                 return new Tuple<>(className, null, null);
             }
-            StringBuffer sb = new StringBuffer();
+            final StringBuffer sb = new StringBuffer();
             if (jsp.contains(JSP.JSP_LANGUAGE_DESC)) {
                 jsp = jsp.replace(JSP.JSP_LANGUAGE_DESC, LOG.NO_CHAR).trim();
             }
             sb.append(jsp.substring(jsp.indexOf(JSP.JSP_HEAD_DESC) + 6, jsp.indexOf(JSP.JSP_TAIL_DESC)).trim());
             //target class
-            ClassPool pool = ClassPool.getDefault();
+            final ClassPool pool = ClassPool.getDefault();
             CtClass ct = pool.makeClass(className);
             ct.setInterfaces(new CtClass[]{pool.get(SERVLET_CLASS)});
             /**
              * The first step is to parse the code of <% Java% >
              */
             Pattern pattern = Pattern.compile(JSP.JSP_CODE_PATTERN);
-            StringBuffer sbuf = new StringBuffer();
+            final StringBuffer sbuf = new StringBuffer();
             Matcher matcher = pattern.matcher(sb.toString());
-            StringBuffer jspSrc = new StringBuffer();
+            final StringBuffer jspSrc = new StringBuffer();
             String javaCode, specToken;
             while (matcher.find()) {
                 javaCode = sb.toString().substring(matcher.start() + 2, matcher.end() - 2);
@@ -148,7 +148,7 @@ public final class JspParser {
             matcher = pattern.matcher(jspSrc);
             sb.delete(0, sb.length());
             //De duplicate class field
-            Set<String> set = new HashSet<>();
+            final Set<String> set = new HashSet<>();
             String el, tmp, field;
             String[] params;
             while (matcher.find()) {
@@ -195,7 +195,7 @@ public final class JspParser {
     }
 
     private String buildService(String javaCode, Set<String> fields) {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         sb.append(JSP.JAVA_SERVICE_PRE);
         fields.forEach(field -> sb.append(JSP.IF_PRE).append(field).append(HTTPStatus.PARAM_KV_SPLITER)
                 .append(HTTPStatus.PARAM_KV_SPLITER).append(JSP.NULL).append(JSP.IF_POS)
@@ -215,19 +215,19 @@ public final class JspParser {
     @Deprecated
     private boolean dynamicClass(String className, String javaSrc) {
         //Current compiler
-        JavaCompiler cmp = ToolProvider.getSystemJavaCompiler();
+        final JavaCompiler cmp = ToolProvider.getSystemJavaCompiler();
         //Java standard file manager
-        StandardJavaFileManager fm = cmp.getStandardFileManager(null, null, null);
+        final StandardJavaFileManager fm = cmp.getStandardFileManager(null, null, null);
         //Java file object
-        JavaFileObject jfo = new StringJavaObject(className, javaSrc);
+        final JavaFileObject jfo = new StringJavaObject(className, javaSrc);
         //Compile parameters, similar to options in javac <Options>
-        List<String> optionsList = new ArrayList<String>();
+        final List<String> optionsList = new ArrayList<String>(1);
         //Note: This is a special place for eclipse tools
         // optionsList.addAll(Arrays.asList("-d","./bin"));
         //Units to compile
-        List<JavaFileObject> jfos = Arrays.asList(jfo);
+        final List<JavaFileObject> jfos = Arrays.asList(jfo);
         //Set up compilation environment
-        JavaCompiler.CompilationTask task = cmp.getTask(null, fm, null, optionsList, null, jfos);
+        final JavaCompiler.CompilationTask task = cmp.getTask(null, fm, null, optionsList, null, jfos);
         //Compiled successfully
         if (task.call()) {
             try {

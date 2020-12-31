@@ -111,7 +111,7 @@ public final class Configuration {
         result = null;
     }
 
-    private void waitFutures(List<Future<Boolean>> result, long timeOut, TimeUnit timeOutUnit) {
+    private void waitFutures(final List<Future<Boolean>> result, final long timeOut, final TimeUnit timeOutUnit) {
         for (Future future : result) {
             try {
                 future.get(timeOut, timeOutUnit);
@@ -128,8 +128,8 @@ public final class Configuration {
         return path.replaceAll(ENTITY.FILE_REGEX_SPLITER, String.valueOf(ENTITY.SLASH));
     }
 
-    private void scanFile(String path) {
-        File files = new File(path);
+    private void scanFile(final String path) {
+        final File files = new File(path);
         if (files.exists()) {
             if (files.isDirectory()) {
                 for (File file : Objects.requireNonNull(files.listFiles())) {
@@ -137,7 +137,7 @@ public final class Configuration {
                 }
             } else {
                 if (files.getPath().endsWith(ENTITY.POINT + ENTITY.FILE_POS_MARK)) {
-                    String className = files.getPath().substring(4).replace(ENTITY.POINT + ENTITY.FILE_POS_MARK, LOG.NO_CHAR)
+                    final String className = files.getPath().substring(4).replace(ENTITY.POINT + ENTITY.FILE_POS_MARK, LOG.NO_CHAR)
                             .replace(ENTITY.PATH_SPLITER_PATTERN, ENTITY.POINT);
                     if (!className.equals(CONFIGURATION_CLASS)) {
                         result.add(executor.submit(new IOTask(className)));
@@ -147,10 +147,10 @@ public final class Configuration {
         }
     }
 
-    private <T> void scanBean(Class<T> t, Field field, Class template) {
+    private <T> void scanBean(final Class<T> tClass, final Field field, final Class template) {
         if (template == Table.class) {
-            if (t.isAnnotationPresent(template)) {
-                scanField(t);
+            if (tClass.isAnnotationPresent(template)) {
+                scanField(tClass);
             }
         } else {
             if (field != null) {
@@ -162,7 +162,7 @@ public final class Configuration {
                             fieldValue = id.value();
                         }
                     } else {
-                        Column column = field.getAnnotation(Column.class);
+                        final Column column = field.getAnnotation(Column.class);
                         if (column != null) {
                             fieldValue = column.value();
                         }
@@ -203,8 +203,7 @@ public final class Configuration {
         @Override
         public Boolean call() {
             try {
-                Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
-                scanBean(tClass, null, Table.class);
+                scanBean(Class.forName(className, true, Thread.currentThread().getContextClassLoader()), null, Table.class);
             } catch (Exception e) {
                 logger.error(LOG.LOG_PRE + "exec for class:" + LOG.LOG_PRE + LOG.LOG_POS,
                         this, className, LOG.EXCEPTION_DESC, e.getCause());

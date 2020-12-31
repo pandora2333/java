@@ -153,13 +153,13 @@ public final class RequestMappingHandler {
      * @return
      * @throws Exception
      */
-    public void parseUrl(ModelAndView modelAndView) {
-        Map<String, Object> valueObject = new HashMap<>(4);
+    public void parseUrl(final ModelAndView modelAndView) {
+        final Map<String, Object> valueObject = new HashMap<>(4);
         Method method = mappings.get(modelAndView.getRequest().getReqUrl());
         boolean restful = false;
         String[] tmp = null;
         if (method == null) {
-            String reqUrl = modelAndView.getRequest().getReqUrl();
+            final String reqUrl = modelAndView.getRequest().getReqUrl();
             if (StringUtils.isNotEmpty(reqUrl)) {
                 int cnt = modelAndView.getRequest().getPathParams().size();
                 for (Map.Entry<String, Method> methodEntry : regexMappings.entrySet()) {
@@ -177,7 +177,7 @@ public final class RequestMappingHandler {
                 return;//The corresponding path was not found
             }
         }
-        Object controller = controllers.get(method);
+        final Object controller = controllers.get(method);
         if (controller == null) {
             modelAndView.setPage(null);
             return;//Failed to initialize controller class to generate instance
@@ -185,7 +185,7 @@ public final class RequestMappingHandler {
         if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
             modelAndView.setJson(true);
         }
-        RequestMapping requestMethod = method.getAnnotation(RequestMapping.class);
+        final RequestMapping requestMethod = method.getAnnotation(RequestMapping.class);
         if (requestMethod == null || !requestMethod.method().equals(modelAndView.getRequest().getMethod())) {
             logger.warn(LOG.LOG_PRE + "target method isn't supported for this method:" + LOG.LOG_PRE,
                     modelAndView.getRequest().getServerName(), modelAndView.getRequest().getMethod());
@@ -193,17 +193,16 @@ public final class RequestMappingHandler {
             modelAndView.setPage(null);
             return;
         }
-        Class<?>[] parameterTypes = method.getParameterTypes();
-        Object objects[] = new Object[parameterTypes.length];
-        String[] paramNames = new String[parameterTypes.length];
-        String[] restfulParamNames = new String[parameterTypes.length];
-        Class<?>[] genericTypes = new Class<?>[parameterTypes.length];
-        Map<String, String> restfulParamValues = new HashMap<>(4);
-        Map<String, String> defaultValues = new HashMap<>(4);
-        Map<String, List<Object>> params = modelAndView.getRequest().getParams();
-        Annotation[][] annotations = method.getParameterAnnotations();
-        java.lang.reflect.Type[] types = method.getGenericParameterTypes();
-
+        final Class<?>[] parameterTypes = method.getParameterTypes();
+        final Object objects[] = new Object[parameterTypes.length];
+        final String[] paramNames = new String[parameterTypes.length];
+        final String[] restfulParamNames = new String[parameterTypes.length];
+        final Class<?>[] genericTypes = new Class<?>[parameterTypes.length];
+        final Map<String, String> restfulParamValues = new HashMap<>(4);
+        final Map<String, String> defaultValues = new HashMap<>(4);
+        final Map<String, List<Object>> params = modelAndView.getRequest().getParams();
+        final Annotation[][] annotations = method.getParameterAnnotations();
+        final java.lang.reflect.Type[] types = method.getGenericParameterTypes();
         for (int i = 0; i < types.length; i++) {
             if (types[i] == null) {
                 continue;
@@ -216,24 +215,24 @@ public final class RequestMappingHandler {
         for (int i = 0; i < annotations.length; i++) {
             for (Annotation annotation : annotations[i]) {
                 if (annotation instanceof RequestParam) {
-                    RequestParam param = (RequestParam) annotation;
+                    final RequestParam param = (RequestParam) annotation;
                     paramNames[i] = param.value();
                     if (StringUtils.isNotEmpty((param.defaultValue()))) {
                         defaultValues.put(param.value(), param.defaultValue());
                     }
                 } else if (restful && annotation instanceof PathVariable) {
-                    PathVariable param = (PathVariable) annotation;
+                    final PathVariable param = (PathVariable) annotation;
                     restfulParamNames[i] = param.value();
                 } else if (annotation instanceof RequestBody) {
-                    RequestBody param = (RequestBody) annotation;
+                    final RequestBody param = (RequestBody) annotation;
                     paramNames[i] = param.value();
                 }
             }
         }
         if (restful && tmp != null) {
-            List<String> pathParams = modelAndView.getRequest().getPathParams();
+            final List<String> pathParams = modelAndView.getRequest().getPathParams();
             if (CollectionUtil.isNotEmptry(pathParams)) {
-                int len = pathParams.size() == tmp.length ? tmp.length : -1;
+                final int len = pathParams.size() == tmp.length ? tmp.length : -1;
                 for (int i = 0; i < len; i++) {
                     if (tmp[i].matches(HTTPStatus.PATH_PARAM_SEPARATOE)) {
                         restfulParamValues.put(tmp[i].substring(1, tmp[i].length() - 1), pathParams.get(i));
@@ -371,20 +370,20 @@ public final class RequestMappingHandler {
      * @param webSocketSession
      * @param clients
      */
-    public void execWSCallBack(WebSocketSession webSocketSession, Map<String, WebSocketSession> clients) {
+    public void execWSCallBack(final WebSocketSession webSocketSession, final Map<String, WebSocketSession> clients) {
         if (webSocketSession == null || clients == null) {
             return;
         }
         //uri-all-match pattern
-        String reqUrl = webSocketSession.getReqUrl();
+        final String reqUrl = webSocketSession.getReqUrl();
         if (!StringUtils.isNotEmpty(reqUrl)) {
             return;
         }
-        Method method = wsMappings.get(reqUrl);
-        Object wsController = wsControllers.get(method);
+        final Method method = wsMappings.get(reqUrl);
+        final Object wsController = wsControllers.get(method);
         if (method != null && wsController != null) {
-            Class<?>[] params = method.getParameterTypes();
-            Object[] values = new Object[params.length];
+            final Class<?>[] params = method.getParameterTypes();
+            final Object[] values = new Object[params.length];
             for (int i = 0; i < params.length; i++) {
                 if (params[i] == WebSocketSession.class) {
                     values[i] = webSocketSession;
@@ -402,7 +401,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private Object getValueByType(Class<?> parameterType, String defaultValue) {
+    private Object getValueByType(final Class<?> parameterType, final String defaultValue) {
         if (!StringUtils.isNotEmpty(defaultValue)) {
             return parameterType == String.class ? LOG.NO_CHAR : null;
         }
@@ -438,12 +437,13 @@ public final class RequestMappingHandler {
 
     //Using ASM to operate class bytecode file to get parameter name
     @Deprecated
-    public void handleMethodParamNames(Class<?> t) {
-        Map<String, Integer> modifers = new HashMap<>(4);
-        Map<String, String[]> paramNames = new HashMap<>(4);
+    public void handleMethodParamNames(final Class<?> t) {
+        final Map<String, Integer> modifers = new HashMap<>(4);
+        final Map<String, String[]> paramNames = new HashMap<>(4);
+        StringBuilder key = new StringBuilder();
         for (Method method : t.getDeclaredMethods()) {
             if (method.isAnnotationPresent(RequestMapping.class)) {
-                StringBuilder key = new StringBuilder(t.getName());
+                key.append(t.getName());
                 key.append(METHOD_SPLITER);
                 key.append(method.getName());
                 key.append(METHOD_SPLITER);
@@ -453,14 +453,15 @@ public final class RequestMappingHandler {
                 }
                 modifers.put(key.toString(), method.getModifiers());
                 paramNames.put(key.toString(), new String[method.getParameterTypes().length]);
+                key.delete(0, key.length());
             }
         }
         String className = t.getName();
         int lastDotIndex = className.lastIndexOf(BeanPool.FILE_SPLITER);
         className = className.substring(lastDotIndex + 1) + BeanPool.FILE_SPLITER + CLASS_FILE_POS;
-        InputStream is = t.getResourceAsStream(className);
+        final InputStream is = t.getResourceAsStream(className);
         try {
-            ClassReader classReader = new ClassReader(is);
+            final ClassReader classReader = new ClassReader(is);
             classReader.accept(new ClassVisitor(Opcodes.ASM4) {
                 @Override
                 public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
@@ -468,7 +469,7 @@ public final class RequestMappingHandler {
                         @Override
                         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
                             // The first parameter of a static method is the parameter of the method. If it is an instance method, the first parameter is this
-                            StringBuilder key = new StringBuilder(t.getName() + METHOD_SPLITER + name + METHOD_SPLITER);
+                            final StringBuilder key = new StringBuilder(t.getName() + METHOD_SPLITER + name + METHOD_SPLITER);
                             for (Type type : Type.getArgumentTypes(desc)) {
                                 key.append(type.getClassName());
                                 key.append(BeanPool.FILE_SPLITER);
@@ -489,7 +490,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private void scanFile(String path) {
+    private void scanFile(final String path) {
         File files = new File(path);
         if (!files.exists()) {
             files = new File(path + BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK);
@@ -502,7 +503,7 @@ public final class RequestMappingHandler {
 
             } else {
                 if (files.getPath().endsWith(BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK)) {
-                    String className = files.getPath().substring(4).replace(BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK, LOG.NO_CHAR).
+                    final String className = files.getPath().substring(4).replace(BeanPool.FILE_SPLITER + BeanPool.FILE_POS_MARK, LOG.NO_CHAR).
                             replace(BeanPool.PATH_SPLITER_PATTERN, BeanPool.FILE_SPLITER);
                     if (!className.equals(MVC_CLASS)) {
                         result.add(executor.submit(new IOTask(className)));
@@ -512,56 +513,56 @@ public final class RequestMappingHandler {
         }
     }
 
-    private void saveUrlPathMapping(Class<?> t, Method method, Map<Method, Object> controllers) {
+    private void saveUrlPathMapping(final Class<?> tClass, final Method method, final Map<Method, Object> controllers) {
         try {
-            String name = Character.toLowerCase(t.getSimpleName().charAt(0)) + t.getSimpleName().substring(1);
+            final String name = Character.toLowerCase(tClass.getSimpleName().charAt(0)) + tClass.getSimpleName().substring(1);
             if (!objectMap.containsKey(name)) {
-                Object bean = ClassUtils.getClass(t, beanPool, true);
+                Object bean = ClassUtils.getClass(tClass, beanPool, true);
                 objectMap.put(name, bean);
             }
             controllers.put(method, objectMap.get(name));
         } catch (InstantiationException | IllegalAccessException e) {
             logger.error(LOG.LOG_PRE + "saveUrlPathMapping for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                    MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
+                    MVC_CLASS, tClass.getName(), LOG.EXCEPTION_DESC, e);
         }
     }
 
-    private <T> void scanResolers(Class<T> t) {
+    private <T> void scanResolers(final Class<T> tClass) {
         //Allow the Annotations are common for the same controller class
-        if (t.isAnnotationPresent(Controller.class) || t.isAnnotationPresent(WebSocket.class)) {
-            Controller controller = t.getAnnotation(Controller.class);
-            WebSocket webSocket = t.getAnnotation(WebSocket.class);
-            String parentPath1 = controller != null ? controller.value() : null;
-            String parentPath2 = webSocket != null ? webSocket.value() : null;
-            for (Method method : t.getDeclaredMethods()) {
+        if (tClass.isAnnotationPresent(Controller.class) || tClass.isAnnotationPresent(WebSocket.class)) {
+            final Controller controller = tClass.getAnnotation(Controller.class);
+            final WebSocket webSocket = tClass.getAnnotation(WebSocket.class);
+            final String parentPath1 = controller != null ? controller.value() : null;
+            final String parentPath2 = webSocket != null ? webSocket.value() : null;
+            for (Method method : tClass.getDeclaredMethods()) {
                 Annotation annotation = method.getAnnotation(RequestMapping.class);
                 if (annotation != null) {
-                    String subPath = ((RequestMapping) annotation).value();
+                    final String subPath = ((RequestMapping) annotation).value();
                     if (subPath.matches(HTTPStatus.PATH_REGEX_MARK)) {
                         regexMappings.put(parentPath1 + subPath, method);
                     } else {
                         savePathRelation(subPath, parentPath1, method, mappings);
                     }
-                    saveUrlPathMapping(t, method, controllers);
+                    saveUrlPathMapping(tClass, method, controllers);
                 }
                 annotation = method.getAnnotation(WebSocketMethod.class);
                 if (annotation != null) {
-                    String subPath = ((WebSocketMethod) annotation).value();
+                    final String subPath = ((WebSocketMethod) annotation).value();
                     savePathRelation(subPath, parentPath2, method, wsMappings);
-                    saveUrlPathMapping(t, method, wsControllers);
+                    saveUrlPathMapping(tClass, method, wsControllers);
                 }
             }
         }
-        Order order = t.getAnnotation(Order.class);
+        final Order order = tClass.getAnnotation(Order.class);
         if (order != null) {
-            Class<?>[] interfaces = t.getInterfaces();
+            final Class<?>[] interfaces = tClass.getInterfaces();
             for (Class<?> i : interfaces) {
                 if (i == Interceptor.class) {
                     try {
-                        interceptors.add(new Pair<>(order.value(), (Interceptor) ClassUtils.getClass(t, beanPool, true)));
+                        interceptors.add(new Pair<>(order.value(), (Interceptor) ClassUtils.getClass(tClass, beanPool, true)));
                     } catch (InstantiationException | IllegalAccessException e) {
                         logger.error(LOG.LOG_PRE + "scanResolers for class:" + LOG.LOG_PRE + LOG.LOG_POS,
-                                MVC_CLASS, t.getName(), LOG.EXCEPTION_DESC, e);
+                                MVC_CLASS, tClass.getName(), LOG.EXCEPTION_DESC, e);
                     }
                     break;
                 }
@@ -569,7 +570,7 @@ public final class RequestMappingHandler {
         }
     }
 
-    private void savePathRelation(String subPath, String parentPath, Method method, Map<String, Method> mappings) {
+    private void savePathRelation(final String subPath, final String parentPath, final Method method, final Map<String, Method> mappings) {
         if (!StringUtils.isNotEmpty(subPath)) {
             mappings.put(parentPath + HTTPStatus.SLASH + method.getName(), method);
         } else {
@@ -577,7 +578,8 @@ public final class RequestMappingHandler {
         }
     }
 
-    private class IOTask implements Callable<Boolean> {
+    private final class IOTask implements Callable<Boolean> {
+
         private String className;
 
         IOTask(String className) {

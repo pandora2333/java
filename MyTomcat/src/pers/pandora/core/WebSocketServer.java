@@ -123,11 +123,11 @@ public class WebSocketServer extends Server {
     public void start(int port) {
         setPort(port);
         try {
-            long start = System.currentTimeMillis();
-            ExecutorService mainPool = Executors.newFixedThreadPool(getMainPoolSize());
-            ExecutorService slavePool = Executors.newFixedThreadPool(getSlavePoolSize());
-            AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
-            AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
+            final long start = System.currentTimeMillis();
+            final ExecutorService mainPool = Executors.newFixedThreadPool(getMainPoolSize());
+            final ExecutorService slavePool = Executors.newFixedThreadPool(getSlavePoolSize());
+            final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
+            final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getReceiveBuffer());
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port));
@@ -139,8 +139,8 @@ public class WebSocketServer extends Server {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
                     if (clients.size() < getMaxKeepClients()) {
-                        ByteBuffer byteBuffer = ByteBuffer.allocate(getCapcity());
-                        WebSocketSession webSocketSession = new WebSocketSession();
+                        final ByteBuffer byteBuffer = ByteBuffer.allocate(getCapcity());
+                        final WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
                         webSocketSession.setReadBuffer(byteBuffer);
                         webSocketSession.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
@@ -154,7 +154,7 @@ public class WebSocketServer extends Server {
                                     attachment.setWriteBuffer(ByteBuffer.allocate(msg.length));
                                 }
                                 //Avoid for concurrently reading in the same buffer by read-thread
-                                ByteBuffer tmp = attachment.getWriteBuffer();
+                                final ByteBuffer tmp = attachment.getWriteBuffer();
                                 try {
                                     tmp.put(msg);
                                     //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
@@ -183,12 +183,12 @@ public class WebSocketServer extends Server {
 
                             @Override
                             public void completed(Integer result, WebSocketSession attachment) {
-                                ByteBuffer buffer = attachment.getReadBuffer();
+                                final ByteBuffer buffer = attachment.getReadBuffer();
                                 buffer.flip();
                                 try {
-                                    String ip = attachment.getClient().getRemoteAddress().toString();
+                                    final String ip = attachment.getClient().getRemoteAddress().toString();
                                     if (ip != null && !clients.containsKey(ip)) {
-                                        String msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
+                                        final String msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
                                         webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
                                         if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
                                             //sync write
@@ -347,8 +347,8 @@ public class WebSocketServer extends Server {
                             break;
                         }
                     }
-                    String accept = CodeUtils.sha1AndBase64(key + WS.WS_MAGIC_STR, null);
-                    String headInfo = HTTPStatus.HTTP1_1 + HTTPStatus.BLANK + WS.CODE_101 + HTTPStatus.BLANK +
+                    final String accept = CodeUtils.sha1AndBase64(key + WS.WS_MAGIC_STR, null);
+                    final String headInfo = HTTPStatus.HTTP1_1 + HTTPStatus.BLANK + WS.CODE_101 + HTTPStatus.BLANK +
                             WS.SWITCHING_PROTOCOLS + HTTPStatus.CRLF +
                             WS.CONNECTION_KEY + HTTPStatus.CRLF +
                             WS.UPGRADE_KEY + HTTPStatus.CRLF +
@@ -384,10 +384,10 @@ public class WebSocketServer extends Server {
     }
 
     protected final byte[] buildSendMsg(WebSocketSession webSocketSession) {
-        List<Byte> buf = new ArrayList<>(8);
+        final List<Byte> buf = new ArrayList<>(8);
         buf.add((byte) (0x80 | webSocketSession.getOutPutType() & 0xff));
         //allow 4 bytes
-        int len = webSocketSession.getOutPutContent().length;
+        final int len = webSocketSession.getOutPutContent().length;
         if (len > 125) {
             if (len > 65535) {
                 buf.add((byte) 0x7f);

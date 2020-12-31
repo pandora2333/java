@@ -15,7 +15,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 
-public class XMLFactory {
+public final class XMLFactory {
 
     private static final Logger logger = LogManager.getLogger(XMLFactory.class);
 
@@ -49,7 +49,7 @@ public class XMLFactory {
     }
 
     //Node resolution
-    public Map<String, String> parse(String file) {
+    public Map<String, String> parse(final String file) {
         try {
             sax.parse(new File(file), new XMLHandler());
             return urlMapping;
@@ -59,9 +59,12 @@ public class XMLFactory {
         return null;
     }
 
-    class XMLHandler extends DefaultHandler {
+    private final class XMLHandler extends DefaultHandler {
+
         private String tag;
+
         private MapContent temp;
+
         private String servletName;
 
         @Override

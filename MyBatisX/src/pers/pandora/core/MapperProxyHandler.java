@@ -52,8 +52,8 @@ public final class MapperProxyHandler {
      * @return Mapper proxy implementation object
      * @throws Exception
      */
-    public <T> T parseMethod(Map<String, DynamicSql> dynamicSqls, Class<T> proxy) {
-        SQLProxyHandler sqlProxyHandler = new SQLProxyHandler();
+    public <T> T parseMethod(final Map<String, DynamicSql> dynamicSqls, final Class<T> proxy) {
+        final SQLProxyHandler sqlProxyHandler = new SQLProxyHandler();
         sqlProxyHandler.setSqls(dynamicSqls);
         return (T) Proxy.newProxyInstance(proxy.getClassLoader(), new Class[]{proxy}, sqlProxyHandler);
     }
@@ -72,8 +72,8 @@ public final class MapperProxyHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            List<Object> list = new ArrayList<>(ONE);
-            boolean notUnique = handleSQL(method, args, list);
+            final List<Object> list = new ArrayList<>(ONE);
+            final boolean notUnique = handleSQL(method, args, list);
             if (list.size() == ZERO) {
                 return null;
             }
@@ -88,11 +88,11 @@ public final class MapperProxyHandler {
          * @param resultType
          * @param list
          */
-        private void handleField(ResultSet rs, String resultType, List<Object> list) {
+        private void handleField(final ResultSet rs, final String resultType, final List<Object> list) {
             if (!StringUtil.isNotEmpty(resultType)) {
                 return;
             }
-            Class<?> tClass = ClassUtil.getClass(resultType);
+            final Class<?> tClass = ClassUtil.getClass(resultType);
             assert tClass != null;
             if (ClassUtil.checkBasicClass(tClass)) {
                 try {
@@ -109,7 +109,7 @@ public final class MapperProxyHandler {
             }
             ResultSetMetaData metaData;
             assert configuration != null;
-            Map<String, String> alias = configuration.getAlias();
+            final Map<String, String> alias = configuration.getAlias();
             try {
                 metaData = rs.getMetaData();
                 String columnName, alia;
@@ -140,7 +140,7 @@ public final class MapperProxyHandler {
          * @param columnName
          * @param columnValue
          */
-        private void invokeSet(Object obj, String columnName, Object columnValue) {
+        private void invokeSet(final Object obj, final String columnName, final Object columnValue) {
             Method m;
             try {
                 if (columnValue != null) {
@@ -162,14 +162,14 @@ public final class MapperProxyHandler {
          * @return
          * @throws Exception
          */
-        private boolean handleSQL(Method method, Object[] args, List<Object> list) throws Exception {
+        private boolean handleSQL(final Method method, final Object[] args, final List<Object> list) throws Exception {
             assert configuration != null;
-            DynamicSql dynamicSql = sqls.get(method.getName());
+            final DynamicSql dynamicSql = sqls.get(method.getName());
             assert dynamicSql != null;
-            String sql = dynamicSql.getSql();
+            final String sql = dynamicSql.getSql();
             assert StringUtil.isNotEmpty(sql);
-            List<Object> params = new ArrayList<>(args.length);
-            String cacheSql = tokenSpec(sql, args, params);
+            final List<Object> params = new ArrayList<>(args.length);
+            final String cacheSql = tokenSpec(sql, args, params);
             String tableName;
             String key= null;
             if(dynamicSql.getMethod().equals(SQL.SELECT)){
@@ -194,7 +194,7 @@ public final class MapperProxyHandler {
                 transation = true;
             }
             //SQL uses precompiled mode,SQL execution process is divided into preparation, optimization and execution
-            PreparedStatement st = connection.getConnection().prepareStatement((String) params.get(params.size() - 1));
+            final PreparedStatement st = connection.getConnection().prepareStatement((String) params.get(params.size() - 1));
             //Assignment parameter
             assignParams(st, params);
             ResultSet rs = null;
@@ -210,7 +210,7 @@ public final class MapperProxyHandler {
                     rs = st.executeQuery(SQL.SELECT + XML.BLANK + SQL.MAX + ENTITY.LEFT_BRACKET + dynamicSql.getPkName()
                             + ENTITY.RIGHT_BRACKET + XML.BLANK + SQL.FROM + XML.BLANK + tableName);
                     rs.next();
-                    Object value = rs.getObject(ONE);
+                    final Object value = rs.getObject(ONE);
                     args[0].getClass().getDeclaredMethod(ENTITY.SET + Character.toUpperCase(dynamicSql.getPkName().charAt(0))
                             + dynamicSql.getPkName().substring(ONE), value.getClass()).invoke(args[ZERO], value);
                 }
@@ -229,7 +229,7 @@ public final class MapperProxyHandler {
             return method.getReturnType() == List.class;
         }
 
-        private void assignParams(PreparedStatement st, List<Object> params) {
+        private void assignParams(final PreparedStatement st, final List<Object> params) {
             Class<?> type;
             for (int i = 0; i < params.size() - ONE; i++) {
                 try {
@@ -268,9 +268,9 @@ public final class MapperProxyHandler {
             }
         }
 
-        private String getTableName(String sql, String condition1, String condition2) {
+        private String getTableName(final String sql, final String condition1, final String condition2) {
             String table = sql.substring(sql.indexOf(condition1) + 4).trim();
-            int index = table.indexOf(condition2);
+            final int index = table.indexOf(condition2);
             if (index > ZERO) {
                 table = table.replace(table.substring(index), LOG.NO_CHAR).trim();
             }
@@ -287,25 +287,26 @@ public final class MapperProxyHandler {
      * @return
      * @throws SQLException
      */
-    private String tokenSpec(String sql, Object[] args, List<Object> params) {
+    private String tokenSpec(String sql, final Object[] args, final List<Object> params) {
         String preSql = sql.replaceAll(XML.VAR_REGEX_PATTERN, String.valueOf(SQL.QUESTION_MARK));
         if (args == null || args.length == ZERO) {
             params.add(preSql);
             return sql;
         }
         final Pattern pattern = Pattern.compile(XML.VAR_REGEX_PATTERN);
-        String var_mark = String.valueOf(XML.VAR_MARK) + ENTITY.LEFT_CURLY_BRACKET;
+        final String var_mark = String.valueOf(XML.VAR_MARK) + ENTITY.LEFT_CURLY_BRACKET;
         if (sql.contains(var_mark)) {
-            Matcher matcher = pattern.matcher(sql);
-            StringBuffer sb = new StringBuffer();
+            final Matcher matcher = pattern.matcher(sql);
+            final StringBuffer sb = new StringBuffer();
             int cursor = ZERO;
             Object param = null;
-            String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
-            String quotation = String.valueOf(SQL.QUOTATION);
-            boolean vo = !ClassUtil.checkBasicClass(args[ZERO].getClass());
+            final String rightBracket = String.valueOf(ENTITY.RIGHT_CURLY_BRACKET);
+            final String quotation = String.valueOf(SQL.QUOTATION);
+            final boolean vo = !ClassUtil.checkBasicClass(args[ZERO].getClass());
+            String paramTemp;
             while (matcher.find()) {
                 if (vo) {
-                    String paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
+                    paramTemp = matcher.group().replace(var_mark, LOG.NO_CHAR).replace(rightBracket, LOG.NO_CHAR);
                     try {
                         param = args[ZERO].getClass().getDeclaredMethod(ENTITY.GET + Character.toUpperCase(paramTemp.charAt(ZERO)) + paramTemp.substring(ONE)).invoke(args[ZERO]);
                     } catch (Exception e) {
@@ -341,7 +342,7 @@ public final class MapperProxyHandler {
         return sql;
     }
 
-    private static void close(Statement st, ResultSet rs) {
+    private static void close(final Statement st, final ResultSet rs) {
         if (rs != null) {
             try {
                 rs.close();

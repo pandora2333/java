@@ -6,6 +6,7 @@ import pers.pandora.annotation.Before;
 import pers.pandora.annotation.Throw;
 import pers.pandora.core.JoinPoint;
 
+@Deprecated
 @Aspect(2)
 public class TestAOP_2 {
 

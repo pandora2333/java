@@ -35,7 +35,7 @@ public interface AOPProxyFactory {
 
     Map<String, DBPool> DBPOOLS = new ConcurrentHashMap<>(4);
 
-    <T> T createProxyClass(final Class<T> t);
+    <T> T createProxyClass(final Class<T> tClass);
 
     void clear();
 }

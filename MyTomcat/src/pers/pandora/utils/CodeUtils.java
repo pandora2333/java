@@ -11,9 +11,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-public class CodeUtils {
+public final class CodeUtils {
 
-    private static Logger logger = LogManager.getLogger(CodeUtils.class);
+    private static final Logger logger = LogManager.getLogger(CodeUtils.class);
     //default md5
     public static final String DEFAULTENCODE = "md5";
     //WS default code
@@ -21,7 +21,7 @@ public class CodeUtils {
 
     private static final char ZERO = '0';
 
-    public static String hashEncode(String plainText, String salt, String hashEncode, String charset) {
+    public static String hashEncode(String plainText, final String salt, String hashEncode, String charset) {
         if (!StringUtils.isNotEmpty(hashEncode)) {
             hashEncode = DEFAULTENCODE;
         }
@@ -46,7 +46,7 @@ public class CodeUtils {
         return md5code;
     }
 
-    public static String sha1AndBase64(String msg, String charset) {
+    public static String sha1AndBase64(final String msg, String charset) {
         if (!StringUtils.isNotEmpty(msg)) {
             return msg;
         }

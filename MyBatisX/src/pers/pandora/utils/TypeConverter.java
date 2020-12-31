@@ -6,9 +6,9 @@ import pers.pandora.constant.SQL;
 /**
  * Type conversion between database field and entity class field
  */
-public class TypeConverter {
+public final class TypeConverter {
 
-    public static String databaseType2JavaType(String columnType) {
+    public static String databaseType2JavaType(final String columnType) {
         //varchar-->string
         if (SQL.VARCHAR.equalsIgnoreCase(columnType) || SQL.CHAR.equalsIgnoreCase(columnType)
                 || SQL.TEXT.equalsIgnoreCase(columnType) || SQL.TINYEXT.equalsIgnoreCase(columnType)

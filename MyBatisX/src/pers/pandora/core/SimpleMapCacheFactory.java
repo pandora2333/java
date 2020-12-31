@@ -11,11 +11,11 @@ public class SimpleMapCacheFactory implements CacheFactory {
     private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>(16);
 
     @Override
-    public void put(String key, Object object) {
+    public void put(final String key, final Object object) {
         if (!StringUtil.isNotEmpty(key)) {
             return;
         }
-        String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
+        final String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
         assert ss.length == 2;
         //DCL
         if (!cache.containsKey(ss[0])) {
@@ -29,33 +29,33 @@ public class SimpleMapCacheFactory implements CacheFactory {
     }
 
     @Override
-    public Object get(String key) {
+    public Object get(final String key) {
         if (!StringUtil.isNotEmpty(key)) {
             return null;
         }
-        String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
+        final String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
         assert ss.length == 2;
-        Map<String, Object> map = cache.get(ss[0]);
+        final Map<String, Object> map = cache.get(ss[0]);
         return map != null ? map.get(ss[1]) : null;
     }
 
     @Override
-    public boolean containsKey(String key) {
+    public boolean containsKey(final String key) {
         return get(key) != null;
     }
 
     @Override
-    public void removeKey(String key) {
+    public void removeKey(final String key) {
         if (!StringUtil.isNotEmpty(key)) {
             return;
         }
-        String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
+        final String[] ss = key.split(String.valueOf(ENTITY.SEMICOLON), -1);
         assert ss.length == 2;
         cache.remove(ss[0]);
     }
 
     @Override
-    public String createKey(String tableName, String sql) {
+    public String createKey(final String tableName, final String sql) {
         return tableName + ENTITY.SEMICOLON + sql;
     }
 }

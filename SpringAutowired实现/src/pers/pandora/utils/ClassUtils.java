@@ -21,33 +21,29 @@ public final class ClassUtils {
 
     private static final String VALUEOF = "valueOf";
 
-    public static <T> T getClass(String name, BeanPool beanPool, boolean cache) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public static <T> T getClass(final String name, final BeanPool beanPool, final boolean cache) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         return (T) getClass(Class.forName(name), beanPool, cache);
     }
 
-    public static <T> void initWithParams(T t, Map params) {
+    public static <T> void initWithParams(final T t, final Map params) {
         if (t == null || !CollectionUtil.isNotEmptry(params)) {
             return;
         }
-        Map<String, List<Field>> fieldMap = new HashMap<>();
+        final Map<String, List<Field>> fieldMap = new HashMap<>(16);
         handleObjectField(t, fieldMap, true);
-        String[] ss;
-        String v;
-        Object obj;
-        Field objField;
-        for (Map.Entry<String, List<Field>> entry : fieldMap.entrySet()) {
-            if (params.containsKey(entry.getKey())) {
-                injectValue(params.get(entry.getKey()), t, entry.getValue());
+        fieldMap.forEach((k, v) -> {
+            if (params.containsKey(k)) {
+                injectValue(params.get(k), t, v);
             } else {
-                ss = entry.getKey().split(LOG.CLASS_NAME_SPLITER);
-                v = getKeyBySeparator(ss);
-                if (StringUtils.isNotEmpty(v)) {
-                    obj = params.get(ss[0]);
+                final String[] ss = k.split(LOG.CLASS_NAME_SPLITER);
+                final String value = getKeyBySeparator(ss);
+                if (StringUtils.isNotEmpty(value)) {
+                    final Object obj = params.get(ss[0]);
                     if (obj != null) {
-                        objField = getFieldByObject(obj.getClass(), v);
+                        final Field objField = getFieldByObject(obj.getClass(), value);
                         if (objField != null) {
                             try {
-                                injectValue(objField.get(obj), t, entry.getValue());
+                                injectValue(objField.get(obj), t, v);
                             } catch (IllegalAccessException e) {
                                 //ignore
                             }
@@ -55,10 +51,13 @@ public final class ClassUtils {
                     }
                 }
             }
+        });
+        for (Map.Entry<String, List<Field>> entry : fieldMap.entrySet()) {
+
         }
     }
 
-    public static String getKeyBySeparator(String[] ss) {
+    public static String getKeyBySeparator(final String[] ss) {
         if (ss.length < 2) {
             return null;
         }
@@ -68,11 +67,11 @@ public final class ClassUtils {
         return ss[1];
     }
 
-    public static void injectValue(Object obj, Object t, List<Field> fields) {
+    public static void injectValue(final Object obj, final Object t, final List<Field> fields) {
         if (obj == null || !CollectionUtil.isNotEmptry(fields)) {
             return;
         }
-        for (Field field : fields) {
+        fields.forEach(field -> {
             try {
                 if (obj instanceof List) {
                     if (((List) obj).size() == 1 && checkType(((List) obj).get(0).getClass(), field.getType())) {
@@ -91,39 +90,39 @@ public final class ClassUtils {
             } catch (Exception e) {
                 //ignore
             }
-        }
+        });
     }
 
-    public static List<Object> convertBasicObject(List list, Class<?> basicClass) {
-        List<Object> tmpList = new ArrayList<>(list.size());
+    public static List<Object> convertBasicObject(final List list, final Class<?> basicClass) {
+        final List<Object> tmpList = new ArrayList<>(list.size());
         try {
-            Method method = basicClass.getMethod(VALUEOF, String.class);
-            for (Object obj : list) {
+            final Method method = basicClass.getMethod(VALUEOF, String.class);
+            list.forEach(obj -> {
                 try {
                     tmpList.add(method.invoke(null, (String) obj));
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     //ignore
                 }
-            }
+            });
         } catch (NoSuchMethodException e) {
             //ignore
         }
         return tmpList;
     }
 
-    public static Field getFieldByObject(Class<?> objClass, String fieldName) {
+    public static Field getFieldByObject(final Class<?> objClass, final String fieldName) {
         try {
-            Field field = objClass.getDeclaredField(fieldName);
+            final Field field = objClass.getDeclaredField(fieldName);
             field.setAccessible(true);
             return field;
         } catch (NoSuchFieldException e) {
             //ignore
-            Class<?> superclass = objClass.getSuperclass();
+            final Class<?> superclass = objClass.getSuperclass();
             return superclass == null || superclass == Object.class ? null : getFieldByObject(superclass, fieldName);
         }
     }
 
-    public static <T> T getClass(Class<T> tClass, BeanPool beanPool, boolean cache) throws IllegalAccessException, InstantiationException {
+    public static <T> T getClass(final Class<T> tClass, final BeanPool beanPool, boolean cache) throws IllegalAccessException, InstantiationException {
         if (tClass == null) {
             return null;
         }
@@ -144,46 +143,46 @@ public final class ClassUtils {
         return bean;
     }
 
-    public static boolean checkType(Class<?> aClass, Class<?> type) {
-        return aClass == type || type == Object.class;
+    public static boolean checkType(final Class<?> tClass, final Class<?> type) {
+        return tClass == type || type == Object.class;
     }
 
-    public static void initWithObjectList(Object handler, Map<String, Object> objectList) {
+    public static void initWithObjectList(final Object handler, final Map<String, Object> objectList) {
         if (handler == null || !CollectionUtil.isNotEmptry(objectList)) {
             return;
         }
-        Map<String, List<Field>> fieldMap = new HashMap<>();
+        final Map<String, List<Field>> fieldMap = new HashMap<>(16);
         handleObjectField(handler, fieldMap, true);
-        Map<String, Map<String, Object>> valueMap = new HashMap<>();
-        String v;
-        for (Map.Entry<String, Object> entry : objectList.entrySet()) {
-            Map<String, Object> tmp = new HashMap<>();
-            handleObjectField(entry.getValue(), tmp, false);
-            valueMap.put(entry.getKey(), tmp);
-        }
-        for (Map.Entry<String, List<Field>> entry : fieldMap.entrySet()) {
-            String name = entry.getKey();
-            String[] ss = name.split(LOG.CLASS_NAME_SPLITER);
-            v = getKeyBySeparator(ss);
-            if (StringUtils.isNotEmpty(v)) {
-                try {
-                    for (Field field : entry.getValue()) {
-                        String query = ss[0].toLowerCase();
-                        if (valueMap.containsKey(query) && valueMap.get(query).containsKey(v) &&
-                                valueMap.get(ss[0].toLowerCase()).get(v) != null
-                                && checkType(valueMap.get(ss[0].toLowerCase()).get(v).getClass(), field.getType())) {
-                            field.set(handler, valueMap.get(ss[0].toLowerCase()).get(v));
-                            break;
+        final Map<String, Map<String, Object>> valueMap = new HashMap<>(16);
+        objectList.forEach((k, v) -> {
+            final Map<String, Object> tmp = new HashMap<>(16);
+            handleObjectField(v, tmp, false);
+            valueMap.put(k, tmp);
+        });
+        fieldMap.forEach((k, v) -> {
+            final String[] ss = k.split(LOG.CLASS_NAME_SPLITER);
+            final String query = ss[0].toLowerCase();
+            final String value = getKeyBySeparator(ss);
+            if (StringUtils.isNotEmpty(value)) {
+                v.stream().anyMatch(field -> {
+                    if (valueMap.containsKey(query) && valueMap.get(query).containsKey(value) &&
+                            valueMap.get(ss[0].toLowerCase()).get(value) != null
+                            && checkType(valueMap.get(ss[0].toLowerCase()).get(value).getClass(), field.getType())) {
+                        try {
+                            field.set(handler, valueMap.get(ss[0].toLowerCase()).get(value));
+                        } catch (IllegalAccessException e) {
+                            //ignore
+                            return false;
                         }
+                        return true;
                     }
-                } catch (IllegalAccessException e) {
-                    //ignore
-                }
+                    return false;
+                });
             }
-        }
+        });
     }
 
-    public static Object getBascialObjectByString(String orign, Class<?> basicClass) {
+    public static Object getBascialObjectByString(final String orign, final Class<?> basicClass) {
         Method method = null;
         try {
             method = basicClass.getMethod(VALUEOF, String.class);
@@ -198,7 +197,7 @@ public final class ClassUtils {
         return null;
     }
 
-    public static <T> void handleObjectField(T t, Map fieldMap, boolean isField) {
+    public static <T> void handleObjectField(final T t, final Map fieldMap, final boolean isField) {
         Class<?> tClass = t.getClass();
         String fieldName;
         List<Field> fields;
@@ -228,14 +227,14 @@ public final class ClassUtils {
     }
 
     //It determines whether it is a basic data type or a string type or a wrapper type
-    public static boolean checkBasicClass(Class t) {
-        return t == Integer.class || t == Character.class || t == Long.class || t == String.class ||
-                t == int.class || t == boolean.class || t == byte.class || t == Double.class ||
-                t == Float.class || t == short.class || t == Boolean.class || t == Byte.class ||
-                t == char.class || t == long.class || t == double.class;
+    public static boolean checkBasicClass(final Class tClass) {
+        return tClass == Integer.class || tClass == Character.class || tClass == Long.class || tClass == String.class ||
+                tClass == int.class || tClass == boolean.class || tClass == byte.class || tClass == Double.class ||
+                tClass == Float.class || tClass == short.class || tClass == Boolean.class || tClass == Byte.class ||
+                tClass == char.class || tClass == long.class || tClass == double.class;
     }
 
-    public static <T> T copy(Class<?> tClass, T t, T ret) {
+    public static <T> T copy(final Class<?> tClass, T t, T ret) {
         if (t == null) {
             return null;
         }

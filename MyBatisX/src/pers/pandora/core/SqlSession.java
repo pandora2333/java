@@ -24,12 +24,12 @@ public class SqlSession {
 
     private MapperProxyHandler mapperProxyHandler;
 
-    public SqlSession(String mapper, MapperProxyHandler mapperProxyHandler) {
+    public SqlSession(final String mapper, final MapperProxyHandler mapperProxyHandler) {
         this.mapper = mapper;
         this.mapperProxyHandler = mapperProxyHandler;
     }
 
-    public <T> T createMapper(Class<T> tClass) {
+    public <T> T createMapper(final Class<T> tClass) {
         try {
             return createMapperProxy(mapper, tClass);
         } catch (Exception e) {
@@ -98,8 +98,8 @@ public class SqlSession {
             }
         });
         try {
-            Map<String, DynamicSql> makeMethod = new HashMap<>(8);
-            Class tClass = Class.forName(proxyClass);
+            final Map<String, DynamicSql> makeMethod = new HashMap<>(8);
+            final Class tClass = Class.forName(proxyClass);
             if (tClass.isInterface()) {
                 DynamicSql dynamicSql;
                 for (Method method : tClass.getDeclaredMethods()) {

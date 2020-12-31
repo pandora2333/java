@@ -3,6 +3,7 @@ package pers.pandora.core;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,8 +111,9 @@ public class DBPool {
         connections = new ArrayBlockingQueue<>(initalSize);
         try {
             Class.forName(driver);
+            PoolConnection connection;
             for (int i = 0; i < initalSize; i++) {
-                PoolConnection connection = new PoolConnection();
+                connection = new PoolConnection();
                 assert url != null;
                 connection.setConnection(DriverManager.getConnection(url, user, password));
                 connection.setBusy(false);
@@ -152,8 +154,9 @@ public class DBPool {
         }
         int upSize = Math.min(len.get() << 1,maxSize);
         int remain = upSize - len.get();
+        PoolConnection connection;
         for (int i = 0;i < remain;i++) {
-            PoolConnection connection = new PoolConnection();
+            connection = new PoolConnection();
             connection.setBusy(false);
             connection.setConnection(DriverManager.getConnection(url, user, password));
             try {

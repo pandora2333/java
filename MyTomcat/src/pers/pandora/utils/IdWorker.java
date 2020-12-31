@@ -108,8 +108,8 @@ public class IdWorker {
     public static final char PADDING_CHAR = '0';
 
     public String next() {
-        long id = nextId();
-        String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
+        final long id = nextId();
+        final String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
         return yyMMdd + String.format(NEXT_FORMAT, id);
     }
 
@@ -118,8 +118,8 @@ public class IdWorker {
      * Returns a fixed 16 bit alphanumeric string
      */
     public String nextShort() {
-        long id = nextId();
-        String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
+        final long id = nextId();
+        final String yyMMdd = new SimpleDateFormat(DATE_FORMAT).format(new Date());
         return padLeft(encode(id), 10, PADDING_CHAR) + yyMMdd;
     }
 
@@ -129,7 +129,7 @@ public class IdWorker {
 
     public static String encode(long num, String symbols) {
         final int B = symbols.length();
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         while (num != 0) {
             sb.append(symbols.charAt((int) (num % B)));
             num /= B;
@@ -142,9 +142,9 @@ public class IdWorker {
 
     public static String padLeft(String str, int size, char padChar) {
         if (str.length() == size) return str;
-        StringBuilder s = new StringBuilder();
+        final StringBuilder s = new StringBuilder();
         if (str.length() > size) {
-            Random random = new Random();
+            final Random random = new Random();
             s.append(str);
             for (int i = str.length() - size, j = 0, k; i > 0; i--) {
                 k = random.nextInt(s.length() - j++);

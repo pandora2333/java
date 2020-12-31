@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
+
 import javassist.util.proxy.MethodHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -191,7 +192,7 @@ public final class BeanPool {
     }
 
     private void topologyBean() {
-        ArrayDeque<String> q = new ArrayDeque<>(beans.size());
+        final ArrayDeque<String> q = new ArrayDeque<>(beans.size());
         beans.forEach((k, v) -> q.addLast(k));
         String cur;
         List<String> next;
@@ -203,11 +204,11 @@ public final class BeanPool {
                 next.forEach(name -> {
                     in.put(name, in.get(name) - 1);
                     if (in.get(name) == 0) {
-                        Method method = beanMethods.get(name);
+                        final Method method = beanMethods.get(name);
                         assert method != null;
-                        Class<?>[] types = method.getParameterTypes();
-                        Object[] params = new Object[types.length];
-                        String[] names = methodParams.get(method);
+                        final Class<?>[] types = method.getParameterTypes();
+                        final Object[] params = new Object[types.length];
+                        final String[] names = methodParams.get(method);
                         for (int i = 0; i < types.length; i++) {
                             params[i] = beans.get(names[i]);
                         }
@@ -224,7 +225,7 @@ public final class BeanPool {
         beanMethods = null;
     }
 
-    public static void waitFutures(List<Future<Boolean>> result, long timeOut, TimeUnit timeOutUnit) {
+    public static void waitFutures(final List<Future<Boolean>> result, final long timeOut, final TimeUnit timeOutUnit) {
         for (Future future : result) {
             try {
                 future.get(timeOut, timeOutUnit);
@@ -244,7 +245,7 @@ public final class BeanPool {
     private void injectValueForAutowired() {
         unBeanInjectMap.forEach((k, v) -> {
             for (Field field : v) {
-                Autowired fieldSrc = field.getAnnotation(Autowired.class);
+                final Autowired fieldSrc = field.getAnnotation(Autowired.class);
                 String name = fieldSrc.value();
                 //Try byName injection first. If there is no corresponding bean, try byType injection again
                 if (!StringUtils.isNotEmpty(name)) {
@@ -268,22 +269,22 @@ public final class BeanPool {
         unBeanInjectMap = null;
     }
 
-    public <T> T getBean(String beanName) {
+    public <T> T getBean(final String beanName) {
         if (StringUtils.isNotEmpty(beanName)) {
             return (T) beans.get(beanName);
         }
         return null;
     }
 
-    public <T> T getBeanByType(Class<T> tClass) {
+    public <T> T getBeanByType(final Class<T> tClass) {
         if (tClass != null) {
-            List<Object> objects = typeBeans.get(tClass);
+            final List<Object> objects = typeBeans.get(tClass);
             return objects != null && objects.size() == 1 ? (T) objects.get(0) : null;
         }
         return null;
     }
 
-    private void scanFile(String path, boolean aop) {
+    private void scanFile(final String path, boolean aop) {
         File files = new File(path);
         if (!files.exists()) {
             files = new File(path + FILE_SPLITER + FILE_POS_MARK);
@@ -295,7 +296,7 @@ public final class BeanPool {
                 }
             } else {
                 if (files.getPath().endsWith(FILE_SPLITER + FILE_POS_MARK)) {
-                    String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, NO_CHAR).
+                    final String className = files.getPath().substring(4).replace(FILE_SPLITER + FILE_POS_MARK, NO_CHAR).
                             replace(PATH_SPLITER_PATTERN, FILE_SPLITER);
                     if (!className.equals(BEAN_POOL_CLASS)) {
                         result.add(executor.submit(new IOTask(className, null, aop)));
@@ -305,7 +306,7 @@ public final class BeanPool {
         }
     }
 
-    private void createBean(Method method, String nameTemp, Object config, Object[] params) {
+    private void createBean(final Method method, final String nameTemp, final Object config, final Object[] params) {
         //Save meta object,Not a post proxy object
         Object obj;
         try {
@@ -320,18 +321,18 @@ public final class BeanPool {
     /**
      * If you want to assign values to the bean property, you must first declare @Configuration and @Bean
      *
-     * @param t
+     * @param tClass
      * @param field
      * @param template
      * @param prop
      * @param <T>
      */
-    private <T> void scanBean(Class<T> t, Field field, Class template, Properties prop) {
+    private <T> void scanBean(final Class<T> tClass, final Field field, final Class template, final Properties prop) {
         if (template == null) {
-            if (t.isAnnotationPresent(Configruation.class)) {
+            if (tClass.isAnnotationPresent(Configruation.class)) {
                 Object config, obj;
                 try {
-                    config = t.newInstance();
+                    config = tClass.newInstance();
                 } catch (InstantiationException | IllegalAccessException e) {
                     logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
                     return;
@@ -344,7 +345,7 @@ public final class BeanPool {
                 Object[] objs;
                 boolean delay;
                 Annotation annotation;
-                for (Method method : t.getMethods()) {
+                for (Method method : tClass.getMethods()) {
                     annotation = method.getAnnotation(Bean.class);
                     if (annotation != null) {
                         nameTemp = ((Bean) annotation).value();
@@ -405,32 +406,32 @@ public final class BeanPool {
                         }
                     }
                 }
-            } else if (t.isAnnotationPresent(Controller.class) ||
-                    t.isAnnotationPresent(Service.class)
-                    || t.isAnnotationPresent(WebSocket.class)) {
-                WCS.add(t);
+            } else if (tClass.isAnnotationPresent(Controller.class) ||
+                    tClass.isAnnotationPresent(Service.class)
+                    || tClass.isAnnotationPresent(WebSocket.class)) {
+                WCS.add(tClass);
             }
         } else if (template == Controller.class || template == Service.class || template == WebSocket.class) {
-            if (getBeanByType(t) != null) {
+            if (getBeanByType(tClass) != null) {
                 return;
             }
             try {
-                initBean(ClassUtils.getClass(t, this, false), Character.toLowerCase(t.getSimpleName().charAt(0))
-                        + t.getSimpleName().substring(1));
+                initBean(ClassUtils.getClass(tClass, this, false), Character.toLowerCase(tClass.getSimpleName().charAt(0))
+                        + tClass.getSimpleName().substring(1));
             } catch (IllegalAccessException | InstantiationException e) {
                 logger.error("scanBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
             }
         } else if (template == PropertySource.class) {
-            PropertySource propertySource = t.getAnnotation(PropertySource.class);
+            final PropertySource propertySource = tClass.getAnnotation(PropertySource.class);
             String filePath = propertySource != null ? propertySource.value() : null;
             if (!StringUtils.isNotEmpty(filePath)) {
-                filePath = t.getName() + FILE_SPLITER + PROPERTIES;
+                filePath = tClass.getName() + FILE_SPLITER + PROPERTIES;
             }
-            loadProperties(t, filePath);
+            loadProperties(tClass, filePath);
         } else if (template == Value.class) {
             if (field != null) {
                 try {
-                    Value fieldSrc = field.getAnnotation(Value.class);
+                    final Value fieldSrc = field.getAnnotation(Value.class);
                     String fieldValue = fieldSrc.value();
                     if (!StringUtils.isNotEmpty(fieldValue)) {
                         fieldValue = field.getName();
@@ -438,7 +439,7 @@ public final class BeanPool {
                     if (prop.get(fieldValue) == null) {
                         return;
                     }
-                    String key = String.valueOf(prop.get(fieldValue));
+                    final String key = String.valueOf(prop.get(fieldValue));
                     if (field.getType() == int.class || field.getType() == Integer.class) {
                         field.set(singleton.get(), Integer.valueOf(key));
                     } else if (field.getType() == long.class || field.getType() == Long.class) {
@@ -468,7 +469,7 @@ public final class BeanPool {
         }
     }
 
-    private void initBean(Object obj, String objName) {
+    private void initBean(Object obj, final String objName) {
         assert obj != null;
         Class<?> objTarget = obj.getClass();
         String target = obj.getClass().getName();
@@ -492,14 +493,14 @@ public final class BeanPool {
         singleton.set(obj);
         injectValue(objTarget);
         beans.put(objName, obj);
-        if(obj instanceof DBPool && aopProxyFactory != null){
+        if (obj instanceof DBPool && aopProxyFactory != null) {
             aopProxyFactory.DBPOOLS.put(objName, (DBPool) obj);
         }
         addTypeBeans(objTarget, obj);
     }
 
     //Automatic injection of attribute values
-    private <T> void injectValue(Class<T> tClass) {
+    private <T> void injectValue(final Class<T> tClass) {
         scanBean(tClass, null, PropertySource.class, null);
     }
 
@@ -510,11 +511,11 @@ public final class BeanPool {
      * @param tClass
      * @param file
      */
-    private void loadProperties(Class tClass, String file) {
+    private void loadProperties(final Class tClass, final String file) {
         try {
-            File source = new File(ROOTPATH + file);
+            final File source = new File(ROOTPATH + file);
             if (source.exists() && !source.isDirectory()) {
-                FileInputStream inputStream = new FileInputStream(source);
+                final FileInputStream inputStream = new FileInputStream(source);
                 prop.get().load(inputStream);
                 inputStream.close();
             }
@@ -532,7 +533,7 @@ public final class BeanPool {
     }
 
     private void injectAutowired(Field field) {
-        Autowired fieldSrc = field.getAnnotation(Autowired.class);
+        final Autowired fieldSrc = field.getAnnotation(Autowired.class);
         if (beans.containsKey(fieldSrc.value())) {
             try {
                 field.set(singleton.get(), beans.get(fieldSrc.value()));
@@ -554,14 +555,14 @@ public final class BeanPool {
             if (unBeanInjectMap.containsKey(singleton.get())) {
                 unBeanInjectMap.get(singleton.get()).add(field);
             } else {
-                List<Field> tmp = new CopyOnWriteArrayList<>();
+                final List<Field> tmp = new CopyOnWriteArrayList<>();
                 tmp.add(field);
                 unBeanInjectMap.put(singleton.get(), tmp);
             }
         }
     }
 
-    private class IOTask implements Callable<Boolean> {
+    private final class IOTask implements Callable<Boolean> {
 
         private String className;
 
@@ -578,7 +579,7 @@ public final class BeanPool {
         @Override
         public Boolean call() {
             try {
-                Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+                final Class<?> tClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
                 if (aop) {
                     scanAOP(tClass);
                 } else {
@@ -602,9 +603,9 @@ public final class BeanPool {
         Integer order = null;
         Annotation annotation = tClass.getAnnotation(Aspect.class);
         if (annotation != null) {
-            order = ((Aspect)annotation).value();
+            order = ((Aspect) annotation).value();
         }
-        boolean transaction = tClass.isAnnotationPresent(Transaction.class),aop;
+        boolean transaction = tClass.isAnnotationPresent(Transaction.class), aop;
         if (annotation != null || transaction) {
             String cutPonit;
             Object proxyClass;
@@ -637,7 +638,7 @@ public final class BeanPool {
                 }
                 if (transaction) {
                     annotation = method.getAnnotation(Transactional.class);
-                    if(annotation != null){
+                    if (annotation != null) {
                         aop = true;
                         proxyClass = aopProxyFactory.createProxyClass(tClass);
                         singleton.set(proxyClass);

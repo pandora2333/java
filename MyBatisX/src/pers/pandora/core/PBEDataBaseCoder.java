@@ -33,11 +33,11 @@ public class PBEDataBaseCoder implements DataBaseCoder {
             salt = SALT;
         }
         try {
-            PBEKeySpec pbeKeySpec = new PBEKeySpec(password);
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE);
-            Key key = factory.generateSecret(pbeKeySpec);
+            final PBEKeySpec pbeKeySpec = new PBEKeySpec(password);
+            final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE);
+            final Key key = factory.generateSecret(pbeKeySpec);
             //new SecureRandom().generateSeed(8);
-            PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
+            final PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
             encoder = Cipher.getInstance(PBE);
             decoder = Cipher.getInstance(PBE);
             encoder.init(Cipher.ENCRYPT_MODE, key, pbeParameterSpec);
@@ -65,7 +65,7 @@ public class PBEDataBaseCoder implements DataBaseCoder {
         if (!StringUtil.isNotEmpty(encode)) {
             return encode;
         }
-        byte[] res = Base64.getDecoder().decode(encode.getBytes());
+        final byte[] res = Base64.getDecoder().decode(encode.getBytes());
         try {
             return new String(decoder.doFinal(res));
         } catch (IllegalBlockSizeException | BadPaddingException e) {

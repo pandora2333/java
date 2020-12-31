@@ -186,7 +186,7 @@ public final class Request {
         return objectList;
     }
 
-    public Request(Dispatcher dispatcher) {
+    public Request(final Dispatcher dispatcher) {
         params = new HashMap<>(4);
         jspParser = new JspParser();
         uploadFiles = new HashMap<>(4);
@@ -236,15 +236,15 @@ public final class Request {
         if (!StringUtils.isNotEmpty(filePath)) {
             filePath = dispatcher.server.getRootPath() + dispatcher.server.requestFileDir;
         }
-        java.io.File path = new java.io.File(filePath);
+        final java.io.File path = new java.io.File(filePath);
         if (!path.exists()) {
             path.mkdirs();
         }
         try {
             //base on mapped memeroy  file
-            FileChannel outChannel = FileChannel.open(Paths.get(filePath + file.getK1()),
+            final FileChannel outChannel = FileChannel.open(Paths.get(filePath + file.getK1()),
                     StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
-            MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
+            final MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
             outMappedBuf.put(file.getV());
             outChannel.close();
         } catch (IOException e) {
@@ -269,7 +269,7 @@ public final class Request {
         if (i > j) {
             return null;
         }
-        String reqToken = msg.substring(i, j).trim();
+        final String reqToken = msg.substring(i, j).trim();
         json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON_TYPE);
         int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
         if (index > 0) {
@@ -297,7 +297,7 @@ public final class Request {
             }
         } else if (msg.startsWith(HTTPStatus.GET)) {
             method = HTTPStatus.GET;
-            String type = judgeStatic(reqUrl);
+            final String type = judgeStatic(reqUrl);
             if (type != null) {
                 //static resource
                 return type + reqUrl;
@@ -313,7 +313,7 @@ public final class Request {
         }
         parseParams(reqToken, true);
         if (reqUrl.contains(HTTPStatus.JSP) && (allowAccess || !reqUrl.contains(dispatcher.server.getSecuiryDir()))) {
-            Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher.server.isHotLoadJSP());
+            final Tuple<String, String, String> parse = jspParser.parse(dispatcher.server.getRootPath() + reqUrl, dispatcher.server.isHotLoadJSP());
             if (parse != null) {
                 dispatcher.addUrlMapping(parse.getK2(), parse.getV());
                 dispatcher.response.setType(HTTPStatus.TEXT_HTML);
@@ -338,7 +338,7 @@ public final class Request {
 
     void initSession() {
         session = new Session(getSessionID());
-        Cookie cookie = new Cookie();
+        final Cookie cookie = new Cookie();
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
         cookie.setNeedUpdate(true);

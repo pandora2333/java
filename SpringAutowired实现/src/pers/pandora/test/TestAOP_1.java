@@ -12,6 +12,7 @@ import pers.pandora.core.JoinPoint;
  * 3.The symbol separating the class name from the method is #,for example, pers.pandora.bean.TaskBean#error
  * Note: The static methods of class properties belong to the member properties of the parent class and cannot be inherited or overridden. Therefore, AOP cannot proxy static methods of classes
  */
+@Deprecated
 @Aspect
 public class TestAOP_1 {
 

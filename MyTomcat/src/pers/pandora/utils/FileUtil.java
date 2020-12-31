@@ -6,9 +6,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-public class FileUtil {
+public final class FileUtil {
 
-    public static byte[] deflate(byte[] data){
+    public static byte[] deflate(final byte[] data){
         if(data.length == 0){
             return data;
         }
@@ -23,7 +23,7 @@ public class FileUtil {
         return ret;
     }
 
-    public static byte[] inflate(byte[] data) throws DataFormatException {
+    public static byte[] inflate(final byte[] data) throws DataFormatException {
         if(data.length == 0){
             return data;
         }

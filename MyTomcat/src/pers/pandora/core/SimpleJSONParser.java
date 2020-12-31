@@ -13,7 +13,7 @@ public class SimpleJSONParser implements JSONParser {
 
     @Override
     public Map<String,Object> parse(String json) {
-        JSONObject jsonObject = (JSONObject) JSON.parse(json);
+        final JSONObject jsonObject = (JSONObject) JSON.parse(json);
         return jsonObject != null ? jsonObject.getInnerMap() : null;
     }
 }

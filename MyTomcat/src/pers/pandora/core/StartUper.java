@@ -108,8 +108,8 @@ public final class StartUper {
     }
 
     //It should not run in a multi-thread environment
-    public void start(boolean blockingThread) {
-        List<Server> servers = new ArrayList<>(paths.length);
+    public void start(final boolean blockingThread) {
+        final List<Server> servers = new ArrayList<>(paths.length);
         Properties properties;
         java.io.File file;
         InputStream inputStream = null;
@@ -147,13 +147,14 @@ public final class StartUper {
         }
     }
 
-    private Server buildServer(Properties properties, String serverName) {
-        String pattern = properties.getProperty(WS, FALSE), value;
+    private Server buildServer(final Properties properties, final String serverName) {
+        final String pattern = properties.getProperty(WS, FALSE);
+        String value;
         Server server;
-        BeanPool beanPool = new BeanPool();
-        RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
+        final BeanPool beanPool = new BeanPool();
+        final RequestMappingHandler requestMappingHandler = new RequestMappingHandler();
         value = properties.getProperty(AOPPATHS, null);
-        String separator = String.valueOf(JSP.JAVA_SPLITER);
+        final String separator = String.valueOf(JSP.JAVA_SPLITER);
         if (StringUtils.isNotEmpty(value)) {
             beanPool.setAopPaths(value.split(separator, -1));
         }
