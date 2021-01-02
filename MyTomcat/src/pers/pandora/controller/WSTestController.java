@@ -1,4 +1,5 @@
 package pers.pandora.controller;
+import pers.pandora.annotation.WebSocket;
 import pers.pandora.annotation.WebSocketMethod;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.constant.WS;
@@ -7,6 +8,7 @@ import pers.pandora.core.WebSocketSession;
 import java.nio.charset.Charset;
 import java.util.Map;
 @Deprecated
+@WebSocket("/ws")
 public class WSTestController {
 
     /**
@@ -18,7 +20,7 @@ public class WSTestController {
     public void test(WebSocketSession webSocketSession, Map<String, WebSocketSession> clients){
         System.out.println("当前客户端连接情况:" + clients);
         webSocketSession.getDatas().stream().filter(v -> v.getType() == WS.TYPE_TEXT).
-                forEach(v -> System.out.println("收到信息:" + new String(v.getData())));
+                forEach(v -> System.out.println("收到信息:"+ v.getRemain()+"|" + new String(v.getData())));
         webSocketSession.setOutPutType(WS.TYPE_TEXT);
         webSocketSession.writeContent(("GET / HTTP/1.1\n" +
                 "Host: localhost:8080\n" +

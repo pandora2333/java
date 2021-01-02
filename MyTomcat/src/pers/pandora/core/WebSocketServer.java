@@ -271,6 +271,7 @@ public class WebSocketServer extends Server {
                                                         data.setMask(mask);
                                                     }
                                                     data.setRemain(len);
+                                                    data.setLength(len);
                                                     i = readWSData(i, buffer, data);
                                                     attachment.getDatas().add(data);
                                                 }
@@ -318,20 +319,19 @@ public class WebSocketServer extends Server {
 
                 private int readWSData(int i, ByteBuffer buffer, WSData data) {
                     if (data != null && buffer != null) {
-                        final List<Byte> buf = new LinkedList<>();
+                        final int len = (int) Math.min(buffer.limit() - i - 1, data.getRemain());
+                        int pLen = 0;
+                        final byte[] tmp = new byte[(data.getData() != null ? pLen = data.getData().length : 0) + len];
+                        if (pLen > 0) {
+                            System.arraycopy(data.getData(), 0, tmp, 0, pLen);
+                        }
                         for (int j = 0; ++i < buffer.limit() && j < data.getRemain(); j++) {
-                            byte cur = buffer.get(i);
+                            tmp[j + pLen] = buffer.get(i);
                             if (data.getMask() != null) {
-                                cur = (byte) (cur ^ (data.getMask()[j % 4] & 0xff));
+                                tmp[j + pLen] = (byte) (tmp[j + pLen] ^ (data.getMask()[j % 4] & 0xff));
                             }
-                            buf.add(cur);
                         }
-                        data.setRemain(data.getRemain() - buf.size());
-                        data.setLength(buf.size());
-                        byte[] tmp = new byte[buf.size()];
-                        for (int j = 0; j < buf.size(); j++) {
-                            tmp[j] = buf.get(j);
-                        }
+                        data.setRemain(data.getRemain() - len);
                         data.setData(tmp);
                     }
                     return i;

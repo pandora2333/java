@@ -8,18 +8,16 @@ import pers.pandora.utils.StringUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import static javax.swing.UIManager.put;
 
 public final class AIOServerlDispatcher extends Dispatcher implements CompletionHandler<Integer, Attachment> {
 
@@ -53,25 +51,27 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //pre handle HTTP resource
         initRequest(buffer);
         //conten-length = all body data bytes after blank line(\n)
-        try {
-            initRequest(buffer.array(), buffer.position(), buffer.limit());
-        } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
-            if (e instanceof OverMaxUpBitsException) return;
-        }
-        if (remain <= 0) {
+        if (buffer.position() < buffer.limit()) {
             try {
-                dispatcher(msg);
-            } catch (RuntimeException e) {
-                logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+                initRequest(buffer.array(), buffer.position(), buffer.limit());
+            } catch (Exception e) {
+                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+                if (e instanceof OverMaxUpBitsException) return;
             }
-            //after HTTP request completed, and before close the tcp connection
-            handleRequestCompleted();
-            request.reset();
-            response.reset();
-            msg = null;
-            fileData = null;
-            remain = 0;
+            if (remain == 0) {
+                try {
+                    dispatcher(msg);
+                } catch (RuntimeException e) {
+                    logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+                }
+                //after HTTP request completed, and before close the tcp connection
+                handleRequestCompleted();
+                request.reset();
+                response.reset();
+                msg = null;
+                fileData = null;
+                remain = 0;
+            }
         }
         buffer.clear();
         server.slavePool.submit(() -> {
@@ -84,21 +84,22 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         });
     }
 
-    private boolean initRequest(byte[] data, int i, int limit) throws UnsupportedEncodingException {
+    private void initRequest(byte[] data, int i, int limit) {
         int j, k, subLen = -HTTPStatus.LINE_SPLITER + 1;
+        Charset charset = Charset.forName(request.getCharset());
         if (remain == 0) {
             j = 0;
             for (; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-            msg = new String(data, i, j - i + subLen, request.getCharset());
+            msg = new String(data, i, j - i + subLen, charset);
             String key, value, fileSeparator = null;
             for (j++, i = j; j < limit; i = ++j) {
                 key = null;
                 for (; j < limit && data[j] != HTTPStatus.CRLF; j++)
                     if (key == null && data[j] == HTTPStatus.COLON) {
-                        key = new String(data, i, j - i, request.getCharset());
+                        key = new String(data, i, j - i, charset);
                         i = j + 1;
                     }
-                value = new String(data, i, j - i + subLen, request.getCharset());
+                value = new String(data, i, j - i + subLen, charset);
                 if (StringUtils.isNotEmpty(key) && StringUtils.isNotEmpty(value))
                     request.getHeads().put(key, value.trim());
                 if (j + HTTPStatus.LINE_SPLITER < limit && data[j + HTTPStatus.LINE_SPLITER] == HTTPStatus.CRLF) {
@@ -135,16 +136,17 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 throw exception;
             }
         }
-        int len = limit - i;
+        int len = (int) Math.min(limit - i, remain);
         byte[] tmpData;
         if (len > 0) {
             tmpData = new byte[(fileData != null ? fileData.length : 0) + len];
             if (fileData != null) System.arraycopy(fileData, 0, tmpData, 0, fileData.length);
             System.arraycopy(data, i, tmpData, fileData != null ? fileData.length : 0, len);
             fileData = tmpData;
+            att.setReadBuffer((ByteBuffer) att.getReadBuffer().position((int) Math.min(i + remain, limit)));
         }
         remain -= len;
-        if (StringUtils.isNotEmpty(request.getFileDesc()) && remain <= 0) {
+        if (StringUtils.isNotEmpty(request.getFileDesc()) && remain == 0) {
             i = 0;
             limit = fileData.length;
             data = fileData;
@@ -159,7 +161,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             for (; i < limit; ) {
                 isFile = false;
                 for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-                query = new String(data, i, j - i + subLen, request.getCharset());
+                query = new String(data, i, j - i + subLen, charset);
                 i = j + 1;
                 k = query.indexOf(HTTPStatus.MUPART_NAME);
                 if (k > 0) {
@@ -174,11 +176,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         i += HTTPStatus.CONTENTTYPE.length() + 1;
                         for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
                         //get file type
-                        fileType = new String(data, i, j - i + subLen, request.getCharset()).trim();
+                        fileType = new String(data, i, j - i + subLen, charset).trim();
                         i = j + 1 + HTTPStatus.LINE_SPLITER;
                         for (j = i; j < limit; j++) {
                             if (data[j] != HTTPStatus.CRLF) continue;
-                            if (new String(data, j, sideWindow.length(), request.getCharset()).equals(sideWindow)) {
+                            if (new String(data, j, sideWindow.length(), charset).equals(sideWindow)) {
                                 j += subLen;
                                 isFile = true;
                                 break;
@@ -186,18 +188,20 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         }
                         if (isFile) {
                             k = j - i;
-                            //copy file data
-                            tmpData = new byte[k];
-                            System.arraycopy(data, i, tmpData, 0, k);
-                            Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, tmpData);
-                            List<Tuple<String, String, byte[]>> tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
-                            tuple.add(file);
+                            if (StringUtils.isNotEmpty(fileName)) {
+                                //copy file data
+                                tmpData = new byte[k];
+                                System.arraycopy(data, i, tmpData, 0, k);
+                                Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, tmpData);
+                                List<Tuple<String, String, byte[]>> tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
+                                tuple.add(file);
+                            }
                         }
                         i = j + HTTPStatus.LINE_SPLITER;
                     } else {//form value
                         i += HTTPStatus.LINE_SPLITER;
                         for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-                        varValue = new String(data, i, j - i + subLen, request.getCharset());
+                        varValue = new String(data, i, j - i + subLen, charset);
                         objects = request.getParams().get(varName);
                         if (objects != null) {
                             objects.add(varValue);
@@ -210,12 +214,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     }
                 }
                 i += len + HTTPStatus.LINE_SPLITER;
-                if (i == limit || (i + 4 == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2)))) break;
+                if (i == limit || (i + 2 + HTTPStatus.LINE_SPLITER == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2))))
+                    break;
             }
         } else if (!StringUtils.isNotEmpty(request.getFileDesc()))
             msg += HTTPStatus.CRLF + new String(data, i, limit - i);
-        //For the server, a TCP connection can process multiple requests in batches, but only one request can be processed simultaneously
-        return remain <= 0;
     }
 
     @Override

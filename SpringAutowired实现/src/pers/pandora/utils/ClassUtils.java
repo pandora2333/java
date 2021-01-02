@@ -246,13 +246,14 @@ public final class ClassUtils {
                 return ret;
             }
         }
+        Field modifiers;
         for (Field field : tClass.getDeclaredFields()) {
             if (!field.isAccessible()) {
                 field.setAccessible(true);
             }
             if ((field.getModifiers() & Modifier.FINAL) != 0) {
                 try {
-                    Field modifiers = Field.class.getDeclaredField(MODIFIER);
+                    modifiers = Field.class.getDeclaredField(MODIFIER);
                     modifiers.setAccessible(true);
                     modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
                 } catch (NoSuchFieldException | IllegalAccessException e) {
