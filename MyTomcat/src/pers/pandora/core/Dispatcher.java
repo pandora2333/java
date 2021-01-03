@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 //servlet dispatcher
 abstract class Dispatcher {
 
-    protected static final Logger logger = LogManager.getLogger(Dispatcher.class);
+    protected static final Logger logger = LogManager.getLogger(Dispatcher.class.getName());
 
     protected Server server;
 

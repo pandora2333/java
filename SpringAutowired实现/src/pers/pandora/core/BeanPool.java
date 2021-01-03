@@ -22,7 +22,7 @@ import pers.pandora.vo.Tuple;
 
 public final class BeanPool {
 
-    private static final Logger logger = LogManager.getLogger(BeanPool.class);
+    private static final Logger logger = LogManager.getLogger(BeanPool.class.getName());
 
     private static final ThreadLocal<Properties> prop = ThreadLocal.withInitial(Properties::new);
 

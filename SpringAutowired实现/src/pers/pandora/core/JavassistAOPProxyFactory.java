@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class JavassistAOPProxyFactory implements AOPProxyFactory {
 
-    private static final Logger logger = LogManager.getLogger(JavassistAOPProxyFactory.class);
+    private static final Logger logger = LogManager.getLogger(JavassistAOPProxyFactory.class.getName());
 
     public static final String PROXY_MARK = "setHandler";
 

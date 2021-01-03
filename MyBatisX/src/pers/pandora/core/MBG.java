@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class MBG {
 
-    private static Logger logger = LogManager.getLogger(MBG.class);
+    private static Logger logger = LogManager.getLogger(MBG.class.getName());
 
     private DBPool dbPool;
     //The table name is key and the table information object is value

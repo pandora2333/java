@@ -51,7 +51,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //pre handle HTTP resource
         initRequest(buffer);
         //conten-length = all body data bytes after blank line(\n)
-        if (buffer.position() < buffer.limit()) {
+        while (buffer.position() < buffer.limit()) {
             try {
                 initRequest(buffer.array(), buffer.position(), buffer.limit());
             } catch (Exception e) {
@@ -71,6 +71,13 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 msg = null;
                 fileData = null;
                 remain = 0;
+            } else if (remain < 0) {
+                remain = 0;
+                msg = null;
+            }
+            if (!att.isKeep()) {
+                server.close(att, this);
+                return;
             }
         }
         buffer.clear();
@@ -86,8 +93,9 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     private void initRequest(byte[] data, int i, int limit) {
         int j, k, subLen = -HTTPStatus.LINE_SPLITER + 1;
-        Charset charset = Charset.forName(request.getCharset());
+        final Charset charset = Charset.forName(request.getCharset());
         if (remain == 0) {
+            boolean ok = false;
             j = 0;
             for (; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
             msg = new String(data, i, j - i + subLen, charset);
@@ -104,7 +112,25 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     request.getHeads().put(key, value.trim());
                 if (j + HTTPStatus.LINE_SPLITER < limit && data[j + HTTPStatus.LINE_SPLITER] == HTTPStatus.CRLF) {
                     i = j + HTTPStatus.LINE_SPLITER + 1;
+                    ok = true;
                     break;
+                }
+            }
+            if (!ok) {
+                //The request header information is incomplete. This request is discarded
+                remain = -1;
+                return;
+            }
+            //long connection or short connection
+            if (!att.isKeep()) {
+                String connection = request.getHeads().get(HTTPStatus.CONNECTION);
+                if (StringUtils.isNotEmpty(connection) && !connection.equalsIgnoreCase(HTTPStatus.CLOSE)) {
+                    try {
+                        server.addClients(att.getClient().getRemoteAddress().toString(), att);
+                        att.setKeep(true);
+                    } catch (IOException e) {
+                        //ignore
+                    }
                 }
             }
             //cookie and session init
@@ -114,9 +140,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 request.initCookies(cookie);
                 initSession = true;
             }
-            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID()))) {
+            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
                 request.initSession();
-            }
             //handle files and variable
             final String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
             if (StringUtils.isNotEmpty(contentType)) {
@@ -143,8 +168,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             if (fileData != null) System.arraycopy(fileData, 0, tmpData, 0, fileData.length);
             System.arraycopy(data, i, tmpData, fileData != null ? fileData.length : 0, len);
             fileData = tmpData;
-            att.setReadBuffer((ByteBuffer) att.getReadBuffer().position((int) Math.min(i + remain, limit)));
         }
+        att.setReadBuffer((ByteBuffer) att.getReadBuffer().position((int) Math.min(i + remain, limit)));
         remain -= len;
         if (StringUtils.isNotEmpty(request.getFileDesc()) && remain == 0) {
             i = 0;
@@ -203,9 +228,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
                         varValue = new String(data, i, j - i + subLen, charset);
                         objects = request.getParams().get(varName);
-                        if (objects != null) {
-                            objects.add(varValue);
-                        } else {
+                        if (objects != null) objects.add(varValue);
+                        else {
                             objects = new ArrayList<>(1);
                             objects.add(varValue);
                             request.getParams().put(varName, objects);

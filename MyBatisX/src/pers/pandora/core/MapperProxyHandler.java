@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  */
 public final class MapperProxyHandler {
 
-    private static final Logger logger = LogManager.getLogger(MapperProxyHandler.class);
+    private static final Logger logger = LogManager.getLogger(MapperProxyHandler.class.getName());
 
     private volatile Configuration configuration;
 

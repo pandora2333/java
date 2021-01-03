@@ -13,7 +13,7 @@ import java.util.Base64;
 
 public final class CodeUtils {
 
-    private static final Logger logger = LogManager.getLogger(CodeUtils.class);
+    private static final Logger logger = LogManager.getLogger(CodeUtils.class.getName());
     //default md5
     public static final String DEFAULTENCODE = "md5";
     //WS default code

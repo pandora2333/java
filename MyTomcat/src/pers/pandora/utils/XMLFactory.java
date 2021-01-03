@@ -17,7 +17,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public final class XMLFactory {
 
-    private static final Logger logger = LogManager.getLogger(XMLFactory.class);
+    private static final Logger logger = LogManager.getLogger(XMLFactory.class.getName());
 
     public static final String SERVLET = "servlet";
 

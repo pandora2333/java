@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SqlSession {
 
-    private static Logger logger = LogManager.getLogger(SqlSession.class);
+    private static Logger logger = LogManager.getLogger(SqlSession.class.getName());
 
     private String mapper;
 

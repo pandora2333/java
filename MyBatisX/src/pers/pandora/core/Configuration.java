@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 //Mapper annotation injection class
 public final class Configuration {
 
-    private static Logger logger = LogManager.getLogger(Configuration.class);
+    private static Logger logger = LogManager.getLogger(Configuration.class.getName());
     //Entity class and attribute corresponding table associated with field alias
     private final Map<String, String> alias = new ConcurrentHashMap<>(16);
     //Transactional Class

@@ -22,7 +22,7 @@ import pers.pandora.utils.StringUtils;
 
 public final class Request {
 
-    private static final Logger logger = LogManager.getLogger(Request.class);
+    private static final Logger logger = LogManager.getLogger(Request.class.getName());
 
     private String method;
 

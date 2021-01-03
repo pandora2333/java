@@ -12,7 +12,7 @@ import java.util.*;
 
 public class IdWorker {
 
-    private static final Logger logger = LogManager.getLogger(IdWorker.class);
+    private static final Logger logger = LogManager.getLogger(IdWorker.class.getName());
     //snowflake revision
     protected long epoch = 1288834974657L;
 
@@ -162,7 +162,8 @@ public class IdWorker {
 
     //SessionID(53位:16+1+36(32+4)) 710+ ms delay time,it means the browser firstly access the web server should have 710 ms+ delay time
     public String nextSessionID() {
-        return nextShort() + HTTPStatus.TRANSVERSE + UUID.randomUUID().toString();
+        //nextShort() + HTTPStatus.TRANSVERSE + UUID.randomUUID().toString();
+        return String.valueOf(nextId());
     }
 
 }

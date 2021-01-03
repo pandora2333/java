@@ -21,7 +21,7 @@ import java.util.Properties;
  */
 public final class StartUper {
 
-    private static final Logger logger = LogManager.getLogger(StartUper.class);
+    private static final Logger logger = LogManager.getLogger(StartUper.class.getName());
 
     public static final String AOPPATHS = "aopPaths";
 
@@ -49,11 +49,11 @@ public final class StartUper {
 
     public static final String SLAVEPOOLSIZE = "slavePoolSize";
 
-    public static final String CAPACTIY = "capcity";
+    public static final String RECEIVEBUFFER = "receiveBuffer";
 
     public static final String RESPONSEBUFFER = "responseBuffer";
 
-    public static final String RECEIVEBUFFER = "receiveBuffer";
+    public static final String TCPRECEIVEDCACHESIZE = "tcpReceivedCacheSize";
 
     public static final String MAXKEEPCLIENTS = "maxKeepClients";
 
@@ -94,6 +94,8 @@ public final class StartUper {
     public static final String CLOSEMSG = "closeMsg";
 
     public static final String SECURITYDIR = "secuiryDir";
+
+    public static final String ACCEPTCOUNT = "acceptCount";
 
     private String[] paths;
 
@@ -289,6 +291,10 @@ public final class StartUper {
             if (StringUtils.isNotEmpty(value)) {
                 ((WebSocketServer) server).setCloseMsg(Boolean.valueOf(value));
             }
+            value = properties.getProperty(MAXKEEPCLIENTS, null);
+            if (StringUtils.isNotEmpty(value)) {
+                ((WebSocketServer) server).setMaxKeepClients(Integer.valueOf(value));
+            }
         }
         //common configs
         server.setRequestMappingHandler(requestMappingHandler);
@@ -308,21 +314,21 @@ public final class StartUper {
         if (StringUtils.isNotEmpty(value)) {
             server.setSlavePoolSize(Integer.valueOf(value));
         }
-        value = properties.getProperty(CAPACTIY, null);
+        value = properties.getProperty(RECEIVEBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setCapcity(Integer.valueOf(value));
+            server.setReceiveBuffer(Integer.valueOf(value));
         }
         value = properties.getProperty(RESPONSEBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setResponseBuffer(Integer.valueOf(value));
         }
-        value = properties.getProperty(RECEIVEBUFFER, null);
+        value = properties.getProperty(TCPRECEIVEDCACHESIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setReceiveBuffer(Integer.valueOf(value));
+            server.setTcpReceivedCacheSize(Integer.valueOf(value));
         }
-        value = properties.getProperty(MAXKEEPCLIENTS, null);
+        value = properties.getProperty(ACCEPTCOUNT, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMaxKeepClients(Integer.valueOf(value));
+            server.setBackLog(Integer.valueOf(value));
         }
         value = properties.getProperty(MAXUPBITS, null);
         if (StringUtils.isNotEmpty(value)) {

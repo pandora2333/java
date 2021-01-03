@@ -8,7 +8,7 @@ import java.util.List;
 
 public final class WebSocketSession extends Attachment {
 
-    private List<WSData> datas = new ArrayList<>();
+    private List<WSData> datas = new ArrayList<>(1);
 
     private String reqUrl;
 

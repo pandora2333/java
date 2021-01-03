@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
 
 public abstract class Server {
 
-    protected static final Logger logger = LogManager.getLogger(Server.class);
+    protected static final Logger logger = LogManager.getLogger(Server.class.getName());
 
     private int port = 8080;
 
@@ -38,19 +38,21 @@ public abstract class Server {
     //serer name，it use logs,session file,etc
     private String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
-    private int mainPoolSize = Runtime.getRuntime().availableProcessors() + 1;
+    private int mainPoolSize = Runtime.getRuntime().availableProcessors();
     //slave thread pool size
     private int slavePoolSize = 2 * mainPoolSize + 1;
     //up file buffer size (byte)
-    private int capcity = 8192;
+    private int receiveBuffer = 8192;
+    //Allowed maximum number of pending tcp connections
+    private int backLog = 50;
 
     private static final String HOST = "127.0.0.1";
     //hot load JSP default true
     private boolean hotLoadJSP = true;
     //download resource buffer size（byte）
     private int responseBuffer = 8192;
-    //server receive buffer size, it should greater than or equal to capcity
-    private int receiveBuffer = capcity;
+    //server receive buffer size, it should greater than or equal to receiveBuffer
+    private int tcpReceivedCacheSize = Math.max(65536, receiveBuffer << 1);
     //global session pool,base on memory
     private Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
     //set invalid time for the sessions,optimize the thread scanning
@@ -65,8 +67,6 @@ public abstract class Server {
     private Map<String, String> context;
     //browser build the tcps
     private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
-    //max keep connections
-    private int maxKeepClients;
     //Allowed maximum number of transmitted information bits
     private long maxUpBits = 1024 * 1024 * 100;
 
@@ -79,6 +79,14 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public int getBackLog() {
+        return backLog;
+    }
+
+    public void setBackLog(int backLog) {
+        this.backLog = backLog;
+    }
 
     public String getSecuiryDir() {
         return secuiryDir;
@@ -162,14 +170,6 @@ public abstract class Server {
         return keepClients;
     }
 
-    public int getMaxKeepClients() {
-        return maxKeepClients;
-    }
-
-    public void setMaxKeepClients(int maxKeepClients) {
-        this.maxKeepClients = maxKeepClients;
-    }
-
     //You should call this method after you start the server
     protected static void mainLoop() {
         try {
@@ -179,12 +179,12 @@ public abstract class Server {
         }
     }
 
-    public void setReceiveBuffer(int receiveBuffer) {
-        this.receiveBuffer = receiveBuffer;
+    public void setTcpReceivedCacheSize(int tcpReceivedCacheSize) {
+        this.tcpReceivedCacheSize = tcpReceivedCacheSize;
     }
 
-    public int getReceiveBuffer() {
-        return receiveBuffer;
+    public int getTcpReceivedCacheSize() {
+        return tcpReceivedCacheSize;
     }
 
     public void setSessionMap(Map<String, Session> sessionMap) {
@@ -227,12 +227,12 @@ public abstract class Server {
         return mainPoolSize;
     }
 
-    public void setCapcity(int capcity) {
-        this.capcity = capcity;
+    public void setReceiveBuffer(int receiveBuffer) {
+        this.receiveBuffer = receiveBuffer;
     }
 
-    public int getCapcity() {
-        return capcity;
+    public int getReceiveBuffer() {
+        return receiveBuffer;
     }
 
     public String getRootPath() {
@@ -382,9 +382,11 @@ public abstract class Server {
     public void close(Attachment att, Object target) {
         try {
             if (att.getClient().isOpen()) {
-                SocketAddress address = att.getClient().getRemoteAddress();
-                keepClients.remove(address.toString());
-                logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), address);
+                if (att.isKeep()) {
+                    SocketAddress address = att.getClient().getRemoteAddress();
+                    keepClients.remove(address.toString());
+                }
+                //logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), address);
                 att.getClient().close();
             }
         } catch (IOException e) {

@@ -35,7 +35,9 @@ import java.util.concurrent.*;
  */
 public final class RequestMappingHandler {
 
-    private static final Logger logger = LogManager.getLogger(RequestMappingHandler.class);
+    public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
+
+    private static final Logger logger = LogManager.getLogger(MVC_CLASS);
     //for @Controller
     //url - method
     private final Map<String, Method> mappings = new ConcurrentHashMap<>(16);
@@ -68,8 +70,6 @@ public final class RequestMappingHandler {
     private ThreadPoolExecutor executor;
 
     private List<Future<Boolean>> result;
-
-    public static final String MVC_CLASS = "pers.pandora.mvc.RequestMappingHandler";
     //Thread pool minimum number of cores
     private int minCore = 5;
     //Thread pool maximum number of cores

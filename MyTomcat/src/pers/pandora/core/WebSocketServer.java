@@ -19,7 +19,6 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +39,7 @@ import java.util.concurrent.Executors;
  * server.setServerName("WebSocket");
  * setJsonParser(new SimpleJSONParser());
  * server.setPort(8000);
- * server.setCapcity(1024 * 1024);
+ * server.setReceiveBuffer(1024 * 1024);
  * server.start();
  * //lastly
  * Server.mainLoop();
@@ -58,6 +57,16 @@ public class WebSocketServer extends Server {
     private boolean openMsg;
 
     private boolean closeMsg;
+
+    private int maxKeepClients;
+
+    public int getMaxKeepClients() {
+        return maxKeepClients;
+    }
+
+    public void setMaxKeepClients(int maxKeepClients) {
+        this.maxKeepClients = maxKeepClients;
+    }
 
     public boolean isCloseMsg() {
         return closeMsg;
@@ -129,17 +138,17 @@ public class WebSocketServer extends Server {
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getReceiveBuffer());
-            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port));
-            logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
+            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
+            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
+            logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
-                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime());
+                            LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
+                    getServerName(), port, getReceiveBuffer(), getMaxKeepClients(), getExpelTime(), getGcTime());
             serverSocketChannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, WebSocketSession>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
                     if (clients.size() < getMaxKeepClients()) {
-                        final ByteBuffer byteBuffer = ByteBuffer.allocate(getCapcity());
+                        final ByteBuffer byteBuffer = ByteBuffer.allocate(getReceiveBuffer());
                         final WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
                         webSocketSession.setReadBuffer(byteBuffer);
@@ -308,6 +317,14 @@ public class WebSocketServer extends Server {
                             }
                         });
                     } else {
+                        //too many tcp connections
+                        if(client.isOpen()){
+                            try {
+                                client.close();
+                            } catch (IOException e) {
+                                //ignore
+                            }
+                        }
                         try {
                             Thread.sleep(busyTime);
                         } catch (InterruptedException e) {

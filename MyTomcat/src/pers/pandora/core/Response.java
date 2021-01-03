@@ -15,7 +15,7 @@ import java.util.*;
 
 public final class Response {
 
-    private static final Logger logger = LogManager.getLogger(Response.class);
+    private static final Logger logger = LogManager.getLogger(Response.class.getName());
 
     private String servlet;
 

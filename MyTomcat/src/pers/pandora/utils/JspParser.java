@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  */
 public final class JspParser {
 
-    private static final Logger logger = LogManager.getLogger(JspParser.class);
+    private static final Logger logger = LogManager.getLogger(JspParser.class.getName());
     //Caching generated servlet classes in non hot load mode,base on double check lock for lazy loading to save some memory
     private static volatile Map<String, String> jspCahce;
 

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class DBPool {
 
-    private static Logger logger = LogManager.getLogger(DBPool.class);
+    private static Logger logger = LogManager.getLogger(DBPool.class.getName());
     //Connection pool initialization CONNECTIONS
     private int initalSize;
     //Database connection pool maximum CONNECTIONS

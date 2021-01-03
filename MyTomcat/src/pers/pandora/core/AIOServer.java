@@ -5,7 +5,6 @@ import pers.pandora.utils.XMLFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -67,8 +66,8 @@ public final class AIOServer extends Server {
             //When work on TIME_WAIT status,quicky release the port
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             //set receive buffer,default value is 64kB
-            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getReceiveBuffer());
-            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port));
+            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
+            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port),getBackLog());
             final Attachment att = new Attachment();
             final long start = System.currentTimeMillis();
             //init web.xml
@@ -78,33 +77,27 @@ public final class AIOServer extends Server {
             if (getSerialSessionSupport() != null) {
                 setSessionMap(getSerialSessionSupport().deserialSession(getServerName()));
             }
-            logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "capacity:" + LOG.LOG_PRE +
-                            "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
-                            +LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getCapcity(), getMaxKeepClients(), getExpelTime(), getGcTime());
+            logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
+                            "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
+                            LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
+                    getServerName(), port, getReceiveBuffer(),  getExpelTime(), getGcTime());
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
                     final Attachment newAtt = new Attachment();
-                    SocketAddress clientAddr = null;
-                    try {
-                        clientAddr = client.getRemoteAddress();
-                    } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
-                    }
-                    logger.debug(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
+//                    SocketAddress clientAddr = null;
+//                    try {
+//                        clientAddr = client.getRemoteAddress();
+//                    } catch (IOException e) {
+//                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
+//                    }
+//                    logger.debug(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
-                    newAtt.setReadBuffer(ByteBuffer.allocate(getCapcity()));
+                    newAtt.setReadBuffer(ByteBuffer.allocate(getReceiveBuffer()));
                     newAtt.setKeepTime(Instant.now());
                     newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
                     newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
-                    //long connection or short connection
-                    if (getKeepClients().size() < getMaxKeepClients()) {
-                        assert clientAddr != null;
-                        addClients(clientAddr.toString(), newAtt);
-                        newAtt.setKeep(true);
-                    }
                     slavePool.submit(() -> {
                         AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                         try {
