@@ -57,9 +57,13 @@ public final class AIOServer extends Server {
         //the waitReceivedTime = browser sent request(include file data) need time + network fluctuation maybe need time
         try {
             //main thread pool should do to connect tcp socket from client
-            mainPool = Executors.newFixedThreadPool(getMainPoolSize());
+            mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
+                    getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>());
             //slave thread pool should do to I/O disk receiving client's datas
-            slavePool = Executors.newFixedThreadPool(getSlavePoolSize());
+            slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
+                    getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>());
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             asyncServerSocketChannel = serverSocketChannel;
@@ -67,7 +71,7 @@ public final class AIOServer extends Server {
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             //set receive buffer,default value is 64kB
             serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
-            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port),getBackLog());
+            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
             final Attachment att = new Attachment();
             final long start = System.currentTimeMillis();
             //init web.xml
@@ -80,7 +84,7 @@ public final class AIOServer extends Server {
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
                             LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getReceiveBuffer(),  getExpelTime(), getGcTime());
+                    getServerName(), port, getReceiveBuffer(), getExpelTime(), getGcTime());
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {

@@ -21,10 +21,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * //firstly,init BeanPool
@@ -133,8 +130,14 @@ public class WebSocketServer extends Server {
         setPort(port);
         try {
             final long start = System.currentTimeMillis();
-            final ExecutorService mainPool = Executors.newFixedThreadPool(getMainPoolSize());
-            final ExecutorService slavePool = Executors.newFixedThreadPool(getSlavePoolSize());
+            //main thread pool should do to connect tcp socket from client
+            mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
+                    getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>());
+            //slave thread pool should do to I/O disk receiving client's datas
+            slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
+                    getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>());
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);

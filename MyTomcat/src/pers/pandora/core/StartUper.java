@@ -45,9 +45,17 @@ public final class StartUper {
 
     public static final String REQUESTFILEDIR = "requestFileDir";
 
-    public static final String MAINPOOLSIZE = "mainPoolSize";
+    public static final String MAINPOOLMINSIZE = "mainPoolMinSize";
 
-    public static final String SLAVEPOOLSIZE = "slavePoolSize";
+    public static final String MAINPOOLMAXSIZE = "mainPoolMaxSize";
+
+    public static final String SLAVEPOOLMINSIZE = "slavePoolMinSize";
+
+    public static final String MAINPOOLKEEPALIVE = "mainPoolKeepAlive";
+
+    public static final String SLAVEPOOLKEEPALIVE = "slavePoolKeepAlive";
+
+    public static final String SLAVEPOOLMAXSIZE = "slavePoolMaxSize";
 
     public static final String RECEIVEBUFFER = "receiveBuffer";
 
@@ -306,13 +314,29 @@ public final class StartUper {
         if (StringUtils.isNotEmpty(value)) {
             server.setPort(Integer.valueOf(value));
         }
-        value = properties.getProperty(MAINPOOLSIZE, null);
+        value = properties.getProperty(MAINPOOLMINSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMainPoolSize(Integer.valueOf(value));
+            server.setMainPoolMinSize(Integer.valueOf(value));
         }
-        value = properties.getProperty(SLAVEPOOLSIZE, null);
+        value = properties.getProperty(MAINPOOLMAXSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setSlavePoolSize(Integer.valueOf(value));
+            server.setMainPoolMaxSize(Integer.valueOf(value));
+        }
+        value = properties.getProperty(MAINPOOLKEEPALIVE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setMainPoolKeepAlive(Long.valueOf(value));
+        }
+        value = properties.getProperty(SLAVEPOOLMINSIZE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setSlavePoolMinSize(Integer.valueOf(value));
+        }
+        value = properties.getProperty(SLAVEPOOLMAXSIZE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setSlavePoolMaxSize(Integer.valueOf(value));
+        }
+        value = properties.getProperty(SLAVEPOOLKEEPALIVE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setSlavePoolKeepAlive(Long.valueOf(value));
         }
         value = properties.getProperty(RECEIVEBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {

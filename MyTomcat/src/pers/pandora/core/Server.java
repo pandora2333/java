@@ -38,9 +38,18 @@ public abstract class Server {
     //serer name，it use logs,session file,etc
     private String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
-    private int mainPoolSize = Runtime.getRuntime().availableProcessors();
+    private int mainPoolMinSize = Runtime.getRuntime().availableProcessors();
+
+    private int mainPoolMaxSize = 2 * mainPoolMinSize;
+
+    private long mainPoolKeepAlive = 60L;
+
     //slave thread pool size
-    private int slavePoolSize = 2 * mainPoolSize + 1;
+    private int slavePoolMinSize = mainPoolMinSize;
+
+    private int slavePoolMaxSize = mainPoolMaxSize;
+
+    private long slavePoolKeepAlive = 60L;
     //up file buffer size (byte)
     private int receiveBuffer = 8192;
     //Allowed maximum number of pending tcp connections
@@ -79,6 +88,38 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public int getMainPoolMaxSize() {
+        return mainPoolMaxSize;
+    }
+
+    public int getSlavePoolMaxSize() {
+        return slavePoolMaxSize;
+    }
+
+    public long getMainPoolKeepAlive() {
+        return mainPoolKeepAlive;
+    }
+
+    public long getSlavePoolKeepAlive() {
+        return slavePoolKeepAlive;
+    }
+
+    public void setMainPoolKeepAlive(long mainPoolKeepAlive) {
+        this.mainPoolKeepAlive = mainPoolKeepAlive;
+    }
+
+    public void setMainPoolMaxSize(int mainPoolMaxSize) {
+        this.mainPoolMaxSize = mainPoolMaxSize;
+    }
+
+    public void setSlavePoolKeepAlive(long slavePoolKeepAlive) {
+        this.slavePoolKeepAlive = slavePoolKeepAlive;
+    }
+
+    public void setSlavePoolMaxSize(int slavePoolMaxSize) {
+        this.slavePoolMaxSize = slavePoolMaxSize;
+    }
 
     public int getBackLog() {
         return backLog;
@@ -136,12 +177,12 @@ public abstract class Server {
         this.expelTime = expelTime;
     }
 
-    public int getSlavePoolSize() {
-        return slavePoolSize;
+    public int getSlavePoolMinSize() {
+        return slavePoolMinSize;
     }
 
-    public void setSlavePoolSize(int slavePoolSize) {
-        this.slavePoolSize = slavePoolSize;
+    public void setSlavePoolMinSize(int slavePoolMinSize) {
+        this.slavePoolMinSize = slavePoolMinSize;
     }
 
     public boolean isHotLoadJSP() {
@@ -223,8 +264,8 @@ public abstract class Server {
         return port;
     }
 
-    public int getMainPoolSize() {
-        return mainPoolSize;
+    public int getMainPoolMinSize() {
+        return mainPoolMinSize;
     }
 
     public void setReceiveBuffer(int receiveBuffer) {
@@ -247,8 +288,8 @@ public abstract class Server {
         this.port = port;
     }
 
-    public void setMainPoolSize(int mainPoolSize) {
-        this.mainPoolSize = mainPoolSize;
+    public void setMainPoolMinSize(int mainPoolMinSize) {
+        this.mainPoolMinSize = mainPoolMinSize;
     }
 
     public void setResourceRootPath(String resourceRootPath) {
