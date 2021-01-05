@@ -52,7 +52,7 @@
         <logger name="org.springframework" level="INFO"></logger>
         <logger name="org.mybatis" level="INFO"></logger>
         -->
-        <logger name="pers.pandora" level="INFO"></logger>
+        <logger name="pers.pandora" level="INFO"/>
         <root level="all">
             <appender-ref ref="Console"/>
             <appender-ref ref="RollingFileInfo"/>

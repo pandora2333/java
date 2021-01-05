@@ -38,7 +38,7 @@ public abstract class Server {
     //serer name，it use logs,session file,etc
     private String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
-    private int mainPoolMinSize = Runtime.getRuntime().availableProcessors();
+    private int mainPoolMinSize = Runtime.getRuntime().availableProcessors() + 1;
 
     private int mainPoolMaxSize = 2 * mainPoolMinSize;
 
@@ -54,14 +54,16 @@ public abstract class Server {
     private int receiveBuffer = 8192;
     //Allowed maximum number of pending tcp connections
     private int backLog = 50;
+    //Waiting queue in thread pool
+    private int queueSize = 200;
 
     private static final String HOST = "127.0.0.1";
     //hot load JSP default true
     private boolean hotLoadJSP = true;
     //download resource buffer size（byte）
     private int responseBuffer = 8192;
-    //server receive buffer size, it should greater than or equal to receiveBuffer
-    private int tcpReceivedCacheSize = Math.max(65536, receiveBuffer << 1);
+    //tcp receive buffer size, it should greater than or equal to receiveBuffer
+    private int tcpReceivedCacheSize = Math.max(65536, receiveBuffer);
     //global session pool,base on memory
     private Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
     //set invalid time for the sessions,optimize the thread scanning
@@ -88,6 +90,14 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public int getQueueSize() {
+        return queueSize;
+    }
+
+    public void setQueueSize(int queueSize) {
+        this.queueSize = queueSize;
+    }
 
     public int getMainPoolMaxSize() {
         return mainPoolMaxSize;
@@ -356,8 +366,6 @@ public abstract class Server {
     public abstract void start(int port);
 
     protected void execExpelThread() {
-        final List<String> invalidKey = new ArrayList<>(10);
-        final List<String> validKey = new ArrayList<>(1);
         final Thread invalidResourceExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
@@ -372,23 +380,15 @@ public abstract class Server {
                 invalidSessionMap.forEach((k, v) -> {
                     if (v.getMax_age() != null) {
                         if (now.compareTo(v.getMax_age()) >= 0) {
-                            invalidKey.add(k);
+                            logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), k);
+                            sessionMap.remove(k);
+                            invalidSessionMap.remove(k);
                         }
                     } else {
-                        validKey.add(k);
+                        logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), k);
+                        invalidSessionMap.remove(k);
                     }
                 });
-                invalidKey.forEach(removeKey -> {
-                    logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), removeKey);
-                    sessionMap.remove(removeKey);
-                    invalidSessionMap.remove(removeKey);
-                });
-                validKey.forEach(addKey -> {
-                    logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), addKey);
-                    invalidSessionMap.remove(addKey);
-                });
-                invalidKey.clear();
-                validKey.clear();
                 endTime = System.currentTimeMillis();
             }
         });
@@ -410,7 +410,8 @@ public abstract class Server {
                 startTime = now.getEpochSecond();
                 keepClients.forEach((k, v) -> {
                     if (now.toEpochMilli() - v.getKeepTime().toEpochMilli() >= gcTime) {
-                        close(v, this);
+                        v.setKeep(false);
+                        close(v, this, k);
                     }
                 });
                 endTime = System.currentTimeMillis();
@@ -420,14 +421,13 @@ public abstract class Server {
         invalidClientExecutor.start();
     }
 
-    public void close(Attachment att, Object target) {
+    public void close(Attachment att, Object target, String ip) {
         try {
-            if (att.getClient().isOpen()) {
-                if (att.isKeep()) {
-                    SocketAddress address = att.getClient().getRemoteAddress();
-                    keepClients.remove(address.toString());
+            if (!att.isKeep()) {
+//                logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), ip);
+                if (StringUtils.isNotEmpty(ip)) {
+                    keepClients.remove(ip);
                 }
-                //logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), address);
                 att.getClient().close();
             }
         } catch (IOException e) {

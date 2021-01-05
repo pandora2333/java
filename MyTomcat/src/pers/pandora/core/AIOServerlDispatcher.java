@@ -37,11 +37,10 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         this.att = att;
         if (result < 0) {
             //The identifier at the end of the packet indicates that the TCP request packet has been sent
-            //The TCP it can not be closed immediately. The browser may be reused next time, so it needs to be kept alive
+            //The TCP it can not be closed immediately. The browser may be reused next time, so it needs to be kept alive if it is keepAlive pattern
             return;
         }
         att.setKeepTime(Instant.now());
-        setKeepAlive(att.isKeep());
         final ByteBuffer buffer = att.getReadBuffer();
         //model change:write -> read
         buffer.flip();
@@ -51,12 +50,16 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //pre handle HTTP resource
         initRequest(buffer);
         //conten-length = all body data bytes after blank line(\n)
+        //It's supported pipeLining for HTTP ,but at least,it has one complete HTTP request header,and it will be processed
         while (buffer.position() < buffer.limit()) {
             try {
                 initRequest(buffer.array(), buffer.position(), buffer.limit());
             } catch (Exception e) {
                 logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
-                if (e instanceof OverMaxUpBitsException) return;
+                if (e instanceof OverMaxUpBitsException) {
+                    reset();
+                    return;
+                }
             }
             if (remain == 0) {
                 try {
@@ -68,16 +71,10 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 handleRequestCompleted();
                 request.reset();
                 response.reset();
-                msg = null;
-                fileData = null;
-                remain = 0;
+                reset();
+                server.close(att, this, null);
             } else if (remain < 0) {
-                remain = 0;
-                msg = null;
-            }
-            if (!att.isKeep()) {
-                server.close(att, this);
-                return;
+                reset();
             }
         }
         buffer.clear();
@@ -89,6 +86,12 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 //ignore
             }
         });
+    }
+
+    private void reset() {
+        remain = 0;
+        msg = null;
+        fileData = null;
     }
 
     private void initRequest(byte[] data, int i, int limit) {
@@ -119,6 +122,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             if (!ok) {
                 //The request header information is incomplete. This request is discarded
                 remain = -1;
+                att.setReadBuffer((ByteBuffer) att.getReadBuffer().position(limit));
                 return;
             }
             //long connection or short connection
@@ -128,20 +132,21 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     try {
                         server.addClients(att.getClient().getRemoteAddress().toString(), att);
                         att.setKeep(true);
+                        setKeepAlive(true);
                     } catch (IOException e) {
                         //ignore
                     }
                 }
             }
             //cookie and session init
-            boolean initSession = false;
-            String cookie = request.getHeads().get(HTTPStatus.COOKIE_MARK);
-            if (StringUtils.isNotEmpty(cookie)) {
-                request.initCookies(cookie);
-                initSession = true;
-            }
-            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
-                request.initSession();
+//            boolean initSession = false;
+//            String cookie = request.getHeads().get(HTTPStatus.COOKIE_MARK);
+//            if (StringUtils.isNotEmpty(cookie)) {
+//                request.initCookies(cookie);
+//                initSession = true;
+//            }
+//            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
+//                request.initSession();
             //handle files and variable
             final String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
             if (StringUtils.isNotEmpty(contentType)) {
@@ -156,8 +161,15 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             remain = StringUtils.isNotEmpty(dataSize) ? Long.valueOf(dataSize) : 0;
             //Directly refuse to receive data after exceeding the maximum transmission bit
             if (remain > server.getMaxUpBits()) {
-                OverMaxUpBitsException exception = new OverMaxUpBitsException(Server.OVERMAXUPBITS);
-                failed(exception, att);
+                final OverMaxUpBitsException exception = new OverMaxUpBitsException(Server.OVERMAXUPBITS);
+                String ip = null;
+                try {
+                    ip = att.getClient().getRemoteAddress().toString();
+                } catch (IOException e) {
+                    //ignore
+                }
+                att.setKeep(false);
+                server.close(att, this, ip);
                 throw exception;
             }
         }
@@ -182,6 +194,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             i += len + HTTPStatus.LINE_SPLITER;
             String query, varName, varValue, fileName, fileType;
             List<Object> objects;
+            Tuple<String, String, byte[]> file;
+            List<Tuple<String, String, byte[]>> tuple;
             boolean isFile;
             for (; i < limit; ) {
                 isFile = false;
@@ -217,8 +231,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                                 //copy file data
                                 tmpData = new byte[k];
                                 System.arraycopy(data, i, tmpData, 0, k);
-                                Tuple<String, String, byte[]> file = new Tuple<>(fileName, fileType, tmpData);
-                                List<Tuple<String, String, byte[]>> tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
+                                file = new Tuple<>(fileName, fileType, tmpData);
+                                tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
                                 tuple.add(file);
                             }
                         }
@@ -248,7 +262,6 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
     @Override
     public void failed(Throwable t, Attachment att) {
         //WritePendingException or Connection_Closed_Exception
-        server.close(att, this);
     }
 
     @Override
@@ -270,12 +283,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 //ignore
                 //ClosedException
             }
-            by.compact();
+            by.clear();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
             FileChannel fin;
             FileInputStream in = null;
             if (staticFile != null) {
-                by = att.getWriteBuffer();
                 final boolean part = response.getCode() == HTTPStatus.CODE_206;
                 try {
                     if (part) {
@@ -294,7 +306,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                             if (!write(by, staticFile.getAbsolutePath())) {
                                 break;
                             }
-                            by.compact();
+                            by.clear();
                         }
                     } else {
                         by = ByteBuffer.allocateDirect((int) response.getLen());

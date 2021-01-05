@@ -105,6 +105,8 @@ public final class StartUper {
 
     public static final String ACCEPTCOUNT = "acceptCount";
 
+    public static final String QUEUESIZE = "queueSize";
+
     private String[] paths;
 
     public StartUper(String... configPaths) {
@@ -353,6 +355,10 @@ public final class StartUper {
         value = properties.getProperty(ACCEPTCOUNT, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setBackLog(Integer.valueOf(value));
+        }
+        value = properties.getProperty(QUEUESIZE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setQueueSize(Integer.valueOf(value));
         }
         value = properties.getProperty(MAXUPBITS, null);
         if (StringUtils.isNotEmpty(value)) {

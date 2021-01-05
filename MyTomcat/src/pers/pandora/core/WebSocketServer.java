@@ -9,6 +9,7 @@ import pers.pandora.vo.TextWSData;
 import pers.pandora.vo.WSData;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.net.URLDecoder;
@@ -133,11 +134,11 @@ public class WebSocketServer extends Server {
             //main thread pool should do to connect tcp socket from client
             mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
                     getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>());
+                    new ArrayBlockingQueue<>(getQueueSize()));
             //slave thread pool should do to I/O disk receiving client's datas
             slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
                     getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>());
+                    new ArrayBlockingQueue<>(getQueueSize()));
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
@@ -166,12 +167,12 @@ public class WebSocketServer extends Server {
                                     attachment.setWriteBuffer(ByteBuffer.allocate(msg.length));
                                 }
                                 //Avoid for concurrently reading in the same buffer by read-thread
-                                final ByteBuffer tmp = attachment.getWriteBuffer();
+                                final ByteBuffer by = attachment.getWriteBuffer();
                                 try {
-                                    tmp.put(msg);
+                                    by.put(msg);
                                     //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
-                                    tmp.flip();
-                                    attachment.getClient().write(tmp).get();
+                                    by.flip();
+                                    attachment.getClient().write(by).get();
                                 } catch (Exception e) {
                                     //ignore,retry again
                                     boolean ok = false;
@@ -183,145 +184,155 @@ public class WebSocketServer extends Server {
                                             //ignore
                                         }
                                         try {
-                                            attachment.getClient().write(tmp);
+                                            attachment.getClient().write(by);
                                         } catch (Exception exx) {
                                             //ignore
                                             ok = false;
                                         }
                                     }
                                 }
-                                tmp.compact();
+                                by.clear();
                             }
 
                             @Override
                             public void completed(Integer result, WebSocketSession attachment) {
                                 final ByteBuffer buffer = attachment.getReadBuffer();
                                 buffer.flip();
+                                String ip = null;
                                 try {
-                                    final String ip = attachment.getClient().getRemoteAddress().toString();
-                                    if (ip != null && !clients.containsKey(ip)) {
-                                        final String msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
-                                        webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
-                                        if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
-                                            //sync write
-                                            writeMsg(buildWS(msg), attachment);
-                                            //callBack method for exec some init-methods
-                                            if (openMsg) {
-                                                writeMsg(initWebSocketSession(attachment), attachment);
-                                            }
-                                        } else {
-                                            //no-mapping url path,just close it
-                                            close(attachment, this);
-                                            return;
+                                    ip = attachment.getClient().getRemoteAddress().toString();
+                                } catch (IOException e) {
+                                    //ignore
+                                }
+                                if (ip != null && !clients.containsKey(ip)) {
+                                    String msg = null;
+                                    try {
+                                        msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
+                                    } catch (UnsupportedEncodingException e) {
+                                        logger.error("url decode fail" + LOG.LOG_PRE + LOG.LOG_POS, LOG.EXCEPTION_DESC, charset, e.getMessage());
+                                        writeMsg(e.getMessage().getBytes(Charset.forName(charset)), attachment);
+                                        close(attachment, this, ip);
+                                        return;
+                                    }
+                                    webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
+                                    if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
+                                        //sync write
+                                        writeMsg(buildWS(msg), attachment);
+                                        //callBack method for exec some init-methods
+                                        if (openMsg) {
+                                            writeMsg(initWebSocketSession(attachment), attachment);
                                         }
-                                        clients.put(ip, attachment);
                                     } else {
-                                        //TCP packet sticking / unpacking,the application layer protocol splitting
-                                        //chrome's max bracket size is 128k
-                                        int i = buffer.position();
-                                        attachment.clear();
-                                        while (i < buffer.limit()) {
-                                            WSData data = null;
-                                            if (attachment.getDatas().size() > 0) {
-                                                data = attachment.getDatas().get(attachment.getDatas().size() - 1);
+                                        //no-mapping url path,just close it
+                                        close(attachment, this, null);
+                                        return;
+                                    }
+                                    clients.put(ip, attachment);
+                                } else {
+                                    //TCP packet sticking / unpacking,the application layer protocol splitting
+                                    //chrome's max bracket size is 128k
+                                    int i = buffer.position();
+                                    attachment.clear();
+                                    WSData data;
+                                    byte first, second;
+                                    boolean finish;
+                                    byte[] mask;
+                                    long len;
+                                    while (i < buffer.limit()) {
+                                        data = null;
+                                        if (attachment.getDatas().size() > 0) {
+                                            data = attachment.getDatas().get(attachment.getDatas().size() - 1);
+                                        }
+                                        if (data != null) {
+                                            i = readWSData(i, buffer, data);
+                                            attachment.getDatas().add(data);
+                                            data = null;
+                                        }
+                                        if (i + 1 < buffer.limit()) {
+                                            first = buffer.get(i);
+                                            finish = (first & 0x80) > 0;
+                                            first &= 0x0f;
+                                            if ((first & 0x0f) == WS.TYPE_TEXT) {
+                                                data = new TextWSData();
+                                                data.setType(WS.TYPE_TEXT);
+                                            } else if ((first & 0x0f) == WS.TYPE_BINARY) {
+                                                data = new BinaryWSData();
+                                                data.setType(WS.TYPE_BINARY);
+                                            } else if ((first & 0x08) > 0) {
+                                                attachment.setCloseSignal(true);
+                                                clients.remove(ip);
+                                                //callBack method for exec some destroy-methods
+                                                if (closeMsg) {
+                                                    destroyWebSocketSession(attachment);
+                                                }
+                                                close(attachment, this, ip);
+                                                return;
                                             }
                                             if (data != null) {
+                                                data.setFinish(finish);
+                                                second = buffer.get(++i);
+                                                mask = null;
+                                                if ((second & 0x80) > 0) {
+                                                    mask = new byte[4];
+                                                }
+                                                second &= 0x7f;
+                                                //The maximum packet length should be controlled within the maximum range of long integers
+                                                len = second & 0x7f;
+                                                if (len >= 0x7d) {
+                                                    int size = len == 0x7e ? 2 : 8;
+                                                    len = 0;
+                                                    for (int j = 0; j < size; j++) {
+                                                        len = (len << 0x08) | (buffer.get(++i) & 0xff);
+                                                        if (len > getMaxUpBits()) {
+                                                            writeMsg(WS.OVER_UP_DATA_SIZE.getBytes(Charset.forName(charset)), attachment);
+                                                            close(attachment, this, ip);
+                                                            return;
+                                                        }
+                                                    }
+                                                }
+                                                //Security. However, it is not to prevent data leakage, but to prevent proxy cache pollution attacks in earlier versions of the protocol
+                                                if (mask != null) {
+                                                    for (int j = 0; j < 4; j++) {
+                                                        mask[j] = buffer.get(++i);
+                                                    }
+                                                    data.setMask(mask);
+                                                }
+                                                data.setRemain(len);
+                                                data.setLength(len);
                                                 i = readWSData(i, buffer, data);
                                                 attachment.getDatas().add(data);
-                                                data = null;
                                             }
-                                            if (i + 1 < buffer.limit()) {
-                                                byte first = buffer.get(i);
-                                                boolean finish = false;
-                                                if ((first & 0x80) > 0) {
-                                                    finish = true;
-                                                }
-                                                first &= 0x0f;
-                                                if ((first & 0x0f) == WS.TYPE_TEXT) {
-                                                    data = new TextWSData();
-                                                    data.setType(WS.TYPE_TEXT);
-                                                } else if ((first & 0x0f) == WS.TYPE_BINARY) {
-                                                    data = new BinaryWSData();
-                                                    data.setType(WS.TYPE_BINARY);
-                                                } else if ((first & 0x08) > 0) {
-                                                    attachment.setCloseSignal(true);
-                                                    clients.remove(ip);
-                                                    //callBack method for exec some destroy-methods
-                                                    if (closeMsg) {
-                                                        destroyWebSocketSession(attachment);
-                                                    }
-                                                    close(attachment, this);
-                                                    return;
-                                                }
-                                                if (data != null) {
-                                                    data.setFinish(finish);
-                                                    byte second = buffer.get(++i);
-                                                    byte[] mask = null;
-                                                    if ((second & 0x80) > 0) {
-                                                        mask = new byte[4];
-                                                    }
-                                                    second &= 0x7f;
-                                                    //The maximum packet length should be controlled within the maximum range of long integers
-                                                    long len = second & 0x7f;
-                                                    if (len >= 0x7d) {
-                                                        int size = len == 0x7e ? 2 : 8;
-                                                        len = 0;
-                                                        for (int j = 0; j < size; j++) {
-                                                            len = (len << 0x08) | (buffer.get(++i) & 0xff);
-                                                            if (len > getMaxUpBits()) {
-                                                                writeMsg(WS.OVER_UP_DATA_SIZE.getBytes(Charset.forName(charset)), attachment);
-                                                                close(attachment, this);
-                                                                return;
-                                                            }
-                                                        }
-                                                    }
-                                                    //Security. However, it is not to prevent data leakage, but to prevent proxy cache pollution attacks in earlier versions of the protocol
-                                                    if (mask != null) {
-                                                        for (int j = 0; j < 4; j++) {
-                                                            mask[j] = buffer.get(++i);
-                                                        }
-                                                        data.setMask(mask);
-                                                    }
-                                                    data.setRemain(len);
-                                                    data.setLength(len);
-                                                    i = readWSData(i, buffer, data);
-                                                    attachment.getDatas().add(data);
-                                                }
-                                            }
-                                        }
-                                        //sync request and exec callback method
-                                        getRequestMappingHandler().execWSCallBack(webSocketSession, clients);
-                                        //sync write-task,because of a request for information, only one transmission
-                                        if (webSocketSession.getOutPutContent() != null) {
-                                            writeMsg(buildSendMsg(webSocketSession), attachment);
-                                            //clear-operation
-                                            webSocketSession.writeContent(null);
-                                            webSocketSession.setOutPutType(WS.TYPE_TEXT);
                                         }
                                     }
-                                    buffer.clear();
-                                    //async read-task
-                                    slavePool.submit(() -> {
-                                        try {
-                                            this.completed(attachment.getClient().read(buffer).get(), attachment);
-                                        } catch (InterruptedException | ExecutionException e) {
-                                            //ignore
-                                        }
-                                    });
-                                } catch (IOException e) {
-                                    //IO concurrent error, forced interrupt
-                                    this.failed(e, attachment);
+                                    //sync request and exec callback method
+                                    getRequestMappingHandler().execWSCallBack(webSocketSession, clients);
+                                    //sync write-task,because of a request for information, only one transmission
+                                    if (webSocketSession.getOutPutContent() != null) {
+                                        writeMsg(buildSendMsg(webSocketSession), attachment);
+                                        //clear-operation
+                                        webSocketSession.writeContent(null);
+                                        webSocketSession.setOutPutType(WS.TYPE_TEXT);
+                                    }
                                 }
+                                buffer.clear();
+                                //async read-task
+                                slavePool.submit(() -> {
+                                    try {
+                                        this.completed(attachment.getClient().read(buffer).get(), attachment);
+                                    } catch (InterruptedException | ExecutionException e) {
+                                        //ignore
+                                    }
+                                });
                             }
 
                             @Override
                             public void failed(Throwable t, WebSocketSession attachment) {
-                                close(attachment, this);
+                                //ignore
                             }
                         });
                     } else {
                         //too many tcp connections
-                        if(client.isOpen()){
+                        if (client.isOpen()) {
                             try {
                                 client.close();
                             } catch (IOException e) {
@@ -381,7 +392,7 @@ public class WebSocketServer extends Server {
                 public void failed(Throwable t, WebSocketSession att) {
                     try {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
-                        close(att, this);
+                        close(att, this, null);
                     } catch (IOException e) {
                         logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
                     }
@@ -397,7 +408,7 @@ public class WebSocketServer extends Server {
     //give a @Override method for some destroy-methods when a WebSocketSession will be closed
     protected void destroyWebSocketSession(WebSocketSession attachment) {
         try {
-            logger.info("Get a " + LOG.LOG_PRE + "closed request!", attachment.getClient().getRemoteAddress());
+            logger.debug("Get a " + LOG.LOG_PRE + "closed request!", attachment.getClient().getRemoteAddress());
         } catch (IOException e) {
             //ignore
         }

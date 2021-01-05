@@ -5,6 +5,7 @@ import pers.pandora.utils.XMLFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -59,17 +60,17 @@ public final class AIOServer extends Server {
             //main thread pool should do to connect tcp socket from client
             mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
                     getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>());
+                    new ArrayBlockingQueue<>(getQueueSize()));
             //slave thread pool should do to I/O disk receiving client's datas
             slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
                     getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>());
+                    new ArrayBlockingQueue<>(getQueueSize()));
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             asyncServerSocketChannel = serverSocketChannel;
             //When work on TIME_WAIT status,quicky release the port
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            //set receive buffer,default value is 64kB
+            //set tcp receive buffer,default value is 64kB for system
             serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
             final Attachment att = new Attachment();
@@ -89,21 +90,19 @@ public final class AIOServer extends Server {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
                     final Attachment newAtt = new Attachment();
-//                    SocketAddress clientAddr = null;
 //                    try {
-//                        clientAddr = client.getRemoteAddress();
+//                        logger.debug(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), client.getRemoteAddress());
 //                    } catch (IOException e) {
 //                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
 //                    }
-//                    logger.debug(LOG.LOG_PRE + "A new Connection:" + LOG.LOG_PRE, getServerName(), clientAddr);
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
                     newAtt.setReadBuffer(ByteBuffer.allocate(getReceiveBuffer()));
                     newAtt.setKeepTime(Instant.now());
                     newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
                     newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
+                    final AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                     slavePool.submit(() -> {
-                        AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                         try {
                             dispatcher.completed(client.read(newAtt.getReadBuffer()).get(), newAtt);
                         } catch (InterruptedException | ExecutionException e) {
@@ -118,7 +117,7 @@ public final class AIOServer extends Server {
                 public void failed(Throwable t, Attachment att) {
                     try {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
-                        close(att, this);
+                        close(att, this,null);
                     } catch (IOException e) {
                         logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
                     }
