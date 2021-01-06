@@ -139,14 +139,14 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 }
             }
             //cookie and session init
-//            boolean initSession = false;
-//            String cookie = request.getHeads().get(HTTPStatus.COOKIE_MARK);
-//            if (StringUtils.isNotEmpty(cookie)) {
-//                request.initCookies(cookie);
-//                initSession = true;
-//            }
-//            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
-//                request.initSession();
+            boolean initSession = false;
+            String cookie = request.getHeads().get(HTTPStatus.COOKIE_MARK);
+            if (StringUtils.isNotEmpty(cookie)) {
+                request.initCookies(cookie);
+                initSession = true;
+            }
+            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
+                request.initSession();
             //handle files and variable
             final String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
             if (StringUtils.isNotEmpty(contentType)) {
