@@ -142,7 +142,9 @@ public class WebSocketServer extends Server {
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
+            if (tcpReceivedCacheSize > 0) {
+                serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, tcpReceivedCacheSize);
+            }
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
@@ -152,11 +154,19 @@ public class WebSocketServer extends Server {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
                     if (clients.size() < getMaxKeepClients()) {
+                        if (tcpSendCacheSize > 0) {
+                            try {
+                                client.setOption(StandardSocketOptions.SO_SNDBUF, tcpSendCacheSize);
+                            } catch (IOException e) {
+                                //ignore
+                                //Because it is set before writing data, no exception will occur
+                            }
+                        }
                         final ByteBuffer byteBuffer = ByteBuffer.allocate(getReceiveBuffer());
                         final WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
                         webSocketSession.setReadBuffer(byteBuffer);
-                        webSocketSession.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
+                        webSocketSession.setWriteBuffer(ByteBuffer.allocateDirect(getSendBuffer()));
                         client.read(byteBuffer, webSocketSession, new CompletionHandler<Integer, WebSocketSession>() {
                             //write message to client
                             private void writeMsg(byte[] msg, WebSocketSession attachment) {

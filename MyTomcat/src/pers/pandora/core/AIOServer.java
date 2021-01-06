@@ -5,7 +5,6 @@ import pers.pandora.utils.XMLFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -71,7 +70,9 @@ public final class AIOServer extends Server {
             //When work on TIME_WAIT status,quicky release the port
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             //set tcp receive buffer,default value is 64kB for system
-            serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, getTcpReceivedCacheSize());
+            if (tcpReceivedCacheSize > 0) {
+                serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, tcpReceivedCacheSize);
+            }
             serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
             final Attachment att = new Attachment();
             final long start = System.currentTimeMillis();
@@ -95,19 +96,27 @@ public final class AIOServer extends Server {
 //                    } catch (IOException e) {
 //                        logger.error(LOG.LOG_PRE + "accept=>completed" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
 //                    }
+                    if (tcpSendCacheSize > 0) {
+                        try {
+                            client.setOption(StandardSocketOptions.SO_SNDBUF, tcpSendCacheSize);
+                        } catch (IOException e) {
+                            //ignore
+                            //Because it is set before writing data, no exception will occur
+                        }
+                    }
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
                     newAtt.setReadBuffer(ByteBuffer.allocate(getReceiveBuffer()));
                     newAtt.setKeepTime(Instant.now());
                     newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
-                    newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getResponseBuffer()));
+                    newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getSendBuffer()));
                     final AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                     slavePool.submit(() -> {
                         try {
                             dispatcher.completed(client.read(newAtt.getReadBuffer()).get(), newAtt);
                         } catch (InterruptedException | ExecutionException e) {
                             //ignore
-                            //Guaranteed by the thread pool match queue, concurrent access to the buffer will not occur
+                            //Guaranteed by the thread pool match queue, concurrent access to the read buffer will not occur
                         }
                     });
                     asyncServerSocketChannel.accept(att, this);
@@ -117,7 +126,7 @@ public final class AIOServer extends Server {
                 public void failed(Throwable t, Attachment att) {
                     try {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
-                        close(att, this,null);
+                        close(att, this, null);
                     } catch (IOException e) {
                         logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
                     }

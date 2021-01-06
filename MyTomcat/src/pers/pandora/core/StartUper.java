@@ -59,7 +59,7 @@ public final class StartUper {
 
     public static final String RECEIVEBUFFER = "receiveBuffer";
 
-    public static final String RESPONSEBUFFER = "responseBuffer";
+    public static final String SENDBUFFER = "sendBuffer";
 
     public static final String TCPRECEIVEDCACHESIZE = "tcpReceivedCacheSize";
 
@@ -106,6 +106,8 @@ public final class StartUper {
     public static final String ACCEPTCOUNT = "acceptCount";
 
     public static final String QUEUESIZE = "queueSize";
+
+    public static final String TCPSENDCACHESIZE = "tcpSendCacheSize";
 
     private String[] paths;
 
@@ -344,13 +346,17 @@ public final class StartUper {
         if (StringUtils.isNotEmpty(value)) {
             server.setReceiveBuffer(Integer.valueOf(value));
         }
-        value = properties.getProperty(RESPONSEBUFFER, null);
+        value = properties.getProperty(SENDBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setResponseBuffer(Integer.valueOf(value));
+            server.setSendBuffer(Integer.valueOf(value));
         }
         value = properties.getProperty(TCPRECEIVEDCACHESIZE, null);
         if (StringUtils.isNotEmpty(value)) {
             server.setTcpReceivedCacheSize(Integer.valueOf(value));
+        }
+        value = properties.getProperty(TCPSENDCACHESIZE, null);
+        if (StringUtils.isNotEmpty(value)) {
+            server.setTcpSendCacheSize(Integer.valueOf(value));
         }
         value = properties.getProperty(ACCEPTCOUNT, null);
         if (StringUtils.isNotEmpty(value)) {

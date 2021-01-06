@@ -8,10 +8,7 @@ import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -38,9 +35,9 @@ public abstract class Server {
     //serer name，it use logs,session file,etc
     private String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
-    private int mainPoolMinSize = Runtime.getRuntime().availableProcessors() + 1;
+    private int mainPoolMinSize = 10;
 
-    private int mainPoolMaxSize = 2 * mainPoolMinSize;
+    private int mainPoolMaxSize = 20;
 
     private long mainPoolKeepAlive = 60L;
 
@@ -49,7 +46,7 @@ public abstract class Server {
 
     private int slavePoolMaxSize = mainPoolMaxSize;
 
-    private long slavePoolKeepAlive = 60L;
+    private long slavePoolKeepAlive = mainPoolKeepAlive;
     //up file buffer size (byte)
     private int receiveBuffer = 8192;
     //Allowed maximum number of pending tcp connections
@@ -61,9 +58,11 @@ public abstract class Server {
     //hot load JSP default true
     private boolean hotLoadJSP = true;
     //download resource buffer size（byte）
-    private int responseBuffer = 8192;
-    //tcp receive buffer size, it should greater than or equal to receiveBuffer
-    private int tcpReceivedCacheSize = Math.max(65536, receiveBuffer);
+    private int sendBuffer = 8192;
+    //tcp receive buffer size,default value is 65536
+    protected int tcpReceivedCacheSize = 0;
+    //tcp send buffer size,default value is 65536
+    protected int tcpSendCacheSize = 0;
     //global session pool,base on memory
     private Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
     //set invalid time for the sessions,optimize the thread scanning
@@ -78,8 +77,8 @@ public abstract class Server {
     private Map<String, String> context;
     //browser build the tcps
     private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
-    //Allowed maximum number of transmitted information bits
-    private long maxUpBits = 1024 * 1024 * 100;
+    //Allowed maximum number of transmitted information bits,default value is 10m
+    private long maxUpBits = 10485760;
 
     protected ExecutorService mainPool;
 
@@ -90,6 +89,14 @@ public abstract class Server {
     private long gcTime;
     //SessionId Generator
     private IdWorker idWorker;
+
+    public int getTcpSendCacheSize() {
+        return tcpSendCacheSize;
+    }
+
+    public void setTcpSendCacheSize(int tcpSendCacheSize) {
+        this.tcpSendCacheSize = tcpSendCacheSize;
+    }
 
     public int getQueueSize() {
         return queueSize;
@@ -353,12 +360,12 @@ public abstract class Server {
         return webConfigPath;
     }
 
-    public void setResponseBuffer(int responseBuffer) {
-        this.responseBuffer = responseBuffer;
+    public void setSendBuffer(int sendBuffer) {
+        this.sendBuffer = sendBuffer;
     }
 
-    public int getResponseBuffer() {
-        return responseBuffer;
+    public int getSendBuffer() {
+        return sendBuffer;
     }
 
     public abstract void start();
@@ -421,7 +428,7 @@ public abstract class Server {
         invalidClientExecutor.start();
     }
 
-    public void close(Attachment att, Object target, String ip) {
+    public boolean close(Attachment att, Object target, String ip) {
         try {
             if (!att.isKeep()) {
 //                logger.debug(LOG.LOG_POS + " will be closed!", getServerName(), ip);
@@ -429,9 +436,11 @@ public abstract class Server {
                     keepClients.remove(ip);
                 }
                 att.getClient().close();
+                return true;
             }
         } catch (IOException e) {
             logger.error(LOG.LOG_POS + "close client" + LOG.LOG_POS, getServerName(), target, LOG.EXCEPTION_DESC, e);
         }
+        return false;
     }
 }

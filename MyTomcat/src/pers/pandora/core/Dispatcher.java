@@ -101,7 +101,7 @@ abstract class Dispatcher {
                                                 response.setEnd(Long.valueOf(tmp[1]));
                                                 len = Math.min(len - start + 1, response.getEnd() - start + 1);
                                             } else {
-                                                len = Math.min(len - start + 1, server.getResponseBuffer());
+                                                len = Math.min(len - start + 1, server.getSendBuffer());
                                             }
                                             response.setEnd(len + start - 1);
                                         }

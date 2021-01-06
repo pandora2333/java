@@ -49,6 +49,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         response.setJsonParser(server.getJsonParser());
         //pre handle HTTP resource
         initRequest(buffer);
+        boolean exceptedOne = false;
         //conten-length = all body data bytes after blank line(\n)
         //It's supported pipeLining for HTTP ,but at least,it has one complete HTTP request header,and it will be processed
         while (buffer.position() < buffer.limit()) {
@@ -69,11 +70,25 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 }
                 //after HTTP request completed, and before close the tcp connection
                 handleRequestCompleted();
+                if (server.close(att, this, null)) {
+                    return;
+                }
                 request.reset();
                 response.reset();
                 reset();
-                server.close(att, this, null);
             } else if (remain < 0) {
+                if (exceptedOne) {
+                    exceptedOne = att.isKeep();
+                    //If the HTTP header is incomplete more than twice, we have reason to believe that the receivebuffer of the current HTTP request is too small to receive the HTTP header completely
+                    att.setKeep(false);
+                    try {
+                        server.close(att, this, exceptedOne ? att.getClient().getRemoteAddress().toString() : null);
+                    } catch (IOException e) {
+                        //ignore
+                    }
+                    return;
+                }
+                exceptedOne = true;
                 reset();
             }
         }
