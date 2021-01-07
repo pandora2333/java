@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.constant.LOG;
 import pers.pandora.utils.CollectionUtil;
+import pers.pandora.utils.IdWorker;
 import pers.pandora.vo.Tuple;
 import pers.pandora.constant.HTTPStatus;
 import pers.pandora.mvc.RequestMappingHandler;
@@ -190,7 +191,7 @@ public final class Request {
         params = new HashMap<>(4);
         jspParser = new JspParser();
         uploadFiles = new HashMap<>(4);
-        cookies = new ArrayList<>(1);
+        cookies = new LinkedList<>();
         heads = new HashMap<>(16);
         this.dispatcher = dispatcher;
         listTypeParams = new HashMap<>(4);
@@ -331,7 +332,7 @@ public final class Request {
         if (jsonParser == null || !StringUtils.isNotEmpty(param)) {
             return;
         }
-        final List<Object> tmp = new ArrayList<>(1);
+        final List<Object> tmp = new LinkedList<>();
         tmp.add(param);
         params.put(HTTPStatus.JSON_TYPE, tmp);
     }
@@ -352,9 +353,11 @@ public final class Request {
     //It ensures that the sessionID is never duplicated
     String getSessionID() {
         String sessionID;
+        final IdWorker idWorker = dispatcher.server.getIdWorker();
+        final Map<String, Session> sessionMap = dispatcher.server.getSessionMap();
         do {
-            sessionID = dispatcher.server.getIdWorker().nextSessionID();
-        } while (dispatcher.server.getSessionMap().containsKey(sessionID));
+            sessionID = idWorker.nextSessionID();
+        } while (sessionMap.containsKey(sessionID));
         return sessionID;
     }
 
@@ -384,10 +387,11 @@ public final class Request {
     }
 
     boolean checkSessionInvalid(final String sessionID) {
-        if (!dispatcher.server.getSessionMap().containsKey(sessionID)) {
+        final Map<String, Session> sessionMap = dispatcher.server.getSessionMap();
+        if (!sessionMap.containsKey(sessionID)) {
             return false;
         }
-        final Session session = dispatcher.server.getSessionMap().get(sessionID);
+        final Session session = sessionMap.get(sessionID);
         return session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0;
     }
 

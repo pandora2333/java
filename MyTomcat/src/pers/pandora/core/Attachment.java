@@ -18,9 +18,17 @@ public class Attachment {
 
     private ByteBuffer writeBuffer;
 
-    private Instant createTime;
+    private volatile boolean used;
 
     private boolean isKeep;
+
+    public boolean isUsed() {
+        return used;
+    }
+
+    public void setUsed(boolean used) {
+        this.used = used;
+    }
 
     public boolean isKeep() {
         return isKeep;

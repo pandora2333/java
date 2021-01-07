@@ -7,10 +7,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClassUtils {
@@ -94,7 +91,7 @@ public final class ClassUtils {
     }
 
     public static List<Object> convertBasicObject(final List list, final Class<?> basicClass) {
-        final List<Object> tmpList = new ArrayList<>(list.size());
+        final List<Object> tmpList = new LinkedList<>();
         try {
             final Method method = basicClass.getMethod(VALUEOF, String.class);
             list.forEach(obj -> {
@@ -212,7 +209,7 @@ public final class ClassUtils {
                             fieldName = field.getName();
                             fields = (List<Field>) fieldMap.get(fieldName);
                             if (!CollectionUtil.isNotEmptry(fields)) {
-                                fields = new ArrayList<>(1);
+                                fields = new LinkedList<>();
                                 fieldMap.put(fieldName, fields);
                             }
                             fields.add(field);

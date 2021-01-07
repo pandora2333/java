@@ -101,7 +101,7 @@ public final class Configuration {
         }
         assert dbPool != null;
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
-        result = new ArrayList<>(10);
+        result = new LinkedList<>();
         for (String path : paths) {
             scanFile(checkPath(path));
         }

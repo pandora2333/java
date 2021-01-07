@@ -9,6 +9,9 @@ import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -373,6 +376,8 @@ public abstract class Server {
     public abstract void start(int port);
 
     protected void execExpelThread() {
+        final List<String> removeKeys = new LinkedList<>();
+        final List<String> resetKeys = new LinkedList<>();
         final Thread invalidResourceExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
@@ -387,15 +392,23 @@ public abstract class Server {
                 invalidSessionMap.forEach((k, v) -> {
                     if (v.getMax_age() != null) {
                         if (now.compareTo(v.getMax_age()) >= 0) {
-                            logger.info(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), k);
-                            sessionMap.remove(k);
-                            invalidSessionMap.remove(k);
+                            removeKeys.add(k);
                         }
                     } else {
-                        logger.info(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), k);
-                        invalidSessionMap.remove(k);
+                        resetKeys.add(k);
                     }
                 });
+                removeKeys.forEach(k -> {
+                    logger.debug(LOG.LOG_PRE + "release invalid SessionID:" + LOG.LOG_PRE, getServerName(), k);
+                    sessionMap.remove(k);
+                    invalidSessionMap.remove(k);
+                });
+                resetKeys.forEach(k -> {
+                    logger.debug(LOG.LOG_PRE + "add valid SessionID:" + LOG.LOG_PRE, getServerName(), k);
+                    invalidSessionMap.remove(k);
+                });
+                removeKeys.clear();
+                resetKeys.clear();
                 endTime = System.currentTimeMillis();
             }
         });
@@ -404,6 +417,7 @@ public abstract class Server {
     }
 
     public void gc() {
+        final List<Attachment> removeKeys = new LinkedList<>();
         final Thread invalidClientExecutor = new Thread(() -> {
             long startTime = 0, endTime = 0;
             while (true) {
@@ -416,11 +430,19 @@ public abstract class Server {
                 final Instant now = Instant.now();
                 startTime = now.getEpochSecond();
                 keepClients.forEach((k, v) -> {
-                    if (now.toEpochMilli() - v.getKeepTime().toEpochMilli() >= gcTime) {
-                        v.setKeep(false);
-                        close(v, this, k);
+                    if (!v.isUsed() && now.toEpochMilli() - v.getKeepTime().toEpochMilli() >= gcTime) {
+                        removeKeys.add(v);
                     }
                 });
+                removeKeys.forEach(v -> {
+                    v.setKeep(false);
+                    try {
+                        close(v, this, v.getClient().getRemoteAddress().toString());
+                    } catch (IOException e) {
+                        //ignore
+                    }
+                });
+                removeKeys.clear();
                 endTime = System.currentTimeMillis();
             }
         });

@@ -13,6 +13,7 @@ import pers.pandora.vo.Tuple;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Set;
 
@@ -78,7 +79,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             }
             final DBPool dbPool = DBPOOLS.get(dbName);
             assert dbPool != null;
-            int level = 0;
+            int level;
             //close db auto-commit
             try {
                 connection = dbPool.getConnection();
@@ -86,22 +87,21 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
                 logger.error("proxy invoke" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
                 throw e;
             }
-            if (connection != null) {
-                try {
-                    connection.getConnection().setAutoCommit(false);
-                    level = connection.getConnection().getTransactionIsolation();
-                    connection.getConnection().setTransactionIsolation(transactional.isolation());
-                    //Binding transactions through ThreadLocal
-                    if (transactional.propagation() == Propagation.REQUIRES_NEW) {
-                        connection.setTransNew((byte) 0);
-                    }
-                    TRANSACTIONS.set(connection);
-                } catch (SQLException e) {
-                    logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-                    throw e;
+            assert connection != null;
+            final Connection cur = connection.getConnection();
+            try {
+                cur.setAutoCommit(false);
+                level = cur.getTransactionIsolation();
+                cur.setTransactionIsolation(transactional.isolation());
+                //Binding transactions through ThreadLocal
+                if (transactional.propagation() == Propagation.REQUIRES_NEW) {
+                    connection.setTransNew((byte) 0);
                 }
+                TRANSACTIONS.set(connection);
+            } catch (SQLException e) {
+                logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                throw e;
             }
-
             try {
                 result = method.invoke(target, args);
                 //commit
@@ -109,8 +109,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
                 //execute rollback
                 if (checkNoRollBackException(e.getCause().toString(), transactional.no_rollback_exception())) {
                     try {
-                        assert connection != null;
-                        connection.getConnection().rollback();
+                        cur.rollback();
                         logger.debug("method:" + LOG.LOG_PRE + "trigger connection rollback" + LOG.LOG_POS, method.getName(), LOG.ERROR_DESC, e.getCause());
                     } catch (SQLException e1) {
                         logger.error("connection rollback" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
@@ -118,16 +117,14 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
                     }
                 }
             }
-            if (connection != null) {
-                try {
-                    connection.getConnection().setAutoCommit(true);
-                    connection.getConnection().setTransactionIsolation(level);
-                    TRANSACTIONS.remove();
-                    dbPool.commit(connection);
-                } catch (SQLException e) {
-                    logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-                    throw e;
-                }
+            try {
+                cur.setAutoCommit(true);
+                cur.setTransactionIsolation(level);
+                TRANSACTIONS.remove();
+                dbPool.commit(connection);
+            } catch (SQLException e) {
+                logger.error("connection set auto_commit" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
+                throw e;
             }
             return result;
         }
@@ -157,7 +154,7 @@ public class JavassistAOPProxyFactory implements AOPProxyFactory {
             try {
                 final Transactional transactional = parentMethod.getAnnotation(Transactional.class);
                 if (transactional != null) {
-                    ret = proxyTransaction(self, args, proceed, transactional);
+                    ret = proxyTransaction(self, joinPoint.getParams(), proceed, transactional);
                 } else {
                     ret = proceed.invoke(self, joinPoint.getParams());
                 }

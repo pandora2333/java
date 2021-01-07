@@ -119,7 +119,7 @@ public final class JspParser {
             sb.append(jsp.substring(jsp.indexOf(JSP.JSP_HEAD_DESC) + 6, jsp.indexOf(JSP.JSP_TAIL_DESC)).trim());
             //target class
             final ClassPool pool = ClassPool.getDefault();
-            CtClass ct = pool.makeClass(className);
+            final CtClass ct = pool.makeClass(className);
             ct.setInterfaces(new CtClass[]{pool.get(SERVLET_CLASS)});
             /**
              * The first step is to parse the code of <% Java% >
@@ -187,7 +187,7 @@ public final class JspParser {
         ct.addMethod(CtMethod.make(buildDoGet(jsp), ct));
         ct.addMethod(CtMethod.make(buildDoPost(), ct));
         ct.writeFile(CLASSDIR);
-        logger.debug("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
+//        logger.debug("Complie And Completed:" + LOG.LOG_PRE, ct.getName());
     }
 
     private String buildDoPost() {

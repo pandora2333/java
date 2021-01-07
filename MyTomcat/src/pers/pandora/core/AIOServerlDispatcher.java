@@ -13,10 +13,7 @@ import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public final class AIOServerlDispatcher extends Dispatcher implements CompletionHandler<Integer, Attachment> {
@@ -38,9 +35,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         if (result < 0) {
             //The identifier at the end of the packet indicates that the TCP request packet has been sent
             //The TCP it can not be closed immediately. The browser may be reused next time, so it needs to be kept alive if it is keepAlive pattern
+            att.setKeepTime(Instant.now());
+            att.setUsed(false);
             return;
         }
-        att.setKeepTime(Instant.now());
+        att.setUsed(true);
         final ByteBuffer buffer = att.getReadBuffer();
         //model change:write -> read
         buffer.flip();
@@ -50,7 +49,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //pre handle HTTP resource
         initRequest(buffer);
         boolean exceptedOne = false;
-        //conten-length = all body data bytes after blank line(\n)
+        //content-length = all body data bytes after blank line(\n)
         //It's supported pipeLining for HTTP ,but at least,it has one complete HTTP request header,and it will be processed
         while (buffer.position() < buffer.limit()) {
             try {
@@ -97,7 +96,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             try {
                 completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
-                //AsyncClosedException,and when channel is closed,it must cause
+                //AsyncClosedException,and when channel is closed,it must cause when tcp-gc or browser shutdown input stream
                 //ignore
             }
         });
@@ -212,6 +211,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             Tuple<String, String, byte[]> file;
             List<Tuple<String, String, byte[]>> tuple;
             boolean isFile;
+            final Map<String, List<Object>> params = request.getParams();
+            final Map<String, List<Tuple<String, String, byte[]>>> uploadFiles = request.getUploadFiles();
             for (; i < limit; ) {
                 isFile = false;
                 for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
@@ -247,7 +248,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                                 tmpData = new byte[k];
                                 System.arraycopy(data, i, tmpData, 0, k);
                                 file = new Tuple<>(fileName, fileType, tmpData);
-                                tuple = request.getUploadFiles().computeIfAbsent(varName, k1 -> new ArrayList<>(1));
+                                tuple = uploadFiles.computeIfAbsent(varName, k1 -> new LinkedList<>());
                                 tuple.add(file);
                             }
                         }
@@ -256,12 +257,12 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         i += HTTPStatus.LINE_SPLITER;
                         for (j = i; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
                         varValue = new String(data, i, j - i + subLen, charset);
-                        objects = request.getParams().get(varName);
+                        objects = params.get(varName);
                         if (objects != null) objects.add(varValue);
                         else {
-                            objects = new ArrayList<>(1);
+                            objects = new LinkedList<>();
                             objects.add(varValue);
-                            request.getParams().put(varName, objects);
+                            params.put(varName, objects);
                         }
                         i = j + 1;
                     }
@@ -276,7 +277,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
 
     @Override
     public void failed(Throwable t, Attachment att) {
-        //WritePendingException or Connection_Closed_Exception
+        //ignore
     }
 
     @Override
@@ -289,27 +290,24 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             by.put(content);
             by.flip();
             try {
-                if (att.getClient().isOpen()) {
-                    att.getClient().write(by).get();
-                } else {
-                    return;
-                }
+                att.getClient().write(by).get();
             } catch (InterruptedException | ExecutionException e) {
                 //ignore
-                //ClosedException
+                //ClosedException,it comes from browser's input stream was closed or tcp-gc collection
             }
             by.clear();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
             FileChannel fin;
             FileInputStream in = null;
-            if (staticFile != null) {
+            if (staticFile != null && att.getClient().isOpen()) {
                 final boolean part = response.getCode() == HTTPStatus.CODE_206;
+                final String file = staticFile.getAbsolutePath();
                 try {
                     if (part) {
-                        fin = ins.get(staticFile.getAbsolutePath());
+                        fin = ins.get(file);
                         if (fin == null) {
                             fin = (in = new FileInputStream(staticFile)).getChannel();
-                            ins.put(staticFile.getAbsolutePath(), fin);
+                            ins.put(file, fin);
                         }
                     } else {
                         fin = (in = new FileInputStream(staticFile)).getChannel();
@@ -318,7 +316,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     if (!part) {
                         while (fin.read(by) != -1) {
                             by.flip();
-                            if (!write(by, staticFile.getAbsolutePath())) {
+                            if (!write(by, file)) {
                                 break;
                             }
                             by.clear();
@@ -327,17 +325,17 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         by = ByteBuffer.allocateDirect((int) response.getLen());
                         fin.read(by, response.getStart());
                         by.flip();
-                        write(by, staticFile.getAbsolutePath());
+                        write(by, file);
                     }
                 } catch (IOException e) {
                     //ignore
-                    //ClosedException
+                    //ClosedException,it comes from browser's input stream was closed or tcp-gc collection
                 }
                 if (in != null && (!part || response.getEnd() == response.getTotal() - 1)) {
                     try {
                         in.close();
                         if (part) {
-                            ins.remove(staticFile.getAbsolutePath());
+                            ins.remove(file);
                         }
                     } catch (IOException e) {
                         //ignore

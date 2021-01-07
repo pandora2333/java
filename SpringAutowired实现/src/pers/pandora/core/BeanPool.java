@@ -154,7 +154,7 @@ public final class BeanPool {
             return;
         }
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
-        result = new ArrayList<>(10);
+        result = new LinkedList<>();
         //init AOP Config
         if (aopPaths != null && aopPaths.length != 0) {
             interceptors = new CopyOnWriteArraySet<>();
@@ -656,7 +656,7 @@ public final class BeanPool {
     }
 
     private void addTypeBeans(Class<?> objTarget, final Object proxyClass) {
-        final List<Class<?>> parents = new ArrayList<>(objTarget.getInterfaces().length + 1);
+        final List<Class<?>> parents = new LinkedList<>();
         Collections.addAll(parents, objTarget.getInterfaces());
         while (objTarget != Object.class) {
             parents.add(objTarget);

@@ -82,12 +82,6 @@ public final class RequestMappingHandler {
     private long timeOut = 60 * 10;
     //Timeout wait class load time unit
     private TimeUnit timeOutUnit = TimeUnit.SECONDS;
-//    static {
-// 类加载阶段启用多线程造成死锁：死循环关键，IOTask任务 scanResolers(Class.forName(xx))加载本类文件时，
-// 加载任务被分配到另一个线程，因此初始化类信息加载，两个线程互相等待对方释放类加载锁，造成死锁等待
-//    解决方式: 添加IOTask人物时候，排除掉当前类文件
-//         init();
-//    }
 
     public Set<Pair<Integer, Interceptor>> getInterceptors() {
         return interceptors;
@@ -173,14 +167,16 @@ public final class RequestMappingHandler {
                 }
             }
             if (method == null) {
+                //The corresponding path was not found
                 modelAndView.setPage(null);
-                return;//The corresponding path was not found
+                return;
             }
         }
         final Object controller = controllers.get(method);
         if (controller == null) {
+            //Failed to initialize controller class to generate instance
             modelAndView.setPage(null);
-            return;//Failed to initialize controller class to generate instance
+            return;
         }
         if (method != null && method.isAnnotationPresent(ResponseBody.class)) {
             modelAndView.setJson(true);
@@ -243,6 +239,9 @@ public final class RequestMappingHandler {
         Object target = null, tmpListObj;
         List list;
         List<Object> tmpList = null;
+        final Map<String, List<Object>> requestMap = modelAndView.getRequest().getParams();
+        final Map<String, Object> attrbuites = modelAndView.getRequest().getSession().getAttrbuites();
+        final Map<String, Map<Integer, Map<String, String>>> listTypeParams = modelAndView.getRequest().getListTypeParams();
         Map<Integer, Map<String, String>> typeParams;
         for (int i = 0; i < parameterTypes.length; i++) {
             if (parameterTypes[i] == Request.class) {
@@ -253,13 +252,13 @@ public final class RequestMappingHandler {
                 objects[i] = modelAndView;
             } else if (!ClassUtils.checkBasicClass(parameterTypes[i])) {
                 if (StringUtils.isNotEmpty(paramNames[i])) {
-                    target = modelAndView.getRequest().getParams().get(paramNames[i]);
+                    target = requestMap.get(paramNames[i]);
                     if (target == null) {
-                        target = modelAndView.getRequest().getSession().getAttrbuites().get(paramNames[i]);
+                        target = attrbuites.get(paramNames[i]);
                     }
                     if (parameterTypes[i] == List.class && genericTypes[i] != null) {
                         if (target == null) {
-                            typeParams = modelAndView.getRequest().getListTypeParams().get(paramNames[i]);
+                            typeParams = listTypeParams.get(paramNames[i]);
                             if (typeParams != null) {
                                 tmpList = new ArrayList<>(typeParams.size());
                                 for (int j = 0; j < typeParams.size(); j++) {
@@ -306,7 +305,7 @@ public final class RequestMappingHandler {
                         //requestScope
                         ClassUtils.initWithParams(target, params);
                         //sessionScope
-                        ClassUtils.initWithParams(target, modelAndView.getRequest().getSession().getAttrbuites());
+                        ClassUtils.initWithParams(target, attrbuites);
                         valueObject.put(parameterTypes[i].getSimpleName().toLowerCase(), target);
                     } catch (IllegalAccessException | InstantiationException e) {
                         //ignore
@@ -340,9 +339,9 @@ public final class RequestMappingHandler {
                 result = LOG.NO_CHAR;
             }
             if (modelAndView.isJson()) {
-                List<Object> temp = new ArrayList<>(1);
+                final List<Object> temp = new LinkedList<>();
                 temp.add(result);
-                modelAndView.getRequest().getParams().put(Response.PLAIN, temp);
+                requestMap.put(Response.PLAIN, temp);
                 modelAndView.setPage(HTTPStatus.PLAIN);
                 modelAndView.getResponse().setServlet(MVC_CLASS);
             } else {
@@ -605,7 +604,7 @@ public final class RequestMappingHandler {
             logger.warn("No path loaded");
             return;
         }
-        result = new ArrayList<>(10);
+        result = new LinkedList<>();
         interceptors = Collections.synchronizedSortedSet(new TreeSet<>(CMP));
         executor = new ThreadPoolExecutor(minCore, maxCore, keepAlive, timeUnit, new LinkedBlockingQueue<>());
         for (String path : paths) {

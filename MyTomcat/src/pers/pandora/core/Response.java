@@ -200,8 +200,9 @@ public final class Response {
         }
         if (src) {
             headInfo.append(HTTPStatus.CACAHE_CONTROL).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.CACHAE_CONTROL_DESC).append(max_age).append(HTTPStatus.CRLF);
-            String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
-            String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
+            final Map<String, String> heads = dispatcher.request.getHeads();
+            final String time = heads.get(HTTPStatus.IF_MODIFIED_SINCE);
+            final String etag = heads.get(HTTPStatus.IF_NONE_MATCH);
             headInfo.append(HTTPStatus.LASTMODIFIED).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(time).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
         }
@@ -318,23 +319,24 @@ public final class Response {
                 if (code == HTTPStatus.CODE_200) {
                     code = HTTPStatus.CODE_304;
                 }
-                final String etag = dispatcher.request.getHeads().get(HTTPStatus.IF_NONE_MATCH);
-                final String time = dispatcher.request.getHeads().get(HTTPStatus.IF_MODIFIED_SINCE);
+                final Map<String, String> heads = dispatcher.request.getHeads();
+                final String etag = heads.get(HTTPStatus.IF_NONE_MATCH);
+                final String time = heads.get(HTTPStatus.IF_MODIFIED_SINCE);
                 if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
-                    dispatcher.request.getHeads().put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
-                    dispatcher.request.getHeads().put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
+                    heads.put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
+                    heads.put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
                     if (code == HTTPStatus.CODE_304) {
                         code = HTTPStatus.CODE_200;
                     }
                 }
-                String cahce = dispatcher.request.getHeads().get(HTTPStatus.CACAHE_CONTROL);
+                String cahce = heads.get(HTTPStatus.CACAHE_CONTROL);
                 if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
                     if (code == HTTPStatus.CODE_304) {
                         code = HTTPStatus.CODE_200;
                     }
                     src = false;
                 } else {
-                    cahce = dispatcher.request.getHeads().get(HTTPStatus.PRAGMA);
+                    cahce = heads.get(HTTPStatus.PRAGMA);
                     if (StringUtils.isNotEmpty(cahce) && cahce.equals(HTTPStatus.NO_CACHE)) {
                         if (code == HTTPStatus.CODE_304) {
                             code = HTTPStatus.CODE_200;
