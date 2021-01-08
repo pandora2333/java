@@ -16,7 +16,7 @@ public class ENTITY {
 
     public static final String INTERFACE = "interface";
 
-    public static final char LEFT_CURLY_BRACKET ='{';
+    public static final char LEFT_CURLY_BRACKET = '{';
 
     public static final char RIGHT_CURLY_BRACKET = '}';
 
@@ -24,7 +24,7 @@ public class ENTITY {
 
     public static final String POINT_REGEX = "\\.";
 
-    public static final char SLASH = '/';
+    public static final String SLASH = "/";
 
     public static final char POINT = '.';
 

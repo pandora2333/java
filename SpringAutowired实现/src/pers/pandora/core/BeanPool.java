@@ -68,7 +68,7 @@ public final class BeanPool {
     //AOP Config for @Aspect
     private String[] aopPaths;
 
-    public static final char PATH_SEPARATOR = '/';
+    public static final String PATH_SEPARATOR = "/";
     //Considering that JSP files may produce a large number of class files, it is optimized to obtain them from the SRC source directory
     public static final String ROOTPATH = "src" + PATH_SEPARATOR;
 
@@ -239,7 +239,7 @@ public final class BeanPool {
         if (!path.startsWith(ROOTPATH)) {
             path = ROOTPATH + path;
         }
-        return path.replaceAll(FILE_REGEX_SPLITER, String.valueOf(PATH_SEPARATOR));
+        return path.replaceAll(FILE_REGEX_SPLITER, PATH_SEPARATOR);
     }
 
     private void injectValueForAutowired() {

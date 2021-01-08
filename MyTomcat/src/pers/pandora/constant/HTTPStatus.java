@@ -3,7 +3,7 @@ package pers.pandora.constant;
 
 public class HTTPStatus {
 
-    public static final char SLASH = '/';
+    public static final String SLASH = "/";
 
     public static final String MUPART_NAME = "name=";
 
@@ -41,6 +41,8 @@ public class HTTPStatus {
 
     public static final String HTTP1_1 = "HTTP/1.1";
 
+    public static final String HTTP1_0 = "HTTP/1.0";
+
     public static final String HTTP = "HTTP";
 
     public static final String COOKIE_MARK = "Cookie";
@@ -63,7 +65,7 @@ public class HTTPStatus {
 
     public static final char GET_PARAMTER_MARK = '?';
 
-    public static final char PARAMETER_SPLITER = '&';
+    public static final String PARAMETER_SPLITER = "&";
 
     public static final char TRANSVERSE = '_';
 

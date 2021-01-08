@@ -10,8 +10,6 @@ public class Attachment {
 
     private Server server;
 
-    private long waitReceivedTime;
-
     private volatile Instant keepTime;
 
     private ByteBuffer readBuffer;
@@ -44,14 +42,6 @@ public class Attachment {
 
     public void setWriteBuffer(ByteBuffer writeBuffer) {
         this.writeBuffer = writeBuffer;
-    }
-
-    protected long getWaitReceivedTime() {
-        return waitReceivedTime;
-    }
-
-    protected void setWaitReceivedTime(long waitReceivedTime) {
-        this.waitReceivedTime = waitReceivedTime;
     }
 
     protected Server getServer() {

@@ -125,7 +125,7 @@ public final class Configuration {
         if (!path.startsWith(ENTITY.ROOTPATH)) {
             path = ENTITY.ROOTPATH + path;
         }
-        return path.replaceAll(ENTITY.FILE_REGEX_SPLITER, String.valueOf(ENTITY.SLASH));
+        return path.replaceAll(ENTITY.FILE_REGEX_SPLITER, ENTITY.SLASH);
     }
 
     private void scanFile(final String path) {

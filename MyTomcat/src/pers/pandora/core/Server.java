@@ -8,6 +8,7 @@ import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -20,15 +21,15 @@ public abstract class Server {
 
     protected static final Logger logger = LogManager.getLogger(Server.class.getName());
 
-    private int port = 8080;
+    protected int port = 8080;
 
-    private String rootPath = "./WebRoot";
+    protected String rootPath = "./WebRoot";
     //JSP in the private directory needs to be forwarded to access
-    private String secuiryDir = "/WEB-INF/";
+    protected String secuiryDir = "/WEB-INF/";
 
-    private String resourceRootPath = "/static/";
+    protected String resourceRootPath = "/static/";
 
-    private String webConfigPath = rootPath + secuiryDir + "web.xml";
+    protected String webConfigPath = rootPath + secuiryDir + "web.xml";
 
     public String requestFileDir = resourceRootPath + "files/";
 
@@ -36,62 +37,62 @@ public abstract class Server {
 
     public static final String DEFAULTSERVER = "PandoraWeb";
     //serer name，it use logs,session file,etc
-    private String serverName = DEFAULTSERVER + System.currentTimeMillis();
+    protected String serverName = DEFAULTSERVER + System.currentTimeMillis();
     //main thread pool size
-    private int mainPoolMinSize = 10;
+    protected int mainPoolMinSize = 10;
 
-    private int mainPoolMaxSize = 20;
+    protected int mainPoolMaxSize = 20;
 
-    private long mainPoolKeepAlive = 60L;
+    protected long mainPoolKeepAlive = 60L;
 
     //slave thread pool size
-    private int slavePoolMinSize = mainPoolMinSize;
+    protected int slavePoolMinSize = mainPoolMinSize;
 
-    private int slavePoolMaxSize = mainPoolMaxSize;
+    protected int slavePoolMaxSize = mainPoolMaxSize;
 
-    private long slavePoolKeepAlive = mainPoolKeepAlive;
+    protected long slavePoolKeepAlive = mainPoolKeepAlive;
     //up file buffer size (byte)
-    private int receiveBuffer = 8192;
+    protected int receiveBuffer = 8192;
     //Allowed maximum number of pending tcp connections
-    private int backLog = 50;
+    protected int backLog = 50;
     //Waiting queue in thread pool
-    private int queueSize = 200;
+    protected int queueSize = 200;
 
-    private static final String HOST = "127.0.0.1";
+    protected static final String HOST = "127.0.0.1";
     //hot load JSP default true
-    private boolean hotLoadJSP = true;
+    protected boolean hotLoadJSP = true;
     //download resource buffer size（byte）
-    private int sendBuffer = 8192;
+    protected int sendBuffer = 8192;
     //tcp receive buffer size,default value is 65536
     protected int tcpReceivedCacheSize = 0;
     //tcp send buffer size,default value is 65536
     protected int tcpSendCacheSize = 0;
     //global session pool,base on memory
-    private Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
+    protected Map<String, Session> sessionMap = new ConcurrentHashMap<>(16);
     //set invalid time for the sessions,optimize the thread scanning
-    private Map<String, Session> invalidSessionMap = new ConcurrentHashMap<>(16);
+    protected Map<String, Session> invalidSessionMap = new ConcurrentHashMap<>(16);
     //session serializer,default it is not supported
-    private SerialSessionSupport serialSessionSupport;
+    protected SerialSessionSupport serialSessionSupport;
     //set mvc-pattern paths
-    private RequestMappingHandler requestMappingHandler;
+    protected RequestMappingHandler requestMappingHandler;
     //JSON_TYPE parser
-    private JSONParser jsonParser;
+    protected JSONParser jsonParser;
 
-    private Map<String, String> context;
+    protected Map<String, String> context;
     //browser build the tcps
-    private Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
+    protected Map<String, Attachment> keepClients = new ConcurrentHashMap<>(16);
     //Allowed maximum number of transmitted information bits,default value is 10m
-    private long maxUpBits = 10485760;
+    protected long maxUpBits = 10485760;
 
     protected ExecutorService mainPool;
 
     protected ExecutorService slavePool;
 
-    private long expelTime;
+    protected long expelTime;
 
-    private long gcTime;
+    protected long gcTime;
     //SessionId Generator
-    private IdWorker idWorker;
+    protected IdWorker idWorker;
 
     public int getTcpSendCacheSize() {
         return tcpSendCacheSize;
@@ -232,7 +233,7 @@ public abstract class Server {
     }
 
     //You should call this method after you start the server
-    protected static void mainLoop() {
+    public static void mainLoop() {
         try {
             Thread.currentThread().join();
         } catch (InterruptedException e) {
@@ -375,7 +376,7 @@ public abstract class Server {
 
     public abstract void start(int port);
 
-    protected void execExpelThread() {
+    public void execExpelThread() {
         final List<String> removeKeys = new LinkedList<>();
         final List<String> resetKeys = new LinkedList<>();
         final Thread invalidResourceExecutor = new Thread(() -> {

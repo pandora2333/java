@@ -35,7 +35,7 @@ abstract class Dispatcher {
 
     void addUrlMapping(final String url, final String mvcClass) {
         if (StringUtils.isNotEmpty(url)) {
-            server.getContext().put(url, mvcClass);
+            server.context.put(url, mvcClass);
         }
     }
 
@@ -58,7 +58,7 @@ abstract class Dispatcher {
                     mv.setRequest(request);
                     mv.setResponse(response);
                     handlePre();
-                    server.getRequestMappingHandler().parseUrl(mv);
+                    server.requestMappingHandler.parseUrl(mv);
                     handleAfter();
                     if (StringUtils.isNotEmpty(mv.getPage())) {
                         if (mv.isJson() || request.isRedirect()) {
@@ -75,7 +75,7 @@ abstract class Dispatcher {
                     final String ss[] = servlet.split(HTTPStatus.HEAD_INFO_SPLITER);
                     java.io.File file = null;
                     if (ss.length == 2) {
-                        file = new java.io.File(server.getRootPath() + ss[1]);
+                        file = new java.io.File(server.rootPath + ss[1]);
                     }
                     if (file != null) {
                         if (!file.exists()) {
@@ -101,7 +101,7 @@ abstract class Dispatcher {
                                                 response.setEnd(Long.valueOf(tmp[1]));
                                                 len = Math.min(len - start + 1, response.getEnd() - start + 1);
                                             } else {
-                                                len = Math.min(len - start + 1, server.getSendBuffer());
+                                                len = Math.min(len - start + 1, server.sendBuffer);
                                             }
                                             response.setEnd(len + start - 1);
                                         }
@@ -122,7 +122,7 @@ abstract class Dispatcher {
     }
 
     void handleRequestCompleted() {
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : server.requestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().completeRequest(request, response)) {
                 logger.warn(LOG.LOG_PRE + "exec completeRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
                 return;
@@ -131,7 +131,7 @@ abstract class Dispatcher {
     }
 
     void initRequest(final ByteBuffer data) {
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : server.requestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().initRequest(request, data)) {
                 logger.warn(LOG.LOG_PRE + "exec initRequest" + LOG.LOG_PRE, interceptor.getV().getClass().getName(), LOG.ERROR_DESC);
                 return;
@@ -140,7 +140,7 @@ abstract class Dispatcher {
     }
 
     void handleAfter() {
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : server.requestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().afterMethod(request, response)) {
                 return;
             }
@@ -152,7 +152,7 @@ abstract class Dispatcher {
         if (request.isJson()) {
             request.handleJSON();
         }
-        for (Pair<Integer, Interceptor> interceptor : server.getRequestMappingHandler().getInterceptors()) {
+        for (Pair<Integer, Interceptor> interceptor : server.requestMappingHandler.getInterceptors()) {
             if (!interceptor.getV().preMethod(request, response)) {
                 return;
             }

@@ -57,13 +57,13 @@ public final class AIOServer extends Server {
         //the waitReceivedTime = browser sent request(include file data) need time + network fluctuation maybe need time
         try {
             //main thread pool should do to connect tcp socket from client
-            mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
-                    getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new ArrayBlockingQueue<>(getQueueSize()));
+            mainPool = new ThreadPoolExecutor(mainPoolMinSize, mainPoolMaxSize,
+                    mainPoolKeepAlive, TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(queueSize));
             //slave thread pool should do to I/O disk receiving client's datas
-            slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
-                    getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new ArrayBlockingQueue<>(getQueueSize()));
+            slavePool = new ThreadPoolExecutor(slavePoolMinSize, slavePoolMaxSize,
+                    slavePoolKeepAlive, TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(queueSize));
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             asyncServerSocketChannel = serverSocketChannel;
@@ -73,20 +73,20 @@ public final class AIOServer extends Server {
             if (tcpReceivedCacheSize > 0) {
                 serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, tcpReceivedCacheSize);
             }
-            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
+            serverSocketChannel.bind(new InetSocketAddress(HOST, port), backLog);
             final Attachment att = new Attachment();
             final long start = System.currentTimeMillis();
             //init web.xml
-            setContext(new XMLFactory().parse(getWebConfigPath()));
+            setContext(new XMLFactory().parse(webConfigPath));
             att.setServer(this);
             //load SESSION.ser if set before the start method is running
             if (getSerialSessionSupport() != null) {
-                setSessionMap(getSerialSessionSupport().deserialSession(getServerName()));
+                sessionMap = serialSessionSupport.deserialSession(serverName);
             }
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
                             LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getReceiveBuffer(), getExpelTime(), getGcTime());
+                    serverName, port, receiveBuffer, expelTime, gcTime);
             serverSocketChannel.accept(att, new CompletionHandler<AsynchronousSocketChannel, Attachment>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, Attachment att) {
@@ -106,10 +106,9 @@ public final class AIOServer extends Server {
                     }
                     newAtt.setClient(client);
                     newAtt.setServer(att.getServer());
-                    newAtt.setReadBuffer(ByteBuffer.allocate(getReceiveBuffer()));
+                    newAtt.setReadBuffer(ByteBuffer.allocate(receiveBuffer));
                     newAtt.setKeepTime(Instant.now());
-                    newAtt.setWaitReceivedTime(att.getWaitReceivedTime());
-                    newAtt.setWriteBuffer(ByteBuffer.allocateDirect(getSendBuffer()));
+                    newAtt.setWriteBuffer(ByteBuffer.allocate(sendBuffer));
                     final AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                     slavePool.submit(() -> {
                         try {
@@ -128,7 +127,7 @@ public final class AIOServer extends Server {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
                         close(att, this, null);
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
+                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, serverName, t);
                     }
                     asyncServerSocketChannel.accept(att, this);
                 }
@@ -141,7 +140,7 @@ public final class AIOServer extends Server {
             }
             logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", getServerName(), (System.currentTimeMillis() - start));
         } catch (IOException | ClassNotFoundException e) {
-            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, serverName, LOG.EXCEPTION_DESC, e);
         }
     }
 

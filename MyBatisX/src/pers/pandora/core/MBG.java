@@ -331,17 +331,16 @@ public class MBG {
      * @throws IOException
      */
     private void createFile(final String poPackage, final String javaFile, final String content, final boolean isJava) throws IOException {
-        final String slash = String.valueOf(ENTITY.SLASH);
-        File temp = new File(ENTITY.ROOTPATH + poPackage.replaceAll(ENTITY.POINT_REGEX, slash));
+        File temp = new File(ENTITY.ROOTPATH + poPackage.replaceAll(ENTITY.POINT_REGEX, ENTITY.SLASH));
         if (!temp.exists()) {
             temp.mkdirs();
         }
         //base on mapped memeroy  file ,use NIO pattern
         String file;
         if (isJava) {
-            file = temp.toPath() + slash + javaFile + ENTITY.POINT + ENTITY.JAVA_MARK;
+            file = temp.toPath() + ENTITY.SLASH + javaFile + ENTITY.POINT + ENTITY.JAVA_MARK;
         } else {
-            file = temp.toPath() + slash + javaFile + ENTITY.POINT + XML.XML_MARK;
+            file = temp.toPath() + ENTITY.SLASH + javaFile + ENTITY.POINT + XML.XML_MARK;
         }
         final FileChannel outChannel = FileChannel.open(Paths.get(file),
                 StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);

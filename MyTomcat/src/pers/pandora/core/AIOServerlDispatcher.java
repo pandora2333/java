@@ -9,6 +9,7 @@ import pers.pandora.utils.StringUtils;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -44,8 +45,8 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         //model change:write -> read
         buffer.flip();
         //set JSON_TYPE parser
-        request.setJsonParser(server.getJsonParser());
-        response.setJsonParser(server.getJsonParser());
+        request.setJsonParser(server.jsonParser);
+        response.setJsonParser(server.jsonParser);
         //pre handle HTTP resource
         initRequest(buffer);
         boolean exceptedOne = false;
@@ -55,7 +56,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             try {
                 initRequest(buffer.array(), buffer.position(), buffer.limit());
             } catch (Exception e) {
-                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+                logger.error(LOG.LOG_PRE + "handleUploadFile" + LOG.LOG_POS, server.serverName, LOG.EXCEPTION_DESC, e);
                 if (e instanceof OverMaxUpBitsException) {
                     reset();
                     return;
@@ -65,7 +66,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 try {
                     dispatcher(msg);
                 } catch (RuntimeException e) {
-                    logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.getServerName(), LOG.EXCEPTION_DESC, e);
+                    logger.error(LOG.LOG_PRE + "dispatcher" + LOG.LOG_POS, server.serverName, LOG.EXCEPTION_DESC, e);
                 }
                 //after HTTP request completed, and before close the tcp connection
                 handleRequestCompleted();
@@ -96,7 +97,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             try {
                 completed(att.getClient().read(buffer).get(), att);
             } catch (InterruptedException | ExecutionException e) {
-                //AsyncClosedException,and when channel is closed,it must cause when tcp-gc or browser shutdown input stream
+                //AsynchronousCloseException,and when channel is closed,it must cause when tcp-gc or browser shutdown input stream
                 //ignore
             }
         });
@@ -116,6 +117,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             j = 0;
             for (; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
             msg = new String(data, i, j - i + subLen, charset);
+            //currently only handle HTTP/1.0 and HTTP/1.1,and it's not supported for SSL/TLS
+            if (!msg.endsWith(HTTPStatus.HTTP1_1) && !msg.endsWith(HTTPStatus.HTTP1_0)) {
+                remain = -1;
+                return;
+            }
             String key, value, fileSeparator = null;
             for (j++, i = j; j < limit; i = ++j) {
                 key = null;
@@ -293,12 +299,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 att.getClient().write(by).get();
             } catch (InterruptedException | ExecutionException e) {
                 //ignore
-                //ClosedException,it comes from browser's input stream was closed or tcp-gc collection
+                //ClosedChannelException,it comes from browser's input stream was closed or tcp-gc collection
             }
             by.clear();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
-            FileChannel fin;
-            FileInputStream in = null;
+            FileChannel fin = null;
             if (staticFile != null && att.getClient().isOpen()) {
                 final boolean part = response.getCode() == HTTPStatus.CODE_206;
                 final String file = staticFile.getAbsolutePath();
@@ -306,11 +311,11 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     if (part) {
                         fin = ins.get(file);
                         if (fin == null) {
-                            fin = (in = new FileInputStream(staticFile)).getChannel();
+                            fin = new FileInputStream(staticFile).getChannel();
                             ins.put(file, fin);
                         }
                     } else {
-                        fin = (in = new FileInputStream(staticFile)).getChannel();
+                        fin = new FileInputStream(staticFile).getChannel();
                     }
                     assert fin != null;
                     if (!part) {
@@ -322,18 +327,25 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                             by.clear();
                         }
                     } else {
-                        by = ByteBuffer.allocateDirect((int) response.getLen());
+                        if (response.getLen() != by.capacity()) {
+                            if (by.capacity() < response.getLen()) {
+                                att.setWriteBuffer(ByteBuffer.allocateDirect((int) response.getLen()));
+                                by = att.getWriteBuffer();
+                            } else {
+                                by = ByteBuffer.allocateDirect((int) response.getLen());
+                            }
+                        }
                         fin.read(by, response.getStart());
                         by.flip();
                         write(by, file);
                     }
                 } catch (IOException e) {
                     //ignore
-                    //ClosedException,it comes from browser's input stream was closed or tcp-gc collection
+                    //ClosedChannelException,it comes from browser's input stream was closed or tcp-gc collection
                 }
-                if (in != null && (!part || response.getEnd() == response.getTotal() - 1)) {
+                if (fin != null && (!part || response.getEnd() == response.getTotal() - 1)) {
                     try {
-                        in.close();
+                        fin.close();
                         if (part) {
                             ins.remove(file);
                         }
@@ -353,7 +365,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 return false;
             }
         } catch (InterruptedException | ExecutionException e) {
-            //The write operation is abnormal. The last IO operation of the underlying tcpsocket is still occurring, and the Current IO operation is interrupted
+            //The write operation is abnormal. The last IO operation of the underlying tcp-socket is still occurring, and the Current IO operation is interrupted
             logger.error(LOG.LOG_PRE + "I/O write" + LOG.LOG_POS,
                     server.getServerName(), file,
                     LOG.EXCEPTION_DESC, e);

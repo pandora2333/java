@@ -324,7 +324,7 @@ public final class Response {
                 final String time = heads.get(HTTPStatus.IF_MODIFIED_SINCE);
                 if (!StringUtils.isNotEmpty(time) || !StringUtils.isNotEmpty(etag) || JSP.NULL.equals(etag)) {
                     heads.put(HTTPStatus.IF_MODIFIED_SINCE, new Date().toString());
-                    heads.put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.getIdWorker().nextId()));
+                    heads.put(HTTPStatus.IF_NONE_MATCH, String.valueOf(dispatcher.server.idWorker.nextId()));
                     if (code == HTTPStatus.CODE_304) {
                         code = HTTPStatus.CODE_200;
                     }
@@ -348,7 +348,7 @@ public final class Response {
                 handle_404_NOT_FOUND();
             }
         } catch (Exception e) {
-            logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, dispatcher.server.getServerName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "handle" + LOG.LOG_POS, dispatcher.server.serverName, LOG.EXCEPTION_DESC, e);
             handle_500_SERVER_ERROR(e.getMessage());
         }
         if (interceptor) {
@@ -385,7 +385,7 @@ public final class Response {
     void reset() {
         servlet = null;
         content = null;
-        jsonParser = dispatcher.server.getJsonParser();
+        jsonParser = dispatcher.server.jsonParser;
         len = 0;
         code = 0;
         max_age = 0;

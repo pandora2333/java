@@ -44,19 +44,21 @@ import java.util.concurrent.*;
  */
 public class WebSocketServer extends Server {
 
-    private final Map<String, WebSocketSession> clients = new ConcurrentHashMap<>(16);
+    protected final Map<String, WebSocketSession> clients = new ConcurrentHashMap<>(16);
     //Downtime when the maximum number of clients is maintained
-    private long busyTime = 1000;
+    protected long busyTime = 1000;
     //retry count
-    private int retryCnt;
+    protected int retryCnt;
     //retry interval time
-    private long retryTime;
+    protected long retryTime;
 
-    private boolean openMsg;
+    protected boolean openMsg;
 
-    private boolean closeMsg;
+    protected boolean closeMsg;
 
-    private int maxKeepClients;
+    protected int maxKeepClients;
+
+    protected String charset = HTTPStatus.DEFAULTENCODING;
 
     public int getMaxKeepClients() {
         return maxKeepClients;
@@ -64,6 +66,11 @@ public class WebSocketServer extends Server {
 
     public void setMaxKeepClients(int maxKeepClients) {
         this.maxKeepClients = maxKeepClients;
+    }
+
+    //Expose the interfaces, send tasks to the server regularly and push content to all clients
+    public Map<String, WebSocketSession> getClients() {
+        return clients;
     }
 
     public boolean isCloseMsg() {
@@ -98,13 +105,6 @@ public class WebSocketServer extends Server {
         this.retryTime = retryTime;
     }
 
-    //Expose the interfaces, send tasks to the server regularly and push content to all clients
-    public final Map<String, WebSocketSession> getClients() {
-        return clients;
-    }
-
-    private String charset = HTTPStatus.DEFAULTENCODING;
-
     public long getBusyTime() {
         return busyTime;
     }
@@ -127,29 +127,29 @@ public class WebSocketServer extends Server {
     }
 
     @Override
-    public void start(int port) {
+    public final void start(int port) {
         setPort(port);
         try {
             final long start = System.currentTimeMillis();
             //main thread pool should do to connect tcp socket from client
-            mainPool = new ThreadPoolExecutor(getMainPoolMinSize(), getMainPoolMaxSize(),
-                    getMainPoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new ArrayBlockingQueue<>(getQueueSize()));
+            mainPool = new ThreadPoolExecutor(mainPoolMinSize, mainPoolMaxSize,
+                    mainPoolKeepAlive, TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(queueSize));
             //slave thread pool should do to I/O disk receiving client's datas
-            slavePool = new ThreadPoolExecutor(getSlavePoolMinSize(), getSlavePoolMaxSize(),
-                    getSlavePoolKeepAlive(), TimeUnit.MILLISECONDS,
-                    new ArrayBlockingQueue<>(getQueueSize()));
+            slavePool = new ThreadPoolExecutor(slavePoolMinSize, slavePoolMaxSize,
+                    slavePoolKeepAlive, TimeUnit.MILLISECONDS,
+                    new ArrayBlockingQueue<>(queueSize));
             final AsynchronousChannelGroup asyncChannelGroup = AsynchronousChannelGroup.withThreadPool(mainPool);
             final AsynchronousServerSocketChannel serverSocketChannel = AsynchronousServerSocketChannel.open(asyncChannelGroup);
             serverSocketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             if (tcpReceivedCacheSize > 0) {
                 serverSocketChannel.setOption(StandardSocketOptions.SO_RCVBUF, tcpReceivedCacheSize);
             }
-            serverSocketChannel.bind(new InetSocketAddress(getHOST(), port), getBackLog());
+            serverSocketChannel.bind(new InetSocketAddress(HOST, port), backLog);
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "maxKeepClients:" + LOG.LOG_PRE + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +
                             LOG.VERTICAL + "gcTime:" + LOG.LOG_PRE + "ms]",
-                    getServerName(), port, getReceiveBuffer(), getMaxKeepClients(), getExpelTime(), getGcTime());
+                    serverName, port, receiveBuffer, maxKeepClients, expelTime, gcTime);
             serverSocketChannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, WebSocketSession>() {
                 @Override
                 public void completed(AsynchronousSocketChannel client, WebSocketSession att) {
@@ -162,11 +162,11 @@ public class WebSocketServer extends Server {
                                 //Because it is set before writing data, no exception will occur
                             }
                         }
-                        final ByteBuffer byteBuffer = ByteBuffer.allocate(getReceiveBuffer());
+                        final ByteBuffer byteBuffer = ByteBuffer.allocate(receiveBuffer);
                         final WebSocketSession webSocketSession = new WebSocketSession();
                         webSocketSession.setClient(client);
                         webSocketSession.setReadBuffer(byteBuffer);
-                        webSocketSession.setWriteBuffer(ByteBuffer.allocateDirect(getSendBuffer()));
+                        webSocketSession.setWriteBuffer(ByteBuffer.allocate(sendBuffer));
                         client.read(byteBuffer, webSocketSession, new CompletionHandler<Integer, WebSocketSession>() {
                             //write message to client
                             private void writeMsg(byte[] msg, WebSocketSession attachment) {
@@ -174,7 +174,7 @@ public class WebSocketServer extends Server {
                                     return;
                                 }
                                 if (attachment.getWriteBuffer().capacity() < msg.length) {
-                                    attachment.setWriteBuffer(ByteBuffer.allocate(msg.length));
+                                    attachment.setWriteBuffer(ByteBuffer.allocateDirect(msg.length));
                                 }
                                 //Avoid for concurrently reading in the same buffer by read-thread
                                 final ByteBuffer by = attachment.getWriteBuffer();
@@ -182,7 +182,7 @@ public class WebSocketServer extends Server {
                                     by.put(msg);
                                     //In multi-thread,it is easy to cause WritePending Exception,because of last one write operation was still running
                                     by.flip();
-                                    attachment.getClient().write(by).get();
+                                    client.write(by).get();
                                 } catch (Exception e) {
                                     //ignore,retry again
                                     boolean ok = false;
@@ -194,7 +194,7 @@ public class WebSocketServer extends Server {
                                             //ignore
                                         }
                                         try {
-                                            attachment.getClient().write(by);
+                                            client.write(by);
                                         } catch (Exception exx) {
                                             //ignore
                                             ok = false;
@@ -210,7 +210,7 @@ public class WebSocketServer extends Server {
                                 buffer.flip();
                                 String ip = null;
                                 try {
-                                    ip = attachment.getClient().getRemoteAddress().toString();
+                                    ip = client.getRemoteAddress().toString();
                                 } catch (IOException e) {
                                     //ignore
                                 }
@@ -225,7 +225,7 @@ public class WebSocketServer extends Server {
                                         return;
                                     }
                                     webSocketSession.setReqUrl(msg.substring(msg.indexOf(HTTPStatus.SLASH), msg.indexOf(HTTPStatus.HTTP)).trim());
-                                    if (getRequestMappingHandler().getWsMappings().containsKey(webSocketSession.getReqUrl())) {
+                                    if (requestMappingHandler.getWsMappings().containsKey(webSocketSession.getReqUrl())) {
                                         //sync write
                                         writeMsg(buildWS(msg), attachment);
                                         //callBack method for exec some init-methods
@@ -248,14 +248,15 @@ public class WebSocketServer extends Server {
                                     boolean finish;
                                     byte[] mask;
                                     long len;
+                                    final List<WSData> datas = attachment.getDatas();
                                     while (i < buffer.limit()) {
                                         data = null;
                                         if (attachment.getDatas().size() > 0) {
-                                            data = attachment.getDatas().get(attachment.getDatas().size() - 1);
+                                            data = datas.get(attachment.getDatas().size() - 1);
                                         }
                                         if (data != null) {
                                             i = readWSData(i, buffer, data);
-                                            attachment.getDatas().add(data);
+                                            datas.add(data);
                                             data = null;
                                         }
                                         if (i + 1 < buffer.limit()) {
@@ -315,7 +316,7 @@ public class WebSocketServer extends Server {
                                         }
                                     }
                                     //sync request and exec callback method
-                                    getRequestMappingHandler().execWSCallBack(webSocketSession, clients);
+                                    requestMappingHandler.execWSCallBack(webSocketSession, clients);
                                     //sync write-task,because of a request for information, only one transmission
                                     if (webSocketSession.getOutPutContent() != null) {
                                         writeMsg(buildSendMsg(webSocketSession), attachment);
@@ -404,14 +405,14 @@ public class WebSocketServer extends Server {
                         logger.error(LOG.LOG_PRE + "accept" + LOG.LOG_POS, att.getClient().getRemoteAddress(), LOG.EXCEPTION_DESC, t);
                         close(att, this, null);
                     } catch (IOException e) {
-                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, getServerName(), t);
+                        logger.error(LOG.LOG_PRE + "Not Get Client Remote IP:" + LOG.LOG_PRE, serverName, t);
                     }
                     serverSocketChannel.accept(att, this);
                 }
             });
-            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", getServerName(), (System.currentTimeMillis() - start));
+            logger.info(LOG.LOG_PRE + "Start! in time:" + LOG.LOG_PRE + "ms", serverName, (System.currentTimeMillis() - start));
         } catch (IOException e) {
-            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, getServerName(), LOG.EXCEPTION_DESC, e);
+            logger.error(LOG.LOG_PRE + "start" + LOG.LOG_POS, serverName, LOG.EXCEPTION_DESC, e);
         }
     }
 

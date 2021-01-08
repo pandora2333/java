@@ -28,8 +28,6 @@ public final class JspParser {
     //Hash encoding needed to generate jsp servlet class name
     private String hashEncode;
 
-    private static final char PATH_SPLITER = '/';
-
     private static final String JSP_PACKAGE = "jsp";
 
     private static final char PACKAGE_SPLITER = '.';
@@ -61,7 +59,7 @@ public final class JspParser {
             return null;
         }
         String query = null;
-        if(!hotLoadJSP){
+        if (!hotLoadJSP) {
             //DCL
             if (jspCahce == null) {
                 synchronized (logger) {
@@ -76,14 +74,14 @@ public final class JspParser {
         StringBuilder buf;
         String jsp = null;
         try {
-            if(!StringUtils.isNotEmpty(query)){
+            if (!StringUtils.isNotEmpty(query)) {
                 inFifle = new FileReader(file);
                 final BufferedReader inputStream = new BufferedReader(inFifle);
                 buf = new StringBuilder();
                 String temp;
                 while ((temp = inputStream.readLine()) != null) {
                     temp = temp.trim();
-                    if(!temp.startsWith(JSP.DOUBLE_SLASH)){
+                    if (!temp.startsWith(JSP.DOUBLE_SLASH)) {
                         buf.append(temp).append(JSP.CRLF);
                     }
                 }
@@ -92,7 +90,7 @@ public final class JspParser {
                 jsp = buf.toString();
                 //Using file hash, duplicate classes are not generated again
                 query = CodeUtils.hashEncode(jsp, SALT, null, null);
-                if(!hotLoadJSP){
+                if (!hotLoadJSP) {
                     //DCL
                     if (!jspCahce.containsKey(jspFile)) {
                         synchronized (logger) {
@@ -103,11 +101,11 @@ public final class JspParser {
                     }
                 }
             }
-            final int urlIndex = jspFile.lastIndexOf(PATH_SPLITER);
+            final int urlIndex = jspFile.lastIndexOf(HTTPStatus.SLASH);
             final String servletName = jspFile.substring(urlIndex + 1, jspFile.lastIndexOf(PACKAGE_SPLITER)).trim();
             String className = Character.toUpperCase(servletName.charAt(0)) + servletName.substring(1);
             className = className + LOG.CLASS_NAME_SPLITER + query;
-            file = new File(CLASSDIR + JSP_PACKAGE + PATH_SPLITER + className + PACKAGE_SPLITER + CLASS_POS_MARK);
+            file = new File(CLASSDIR + JSP_PACKAGE + HTTPStatus.SLASH + className + PACKAGE_SPLITER + CLASS_POS_MARK);
             className = JSP_PACKAGE + PACKAGE_SPLITER + className;
             if (file.exists()) {
                 return new Tuple<>(className, null, null);

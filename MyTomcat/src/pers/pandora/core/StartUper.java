@@ -219,7 +219,7 @@ public final class StartUper {
             value = properties.getProperty(SERIALSESSIONSUPPORT, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    server.setSerialSessionSupport(ClassUtils.getClass(value, beanPool, true));
+                    server.serialSessionSupport = ClassUtils.getClass(value, beanPool, true);
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer serialSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
@@ -228,8 +228,7 @@ public final class StartUper {
             value = properties.getProperty(SESSIONIDGENERATOR, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    IdWorker idWoker = ClassUtils.getClass(value, beanPool, true);
-                    server.setIdWorker(idWoker);
+                    server.idWorker = ClassUtils.getClass(value, beanPool, true);
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                     logger.error("buildServer sessionIDGenerator:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
@@ -237,11 +236,11 @@ public final class StartUper {
             }
             value = properties.getProperty(HOTLOADJSP, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setHotLoadJSP(Boolean.valueOf(value));
+                server.hotLoadJSP = Boolean.valueOf(value);
             }
             value = properties.getProperty(ROOTPATH, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setRootPath(value);
+                server.rootPath = value;
             }
             value = properties.getProperty(RESOURCEROOTPATH, null);
             if (StringUtils.isNotEmpty(value)) {
@@ -249,23 +248,23 @@ public final class StartUper {
             }
             value = properties.getProperty(WEBCONFIGPATH, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setWebConfigPath(value);
+                server.webConfigPath = value;
             }
             value = properties.getProperty(REQUESTFILEDIR, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setRequestFileDir(value);
+                server.requestFileDir = value;
             }
             value = properties.getProperty(EXPELTIME, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setExpelTime(Long.valueOf(value));
+                server.expelTime = Long.valueOf(value);
             }
             value = properties.getProperty(GCTIME, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setGcTime(Long.valueOf(value));
+                server.gcTime = Long.valueOf(value);
             }
             value = properties.getProperty(SECURITYDIR, null);
             if (StringUtils.isNotEmpty(value)) {
-                server.setSecuiryDir(value);
+                server.secuiryDir = value;
             }
         } else {
             value = properties.getProperty(WSCLASS, null);
@@ -281,99 +280,99 @@ public final class StartUper {
             }
             value = properties.getProperty(BUSYTIME, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setBusyTime(Long.valueOf(value));
+                ((WebSocketServer) server).busyTime = Long.valueOf(value);
             }
             value = properties.getProperty(CHARSET, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setCharset(value);
+                ((WebSocketServer) server).charset = value;
             }
             value = properties.getProperty(RETRYTIME, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setRetryTime(Long.valueOf(value));
+                ((WebSocketServer) server).retryTime = Long.valueOf(value);
             }
             value = properties.getProperty(RETRYCNT, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setRetryCnt(Integer.valueOf(value));
+                ((WebSocketServer) server).retryCnt = Integer.valueOf(value);
             }
             value = properties.getProperty(OPENMSG, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setOpenMsg(Boolean.valueOf(value));
+                ((WebSocketServer) server).openMsg = Boolean.valueOf(value);
             }
             value = properties.getProperty(CLOSEMSG, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setCloseMsg(Boolean.valueOf(value));
+                ((WebSocketServer) server).closeMsg = Boolean.valueOf(value);
             }
             value = properties.getProperty(MAXKEEPCLIENTS, null);
             if (StringUtils.isNotEmpty(value)) {
-                ((WebSocketServer) server).setMaxKeepClients(Integer.valueOf(value));
+                ((WebSocketServer) server).maxKeepClients = Integer.valueOf(value);
             }
         }
         //common configs
-        server.setRequestMappingHandler(requestMappingHandler);
-        server.setServerName(serverName);
+        server.requestMappingHandler = requestMappingHandler;
+        server.serverName = serverName;
         if (server.getSerialSessionSupport() != null) {
-            SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
+            SerialSessionSupport.getSessionPool().put(server.serverName, server.sessionMap);
         }
         value = properties.getProperty(PORT, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setPort(Integer.valueOf(value));
+            server.port = Integer.valueOf(value);
         }
         value = properties.getProperty(MAINPOOLMINSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMainPoolMinSize(Integer.valueOf(value));
+            server.mainPoolMinSize = Integer.valueOf(value);
         }
         value = properties.getProperty(MAINPOOLMAXSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMainPoolMaxSize(Integer.valueOf(value));
+            server.mainPoolMaxSize = Integer.valueOf(value);
         }
         value = properties.getProperty(MAINPOOLKEEPALIVE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMainPoolKeepAlive(Long.valueOf(value));
+            server.mainPoolKeepAlive = Long.valueOf(value);
         }
         value = properties.getProperty(SLAVEPOOLMINSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setSlavePoolMinSize(Integer.valueOf(value));
+            server.slavePoolMinSize = Integer.valueOf(value);
         }
         value = properties.getProperty(SLAVEPOOLMAXSIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setSlavePoolMaxSize(Integer.valueOf(value));
+            server.slavePoolMaxSize = Integer.valueOf(value);
         }
         value = properties.getProperty(SLAVEPOOLKEEPALIVE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setSlavePoolKeepAlive(Long.valueOf(value));
+            server.slavePoolKeepAlive = Long.valueOf(value);
         }
         value = properties.getProperty(RECEIVEBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setReceiveBuffer(Integer.valueOf(value));
+            server.receiveBuffer = Integer.valueOf(value);
         }
         value = properties.getProperty(SENDBUFFER, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setSendBuffer(Integer.valueOf(value));
+            server.sendBuffer = Integer.valueOf(value);
         }
         value = properties.getProperty(TCPRECEIVEDCACHESIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setTcpReceivedCacheSize(Integer.valueOf(value));
+            server.tcpReceivedCacheSize = Integer.valueOf(value);
         }
         value = properties.getProperty(TCPSENDCACHESIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setTcpSendCacheSize(Integer.valueOf(value));
+            server.tcpSendCacheSize = Integer.valueOf(value);
         }
         value = properties.getProperty(ACCEPTCOUNT, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setBackLog(Integer.valueOf(value));
+            server.backLog = Integer.valueOf(value);
         }
         value = properties.getProperty(QUEUESIZE, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setQueueSize(Integer.valueOf(value));
+            server.queueSize = Integer.valueOf(value);
         }
         value = properties.getProperty(MAXUPBITS, null);
         if (StringUtils.isNotEmpty(value)) {
-            server.setMaxUpBits(Long.valueOf(value));
+            server.maxUpBits = Long.valueOf(value);
         }
         value = properties.getProperty(JSONCLASS, null);
         if (StringUtils.isNotEmpty(value)) {
             try {
-                server.setJsonParser(ClassUtils.getClass(value, beanPool, true));
+                server.jsonParser = ClassUtils.getClass(value, beanPool, true);
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 logger.error("buildServer jsonClass:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                 return null;

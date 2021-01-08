@@ -2,11 +2,15 @@ package pers.pandora.core;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.time.Instant;
 import java.util.*;
 
@@ -20,6 +24,8 @@ import pers.pandora.constant.HTTPStatus;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.JspParser;
 import pers.pandora.utils.StringUtils;
+import sun.misc.Cleaner;
+import sun.nio.ch.FileChannelImpl;
 
 public final class Request {
 
@@ -230,7 +236,7 @@ public final class Request {
     }
 
 
-    public void saveFileData(String filePath, final Tuple<String,String,byte[]> file) {
+    public void saveFileData(String filePath, final Tuple<String, String, byte[]> file) {
         if (file == null) {
             return;
         }
@@ -242,12 +248,24 @@ public final class Request {
             path.mkdirs();
         }
         try {
-            //base on mapped memeroy  file
+            //base on mapped memory  file
             final FileChannel outChannel = FileChannel.open(Paths.get(filePath + file.getK1()),
                     StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
             final MappedByteBuffer outMappedBuf = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, file.getV().length);
             outMappedBuf.put(file.getV());
+            outMappedBuf.force();
             outChannel.close();
+            //release mapper file object
+            AccessController.doPrivileged((PrivilegedAction) () -> {
+                try {
+                    final Method m = FileChannelImpl.class.getDeclaredMethod("unmap", MappedByteBuffer.class);
+                    m.setAccessible(true);
+                    m.invoke(FileChannelImpl.class, outMappedBuf);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            });
         } catch (IOException e) {
             logger.error(LOG.LOG_PRE + "I/O write " + LOG.LOG_PRE + LOG.LOG_POS,
                     dispatcher.server.getServerName(), file.getK1(), LOG.EXCEPTION_DESC, e);
@@ -345,7 +363,7 @@ public final class Request {
         cookie.setNeedUpdate(true);
         session.setSessionCookie(cookie);
         //sessionID will be add cookie, and it's path set the root path
-        cookie.setPath(String.valueOf(HTTPStatus.SLASH));
+        cookie.setPath(HTTPStatus.SLASH);
         dispatcher.server.addSessionMap(session.getSessionID(), session);
         cookies.add(cookie);
     }
@@ -471,23 +489,23 @@ public final class Request {
             if (isGet) {
                 int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
                 if (index > 0) {
-                    temp = reqToken.substring(index + 1).split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+                    temp = reqToken.substring(index + 1).split(HTTPStatus.PARAMETER_SPLITER);
                 } else {
                     index = reqToken.length();
                 }
                 String path = reqToken.substring(0, index);
                 if (StringUtils.isNotEmpty(path) && path.length() > 1) {
-                    pathParams = Arrays.asList(path.split(String.valueOf(HTTPStatus.SLASH), -1));
+                    pathParams = Arrays.asList(path.split(HTTPStatus.SLASH, -1));
                 }
             } else {
-                temp = reqToken.split(String.valueOf(HTTPStatus.PARAMETER_SPLITER));
+                temp = reqToken.split(HTTPStatus.PARAMETER_SPLITER);
             }
             handleData(temp);
         }
     }
 
     private boolean isMVC(final String reqUrl) {
-        for (Map.Entry<String, String> entry : dispatcher.server.getContext().entrySet()) {
+        for (Map.Entry<String, String> entry : dispatcher.server.context.entrySet()) {
             if (entry.getValue().equals(RequestMappingHandler.MVC_CLASS) && reqUrl.matches(entry.getKey())) {// /.*.do //.do
                 return true;
             }
@@ -497,10 +515,10 @@ public final class Request {
 
     private void buildSession(String sessionID, final Cookie cookie) {
         if (checkSessionInvalid(sessionID)) {
-            session = dispatcher.server.getSessionMap().get(sessionID);
+            session = dispatcher.server.sessionMap.get(sessionID);
         } else {
             //It's lazy to delete the session just now
-            dispatcher.server.getSessionMap().remove(sessionID);
+            dispatcher.server.sessionMap.remove(sessionID);
             sessionID = getSessionID();
             session = new Session(sessionID);
             dispatcher.server.addSessionMap(sessionID, session);
@@ -508,7 +526,7 @@ public final class Request {
                 cookie.setNeedUpdate(true);
                 cookie.setValue(sessionID);
                 //sessionID will be add cookie, and it's path set the root path
-                cookie.setPath(String.valueOf(HTTPStatus.SLASH));
+                cookie.setPath(HTTPStatus.SLASH);
                 session.setSessionCookie(cookie);
             }
         }
@@ -560,7 +578,7 @@ public final class Request {
         json = false;
         redirect = false;
         allowAccess = false;
-        jsonParser = dispatcher.server.getJsonParser();
+        jsonParser = dispatcher.server.jsonParser;
         if (CollectionUtil.isNotEmptry(params)) {
             params.clear();
         }
