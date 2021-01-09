@@ -295,16 +295,12 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             ByteBuffer by = att.getWriteBuffer();
             by.put(content);
             by.flip();
-            try {
-                att.getClient().write(by).get();
-            } catch (InterruptedException | ExecutionException e) {
-                //ignore
-                //ClosedChannelException,it comes from browser's input stream was closed or tcp-gc collection
+            if (!write(by)) {
+                return;
             }
-            by.clear();
             //Files.readAllBytes(Patrhs.get("./WebRoot" + staticFile)
             FileChannel fin = null;
-            if (staticFile != null && att.getClient().isOpen()) {
+            if (staticFile != null) {
                 final boolean part = response.getCode() == HTTPStatus.CODE_206;
                 final String file = staticFile.getAbsolutePath();
                 try {
@@ -321,10 +317,9 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     if (!part) {
                         while (fin.read(by) != -1) {
                             by.flip();
-                            if (!write(by, file)) {
+                            if (!write(by)) {
                                 break;
                             }
-                            by.clear();
                         }
                     } else {
                         if (response.getLen() != by.capacity()) {
@@ -337,7 +332,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         }
                         fin.read(by, response.getStart());
                         by.flip();
-                        write(by, file);
+                        write(by);
                     }
                 } catch (IOException e) {
                     //ignore
@@ -357,7 +352,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
         }
     }
 
-    public boolean write(final ByteBuffer by, final String file) {
+    public boolean write(final ByteBuffer by) {
         try {
             if (att.getClient().isOpen()) {
                 att.getClient().write(by).get();
@@ -366,10 +361,10 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             }
         } catch (InterruptedException | ExecutionException e) {
             //The write operation is abnormal. The last IO operation of the underlying tcp-socket is still occurring, and the Current IO operation is interrupted
-            logger.error(LOG.LOG_PRE + "I/O write" + LOG.LOG_POS,
-                    server.getServerName(), file,
-                    LOG.EXCEPTION_DESC, e);
+            //ignore
             return false;
+        } finally {
+            by.clear();
         }
         return true;
     }
