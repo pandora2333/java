@@ -108,7 +108,7 @@ public final class AIOServer extends Server {
                     newAtt.setServer(att.getServer());
                     newAtt.setReadBuffer(ByteBuffer.allocate(receiveBuffer));
                     newAtt.setKeepTime(Instant.now());
-                    newAtt.setWriteBuffer(ByteBuffer.allocate(sendBuffer));
+                    newAtt.setWriteBuffer(ByteBuffer.allocateDirect(sendBuffer));
                     final AIOServerlDispatcher dispatcher = new AIOServerlDispatcher();
                     slavePool.submit(() -> {
                         try {
