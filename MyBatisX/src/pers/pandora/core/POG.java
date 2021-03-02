@@ -9,9 +9,9 @@ import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.LOG;
 import pers.pandora.constant.SQL;
 import pers.pandora.constant.XML;
-import pers.pandora.mbg.ColumnInfo;
-import pers.pandora.mbg.JavaGetSetter;
-import pers.pandora.mbg.TableInfo;
+import pers.pandora.pog.ColumnInfo;
+import pers.pandora.pog.JavaGetSetter;
+import pers.pandora.pog.TableInfo;
 import pers.pandora.utils.Dom4JUtil;
 import pers.pandora.utils.StringUtil;
 import pers.pandora.utils.TypeConverter;
@@ -28,18 +28,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MBG reverse engineering
+ * POG reverse engineering
  * Note: It should run in a single thread environment
  */
-public class MBG {
+public class POG {
 
-    private static Logger logger = LogManager.getLogger(MBG.class.getName());
+    private static Logger logger = LogManager.getLogger(POG.class.getName());
 
     private DBPool dbPool;
     //The table name is key and the table information object is value
     private final Map<String, TableInfo> tables = new HashMap<>(16);
 
-    public MBG(final String dbProperties) {
+    public POG(final String dbProperties) {
         if (StringUtil.isNotEmpty(dbProperties)) {
             dbPool = new DBPool(dbProperties);
         }
@@ -351,8 +351,8 @@ public class MBG {
     }
 
     /**
-     * Responsible for parsing MBG initialization configuration file: mbg.xml The total task of parsing, loading, and entity mapper XML generation
-     * Note:the file should be 'mbg.xml'
+     * Responsible for parsing POG initialization configuration file: pog.xml The total task of parsing, loading, and entity mapper XML generation
+     * Note:the file should be 'pog.xml'
      *
      * @param xmlPath
      */

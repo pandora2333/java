@@ -1,4 +1,4 @@
-package pers.pandora.mbg;
+package pers.pandora.pog;
 
 /**
  * Field in record table

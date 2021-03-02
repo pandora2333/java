@@ -17,7 +17,7 @@ public final class Dom4JUtil {
         final SAXReader reader = new SAXReader();
         // ignore dtd
         reader.setEntityResolver(new IgnoreDTDEntityResolver());
-//        reader.setFeature("mbg.dtd", false);
+//        reader.setFeature("pog.dtd", false);
         return reader.read(new File(path));
     }
 

@@ -3,10 +3,6 @@ package pers.pandora.test;
 import org.dom4j.DocumentException;
 
 import pers.pandora.core.*;
-import pers.pandora.test.dd.TestTransaction;
-import pers.pandora.test.dd.mapper.TestMapper;
-
-import java.sql.Timestamp;
 
 /**
  * Federated primary keys are not supported
@@ -15,17 +11,17 @@ import java.sql.Timestamp;
 public class testMyBatisX {
 
     public static void test02(){
-        MBG mbg = new MBG("src/dd_test.properties");
-        mbg.setDataBaseCoder(new PBEDataBaseCoder(null,null));
+        POG pog = new POG("src/dd_test.properties");
+        pog.setDataBaseCoder(new PBEDataBaseCoder(null,null));
         try {
-            mbg.parseXML("src/mbg.xml");
+            pog.parseXML("src/pog.xml");
         } catch (DocumentException e) {
             e.printStackTrace();
         }
-        mbg = new MBG("src/dbpool.properties");
-        mbg.setDataBaseCoder(new PBEDataBaseCoder(null,null));
+        pog = new POG("src/dbpool.properties");
+        pog.setDataBaseCoder(new PBEDataBaseCoder(null,null));
         try {
-            mbg.parseXML("src/mbg.xml");
+            pog.parseXML("src/pog.xml");
         } catch (DocumentException e) {
             e.printStackTrace();
         }

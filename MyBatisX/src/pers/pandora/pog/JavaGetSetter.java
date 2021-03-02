@@ -1,4 +1,4 @@
-package pers.pandora.mbg;
+package pers.pandora.pog;
 
 import pers.pandora.constant.ENTITY;
 import pers.pandora.constant.XML;

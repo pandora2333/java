@@ -1,4 +1,4 @@
-package pers.pandora.mbg;
+package pers.pandora.pog;
 
 import java.util.ArrayList;
 import java.util.List;
