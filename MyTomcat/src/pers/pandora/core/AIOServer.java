@@ -33,8 +33,8 @@ import java.util.concurrent.*;
  * server.setIdWorker(new IdWorker());
  * setJsonParser(new SimpleJSONParser());
  * server.setRequestMappingHandler(requestMappingHandler);
- * server.setSerialSessionSupport(new SerialSessionSupportSimpler());
- * SerialSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
+ * server.setSerializeSessionSupport(new SerializeSessionSupportSimpler());
+ * SerializeSessionSupport.getSessionPool().put(server.getServerName(), server.getSessionMap());
  * //start server
  * server.start();
  * //main Thread stop
@@ -80,8 +80,10 @@ public final class AIOServer extends Server {
             setContext(new XMLFactory().parse(webConfigPath));
             att.setServer(this);
             //load SESSION.ser if set before the start method is running
-            if (getSerialSessionSupport() != null) {
-                sessionMap = serialSessionSupport.deserialSession(serverName);
+            if (getSerializeSessionSupport() != null) {
+                sessionMap = serializeSessionSupport.deserializeSession(serverName);
+                sessionMap.forEach(this::addInvalidSessionMap);
+                SerializeSessionSupport.getSessionPool().put(serverName,sessionMap);
             }
             logger.info(LOG.LOG_PRE + "start core params[port:" + LOG.LOG_PRE + LOG.VERTICAL + "receiveBuffer:" + LOG.LOG_PRE +
                             "byte" + LOG.VERTICAL + "expeltTime:" + LOG.LOG_PRE + "ms" +

@@ -79,7 +79,7 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             } else if (remain < 0) {
                 if (exceptedOne) {
                     exceptedOne = att.isKeep();
-                    //If the HTTP header is incomplete more than twice, we have reason to believe that the receivebuffer of the current HTTP request is too small to receive the HTTP header completely
+                    //If the HTTP header is incomplete more than twice, we have reason to believe that the receiveBuffer of the current HTTP request is too small to receive the HTTP header completely
                     att.setKeep(false);
                     try {
                         server.close(att, this, exceptedOne ? att.getClient().getRemoteAddress().toString() : null);
@@ -158,15 +158,9 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     }
                 }
             }
-            //cookie and session init
-            boolean initSession = false;
+            //cookie init
             String cookie = request.getHeads().get(HTTPStatus.COOKIE_MARK);
-            if (StringUtils.isNotEmpty(cookie)) {
-                request.initCookies(cookie);
-                initSession = true;
-            }
-            if (!initSession && (request.getSession() == null || !request.checkSessionInvalid(request.getSession().getSessionID())))
-                request.initSession();
+            if (StringUtils.isNotEmpty(cookie)) request.initCookies(cookie);
             //handle files and variable
             final String contentType = request.getHeads().get(HTTPStatus.CONTENTTYPE);
             if (StringUtils.isNotEmpty(contentType)) {

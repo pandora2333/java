@@ -8,12 +8,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * step1:set serverName
- * step2:server#setSerialSessionSupport add setSerialSessionSupport instance
- * step3:SerialSessionSupport#getSessionPool addKey serverName and addValue Server#getSessionMap reference
+ * step2:server#setSerializeSessionSupport add setSerializeSessionSupport instance
+ * step3:SerializeSessionSupport#getSessionPool addKey serverName and addValue Server#getSessionMap reference
  * step4:build a client or test class to use the next methods
  * notes:you can define your own parser by the interface
  */
-public abstract class SerialSessionSupport {
+public abstract class SerializeSessionSupport {
     //the same JVM strategy
     private static final Map<String, Map<String,Session>> SESSIONPOOL = new ConcurrentHashMap<>(4);
     //exclude Session
@@ -31,9 +31,9 @@ public abstract class SerialSessionSupport {
         return EXCLUDESESSIONS;
     }
 
-    public abstract void serialSession(String serverName) throws IOException;
+    public abstract void serializeSession(String serverName) throws IOException;
 
-    public abstract Map<String,Session> deserialSession(String serverName) throws IOException, ClassNotFoundException;
+    public abstract Map<String,Session> deserializeSession(String serverName) throws IOException, ClassNotFoundException;
     //mark the no-deleted session
     public abstract void excliudeSession(String serverName,String sessionID);
     //delete the marks for exclude sessions

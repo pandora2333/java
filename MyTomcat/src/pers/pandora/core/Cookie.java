@@ -1,6 +1,10 @@
 package pers.pandora.core;
 
-public final class Cookie {
+import java.io.Serializable;
+
+public final class Cookie implements Serializable {
+
+    private static final long serialVersionUID = 3604972003323896788L;
 
     private String key;
 

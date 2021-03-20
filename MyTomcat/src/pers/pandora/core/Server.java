@@ -8,9 +8,7 @@ import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +70,7 @@ public abstract class Server {
     //set invalid time for the sessions,optimize the thread scanning
     protected Map<String, Session> invalidSessionMap = new ConcurrentHashMap<>(16);
     //session serializer,default it is not supported
-    protected SerialSessionSupport serialSessionSupport;
+    protected SerializeSessionSupport serializeSessionSupport;
     //set mvc-pattern paths
     protected RequestMappingHandler requestMappingHandler;
     //JSON_TYPE parser
@@ -266,19 +264,19 @@ public abstract class Server {
     }
 
     public boolean addInvalidSessionMap(final String key, final Session session) {
-        if (StringUtils.isNotEmpty(key)) {
+        if (StringUtils.isNotEmpty(key) && session != null && session.getMax_age() != null) {
             invalidSessionMap.put(key, session);
             return true;
         }
         return false;
     }
 
-    public SerialSessionSupport getSerialSessionSupport() {
-        return serialSessionSupport;
+    public SerializeSessionSupport getSerializeSessionSupport() {
+        return serializeSessionSupport;
     }
 
-    public void setSerialSessionSupport(SerialSessionSupport serialSessionSupport) {
-        this.serialSessionSupport = serialSessionSupport;
+    public void setSerializeSessionSupport(SerializeSessionSupport serializeSessionSupport) {
+        this.serializeSessionSupport = serializeSessionSupport;
     }
 
     public int getPort() {
@@ -342,6 +340,16 @@ public abstract class Server {
             return true;
         }
         return false;
+    }
+
+
+    public boolean removeSessionMap(final String sessionID) {
+        if (StringUtils.isNotEmpty(sessionID)) {
+            sessionMap.remove(sessionID);
+            invalidSessionMap.remove(sessionID);
+            return true;
+        }
+        return  false;
     }
 
     public Map<String, String> getContext() {

@@ -24,7 +24,6 @@ import pers.pandora.constant.HTTPStatus;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.JspParser;
 import pers.pandora.utils.StringUtils;
-import sun.misc.Cleaner;
 import sun.nio.ch.FileChannelImpl;
 
 public final class Request {
@@ -355,9 +354,12 @@ public final class Request {
         params.put(HTTPStatus.JSON_TYPE, tmp);
     }
 
-    void initSession() {
+    void initSession(Cookie cookie) {
         session = new Session(getSessionID());
-        final Cookie cookie = new Cookie();
+        if(cookie == null){
+            cookie = new Cookie();
+            cookies.add(cookie);
+        }
         cookie.setKey(HTTPStatus.SESSION_MARK);
         cookie.setValue(session.getSessionID());
         cookie.setNeedUpdate(true);
@@ -365,7 +367,6 @@ public final class Request {
         //sessionID will be add cookie, and it's path set the root path
         cookie.setPath(HTTPStatus.SLASH);
         dispatcher.server.addSessionMap(session.getSessionID(), session);
-        cookies.add(cookie);
     }
 
     //It ensures that the sessionID is never duplicated
@@ -380,7 +381,6 @@ public final class Request {
     }
 
     void initCookies(final String cookie_str) {
-        boolean initSession = false;
         if (StringUtils.isNotEmpty(cookie_str)) {
             Cookie cookie;
             String[] ss;
@@ -390,8 +390,7 @@ public final class Request {
                     cookie = new Cookie();
                     cookie.setKey(ss[0]);
                     if (ss[0].equals(HTTPStatus.SESSION_MARK)) {
-                        buildSession(ss[1], cookie);
-                        initSession = true;
+                        rebuildSession(ss[1], cookie);
                     } else {
                         cookie.setValue(ss[1]);
                     }
@@ -399,18 +398,17 @@ public final class Request {
                 }
             }
         }
-        if (!initSession) {
-            initSession();
-        }
     }
 
     boolean checkSessionInvalid(final String sessionID) {
         final Map<String, Session> sessionMap = dispatcher.server.getSessionMap();
-        if (!sessionMap.containsKey(sessionID)) {
-            return false;
-        }
         final Session session = sessionMap.get(sessionID);
-        return session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0;
+        if(session != null && (session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0)){
+            return  false;
+        }
+        //Remove it immediately!
+        dispatcher.server.removeSessionMap(sessionID);
+        return  true;
     }
 
     private String judgeStatic(final String reqToken) {
@@ -513,22 +511,11 @@ public final class Request {
         return false;
     }
 
-    private void buildSession(String sessionID, final Cookie cookie) {
-        if (checkSessionInvalid(sessionID)) {
+    private void rebuildSession(String sessionID, final Cookie cookie) {
+        if (!checkSessionInvalid(sessionID)) {
             session = dispatcher.server.sessionMap.get(sessionID);
         } else {
-            //It's lazy to delete the session just now
-            dispatcher.server.sessionMap.remove(sessionID);
-            sessionID = getSessionID();
-            session = new Session(sessionID);
-            dispatcher.server.addSessionMap(sessionID, session);
-            if (cookie != null) {
-                cookie.setNeedUpdate(true);
-                cookie.setValue(sessionID);
-                //sessionID will be add cookie, and it's path set the root path
-                cookie.setPath(HTTPStatus.SLASH);
-                session.setSessionCookie(cookie);
-            }
+            initSession(cookie);
         }
     }
 
@@ -548,7 +535,7 @@ public final class Request {
                     kv[1] += HTTPStatus.PARAM_KV_SPLITER + kv[i];
                 }
                 if (kv[0].equals(HTTPStatus.SESSION_MARK) && session == null) {
-                    buildSession(kv[1], null);
+                    rebuildSession(kv[1], null);
                 } else if (kv[0].matches(HTTPStatus.LISTTYPE)) {
                     i = kv[0].indexOf(HTTPStatus.LISTTYPESEPARATOR_PRE);
                     key = kv[0].substring(0, i);

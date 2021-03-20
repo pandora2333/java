@@ -48,6 +48,10 @@ abstract class Dispatcher {
     final void dispatcher(final String reqMsg) {
         if (StringUtils.isNotEmpty(reqMsg)) {
             final String servlet = request.handle(reqMsg);
+            //session rebuild
+            if (request.getSession() == null || request.checkSessionInvalid(request.getSession().getSessionID())) {
+                request.initSession(null);
+            }
             if (servlet != null) {
                 if (servlet.equals(HTTPStatus.OPTIONS)) {
                     pushClient(response.handle(HTTPStatus.OPTIONS, true), null);

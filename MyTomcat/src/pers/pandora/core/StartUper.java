@@ -6,7 +6,6 @@ import pers.pandora.constant.JSP;
 import pers.pandora.constant.LOG;
 import pers.pandora.mvc.RequestMappingHandler;
 import pers.pandora.utils.ClassUtils;
-import pers.pandora.utils.IdWorker;
 import pers.pandora.utils.StringUtils;
 
 import java.io.*;
@@ -219,9 +218,9 @@ public final class StartUper {
             value = properties.getProperty(SERIALSESSIONSUPPORT, null);
             if (StringUtils.isNotEmpty(value)) {
                 try {
-                    server.serialSessionSupport = ClassUtils.getClass(value, beanPool, true);
+                    server.serializeSessionSupport = ClassUtils.getClass(value, beanPool, true);
                 } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-                    logger.error("buildServer serialSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
+                    logger.error("buildServer serializeSessionSupport:" + LOG.LOG_PRE + LOG.LOG_POS, value, LOG.EXCEPTION_DESC, e);
                     return null;
                 }
             }
@@ -310,9 +309,6 @@ public final class StartUper {
         //common configs
         server.requestMappingHandler = requestMappingHandler;
         server.serverName = serverName;
-        if (server.getSerialSessionSupport() != null) {
-            SerialSessionSupport.getSessionPool().put(server.serverName, server.sessionMap);
-        }
         value = properties.getProperty(PORT, null);
         if (StringUtils.isNotEmpty(value)) {
             server.port = Integer.valueOf(value);

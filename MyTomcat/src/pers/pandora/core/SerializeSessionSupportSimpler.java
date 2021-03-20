@@ -15,12 +15,12 @@ import java.util.Set;
 /**
  * by java in a simple  way
  */
-public class SerialSessionSupportSimpler extends SerialSessionSupport {
+public class SerializeSessionSupportSimpler extends SerializeSessionSupport {
 
-    private static final Logger logger = LogManager.getLogger(SerialSessionSupportSimpler.class.getName());
+    private static final Logger logger = LogManager.getLogger(SerializeSessionSupportSimpler.class.getName());
 
     @Override
-    public void serialSession(final String serverName) throws IOException {
+    public void serializeSession(final String serverName) throws IOException {
         final Map<String, Session> tmp = new HashMap<>(16);
         final Set<String> excludesessions = getExcludeSessions();
         Optional.ofNullable(getSessionPool().get(serverName)).get().forEach((k, v) -> {
@@ -37,7 +37,7 @@ public class SerialSessionSupportSimpler extends SerialSessionSupport {
     }
 
     @Override
-    public Map<String, Session> deserialSession(final String serverName) throws IOException, ClassNotFoundException {
+    public Map<String, Session> deserializeSession(final String serverName) throws IOException, ClassNotFoundException {
         final File file = new File(SESSIONPATH + serverName + HTTPStatus.TRANSVERSE + SESSIONFILE_POS);
         if (!file.exists()) {
             logger.warn(LOG.LOG_PRE + "Not Found Session File", serverName);

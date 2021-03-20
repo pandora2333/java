@@ -1,18 +1,10 @@
 package pers.pandora.test;
 
-import pers.pandora.core.SerialSessionSupport;
-import pers.pandora.core.SerialSessionSupportSimpler;
-import pers.pandora.core.Session;
+import pers.pandora.core.SerializeSessionSupportSimpler;
 import pers.pandora.core.StartUper;
-import pers.pandora.utils.IdWorker;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 @Deprecated
 public class Client {
 
@@ -37,10 +29,10 @@ public class Client {
 //                session.getAttrbuites().put(idWorker.nextShort(), idWorker.nextId());
 //                map.put(session.getSessionID(), session);
 //            }
-//            SerialSessionSupport.getSessionPool().put("pandora_test_1", map);
-            SerialSessionSupportSimpler simpler = new SerialSessionSupportSimpler();
-//            simpler.serialSession("pandora_test_1");
-            simpler.deserialSession("pandora_test_1").forEach((k, v) -> {
+//            SerializeSessionSupport.getSessionPool().put("pandora_test_1", map);
+            SerializeSessionSupportSimpler simpler = new SerializeSessionSupportSimpler();
+//            simpler.serializeSession("pandora_test_1");
+            simpler.deserializeSession("pandora_test_1").forEach((k, v) -> {
                 System.out.println(k + ":{" + v.getSessionID() + "," + v.getAttrbuites() + "}");
             });
         } catch (IOException | ClassNotFoundException e) {
