@@ -329,7 +329,7 @@ public final class BeanPool {
      */
     private <T> void scanBean(final Class<T> tClass, final Field field, final Class template, final Properties prop) {
         if (template == null) {
-            if (tClass.isAnnotationPresent(Configruation.class)) {
+            if (tClass.isAnnotationPresent(Configuration.class)) {
                 Object config, obj;
                 try {
                     config = tClass.newInstance();

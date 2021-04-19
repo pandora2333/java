@@ -215,7 +215,7 @@ public class WebSocketServer extends Server {
                                     //ignore
                                 }
                                 if (ip != null && !clients.containsKey(ip)) {
-                                    String msg = null;
+                                    String msg;
                                     try {
                                         msg = URLDecoder.decode(new String(buffer.array(), 0, buffer.limit()), charset);
                                     } catch (UnsupportedEncodingException e) {

@@ -1,13 +1,13 @@
 package pers.pandora.config;
 
 import pers.pandora.annotation.Bean;
-import pers.pandora.annotation.Configruation;
+import pers.pandora.annotation.Configuration;
 import pers.pandora.bean.B;
 import pers.pandora.bean.TaskBean;
 import pers.pandora.bean.User;
 
 @Deprecated
-@Configruation
+@Configuration
 public class SpringConfig {
 
     @Bean
