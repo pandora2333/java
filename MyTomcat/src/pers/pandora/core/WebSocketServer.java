@@ -253,7 +253,11 @@ public class WebSocketServer extends Server {
                                         data = null;
                                         if (attachment.getDatas().size() > 0) {
                                             data = datas.get(attachment.getDatas().size() - 1);
-                                            datas.clear();
+                                            if(data.getRemain() > 0) {
+                                                datas.remove(attachment.getDatas().size() - 1);
+                                            }else{
+                                                data = null;
+                                            }
                                         }
                                         if (data != null) {
                                             i = readWSData(i, buffer, data);
