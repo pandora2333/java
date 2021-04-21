@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: pers.pandora.test.testMyBatisX
+Main-Class: pers.pandora.orm.test.testMyBatisX
 

@@ -2,11 +2,11 @@
 <web>
     <servlet>
         <servlet-name>login</servlet-name>
-        <servlet-class>pers.pandora.servlet.LoginServlet</servlet-class>
+        <servlet-class>pers.pandora.web.servlet.LoginServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>test</servlet-name>
-        <servlet-class>pers.pandora.servlet.TestServlet</servlet-class>
+        <servlet-class>pers.pandora.web.servlet.TestServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>test</servlet-name>
@@ -26,7 +26,7 @@
     </servlet-mapping>
     <servlet>
         <servlet-name>mvc</servlet-name>
-        <servlet-class>pers.pandora.mvc.RequestMappingHandler</servlet-class>
+        <servlet-class>pers.pandora.web.mvc.RequestMappingHandler</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>mvc</servlet-name>
