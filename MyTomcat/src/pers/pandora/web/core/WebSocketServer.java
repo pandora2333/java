@@ -231,11 +231,7 @@ public class WebSocketServer extends Server {
                                         }
                                         if (data != null) {
                                             i = readWSData(i, buffer, data);
-                                            if (data.getRemain() == 0) {
-                                                webSocketSession.setData(data);
-                                                handleWSData(webSocketSession);
-                                                webSocketSession.setData(null);
-                                            }
+                                            handleWSData(data,webSocketSession);
                                         }
                                         if (i + 1 < buffer.limit()) {
                                             first = buffer.get(i);
@@ -295,11 +291,7 @@ public class WebSocketServer extends Server {
                                             data.setRemain(len);
                                             data.setLength(len);
                                             i = readWSData(i, buffer, data);
-                                            if (data.getRemain() == 0) {
-                                                webSocketSession.setData(data);
-                                                handleWSData(webSocketSession);
-                                                webSocketSession.setData(null);
-                                            }
+                                            handleWSData(data,webSocketSession);
                                         }
                                     }
                                     webSocketSession.setKeepTime(Instant.now());
@@ -314,6 +306,17 @@ public class WebSocketServer extends Server {
                                         //ignore
                                     }
                                 });
+                            }
+                            private void handleWSData(WSData data,WebSocketSession webSocketSession) {
+                                if (data.getType() == WS.TYPE_BINARY || data.getRemain() == 0) {
+                                    webSocketSession.setData(data);
+                                    handleWSData(webSocketSession);
+                                    if(data.getRemain() == 0){
+                                        webSocketSession.setData(null);
+                                    }else{
+                                        data.setData(null);
+                                    }
+                                }
                             }
 
                             private void handleWSData(WebSocketSession webSocketSession) {
