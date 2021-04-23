@@ -3,6 +3,9 @@ package pers.pandora.web.test;
 import pers.pandora.web.core.SerializeSessionSupportSimpler;
 import pers.pandora.web.core.StartUper;
 
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Deprecated

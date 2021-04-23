@@ -6,6 +6,7 @@ import pers.pandora.common.utils.StringUtils;
 import pers.pandora.common.vo.Tuple;
 import pers.pandora.web.exception.OverMaxUpBitsException;
 import pers.pandora.web.constant.HTTPStatus;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -232,14 +233,12 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                         //get file type
                         fileType = new String(data, i, j - i + subLen, charset).trim();
                         i = j + 1 + HTTPStatus.LINE_SPLITER;
-                        for (j = i; j < limit; j++) {
-                            if (data[j] != HTTPStatus.CRLF) continue;
-                            if (new String(data, j, sideWindow.length(), charset).equals(sideWindow)) {
+                        for (j = i; j < limit; j++)
+                            if (checkFileDesc(data, j, sideWindow)) {
                                 j += subLen;
                                 isFile = true;
                                 break;
                             }
-                        }
                         if (isFile) {
                             k = j - i;
                             if (StringUtils.isNotEmpty(fileName)) {
@@ -267,11 +266,18 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                     }
                 }
                 i += len + HTTPStatus.LINE_SPLITER;
-                if (i == limit || (i + 2 + HTTPStatus.LINE_SPLITER == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2))))
+                if (i == limit || (i + 2 + HTTPStatus.LINE_SPLITER == limit && HTTPStatus.MUPART_DESC_LINE.equals(new String(data, i, 2, charset))))
                     break;
             }
         } else if (!StringUtils.isNotEmpty(request.getFileDesc()))
             msg += HTTPStatus.CRLF + new String(data, i, limit - i);
+    }
+
+    private boolean checkFileDesc(byte[] data, int j, String sideWindow) {
+        int i, k;
+        for (i = j, k = 0; i < data.length && k < sideWindow.length(); i++, k++)
+            if (data[i] != sideWindow.charAt(k)) break;
+        return k == sideWindow.length();
     }
 
     @Override
