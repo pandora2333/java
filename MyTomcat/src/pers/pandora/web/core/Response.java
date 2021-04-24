@@ -286,7 +286,7 @@ public final class Response {
             } else if (StringUtils.isNotEmpty(servlet)) {
                 final Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
-                final Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), true);
+                final Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), false);
                 //requestScope
                 ClassUtils.initWithParams(handler, params);
                 //sessionScope
