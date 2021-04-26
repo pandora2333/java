@@ -325,7 +325,7 @@ public final class Request {
         } else if (msg.startsWith(HTTPStatus.DELETE)) {
             method = HTTPStatus.DELETE;
         } else {
-            logger.warn(HTTPStatus.CODE_400_BAD_REQUEST + LOG.LOG_PRE, msg);
+            logger.warn(HTTPStatus.CODE_400_DESC + LOG.LOG_PRE, msg);
             dispatcher.response.setCode(HTTPStatus.CODE_400);
             return null;
         }
@@ -356,7 +356,7 @@ public final class Request {
 
     void initSession(Cookie cookie) {
         session = new Session(getSessionID());
-        if(cookie == null){
+        if (cookie == null) {
             cookie = new Cookie();
             cookies.add(cookie);
         }
@@ -403,12 +403,12 @@ public final class Request {
     boolean checkSessionInvalid(final String sessionID) {
         final Map<String, Session> sessionMap = dispatcher.server.getSessionMap();
         final Session session = sessionMap.get(sessionID);
-        if(session != null && (session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0)){
-            return  false;
+        if (session != null && (session.getMax_age() == null || Instant.now().compareTo(session.getMax_age()) < 0)) {
+            return false;
         }
         //Remove it immediately!
         dispatcher.server.removeSessionMap(sessionID);
-        return  true;
+        return true;
     }
 
     private String judgeStatic(final String reqToken) {

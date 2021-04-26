@@ -213,6 +213,8 @@ public class HTTPStatus {
 
     public static final int CODE_404 = 404;
 
+    public static final int CODE_416 = 416;
+
     public static final int CODE_405 = 405;
 
     public static final int CODE_500 = 500;
@@ -229,6 +231,8 @@ public class HTTPStatus {
 
     public static final String CODE_404_DESC = "Not Found";
 
+    public static final String CODE_416_DESC = "Requested Range Not Satisfiable";
+
     public static final String CODE_500_DESC = "Server Error";
 
     public static final String CODE_302_DESC = "Found";
@@ -243,9 +247,9 @@ public class HTTPStatus {
 
     public static final String CODE_404_OUTPUT_DESC = "Page Not Found";
 
-    public static final String CODE_405_METHOD_NOT_SUPPORTED = "method not allowed";
+    public static final String CODE_405_DESC = "method not allowed";
 
-    public static final String CODE_400_BAD_REQUEST = "Bad Request";
+    public static final String CODE_400_DESC = "Bad Request";
 
     public static final String PATH_PARAM_SEPARATOE = "\\{.*?\\}";
 

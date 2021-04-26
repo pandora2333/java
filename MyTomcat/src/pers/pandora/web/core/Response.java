@@ -172,13 +172,16 @@ public final class Response {
                 headInfo.append(HTTPStatus.CODE_304_DESC);
                 break;
             case HTTPStatus.CODE_400:
-                headInfo.append(HTTPStatus.CODE_400_BAD_REQUEST);
+                headInfo.append(HTTPStatus.CODE_400_DESC);
                 break;
             case HTTPStatus.CODE_404:
                 headInfo.append(HTTPStatus.CODE_404_DESC);
                 break;
             case HTTPStatus.CODE_405:
-                headInfo.append(HTTPStatus.CODE_405_METHOD_NOT_SUPPORTED);
+                headInfo.append(HTTPStatus.CODE_405_DESC);
+                break;
+            case HTTPStatus.CODE_416:
+                headInfo.append(HTTPStatus.CODE_416_DESC);
                 break;
             case HTTPStatus.CODE_500:
                 headInfo.append(HTTPStatus.CODE_500_DESC);
@@ -207,7 +210,7 @@ public final class Response {
             headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
         }
 
-        if (code == HTTPStatus.CODE_206) {
+        if (code == HTTPStatus.CODE_206 || code == HTTPStatus.CODE_416) {
             headInfo.append(HTTPStatus.ACCEPTRANGES).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.CONTENTRANGE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.BLANK).append(start)
                     .append(HTTPStatus.MUPART_DESC_LINE.charAt(0)).append(String.valueOf(end)).append(HTTPStatus.SLASH).append(String.valueOf(total)).append(HTTPStatus.CRLF);
@@ -314,7 +317,7 @@ public final class Response {
                 } else {
                     handle_404_NOT_FOUND();
                 }
-            } else if (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206) {
+            } else if (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206 || code == HTTPStatus.CODE_416) {
                 src = true;
                 if (code == HTTPStatus.CODE_200) {
                     code = HTTPStatus.CODE_304;
@@ -397,5 +400,11 @@ public final class Response {
         }
         charset = HTTPStatus.DEFAULTENCODING;
         type = HTTPStatus.PLAIN;
+    }
+
+    void handle_Code_416(long len) {
+        setStart(0);
+        setCode(HTTPStatus.CODE_416);
+        setEnd(len - 1);
     }
 }

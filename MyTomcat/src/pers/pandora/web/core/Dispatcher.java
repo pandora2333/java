@@ -100,16 +100,30 @@ abstract class Dispatcher {
                                         if (tmp.length == 2) {
                                             response.setCode(HTTPStatus.CODE_206);
                                             final long start = Long.valueOf(tmp[0]);
-                                            response.setStart(start);
-                                            if (StringUtils.isNotEmpty(tmp[1])) {
-                                                response.setEnd(Long.valueOf(tmp[1]));
-                                                len = Math.min(len - start + 1, response.getEnd() - start + 1);
+                                            if (start < len) {
+                                                response.setStart(start);
+                                                if (StringUtils.isNotEmpty(tmp[1])) {
+                                                    response.setEnd(Long.valueOf(tmp[1]));
+                                                    if (response.getEnd() < len) {
+                                                        len = Math.min(len - start + 1, response.getEnd() - start + 1);
+                                                    } else {
+                                                        response.handle_Code_416(len);
+                                                    }
+                                                } else {
+                                                    len = Math.min(len - start + 1, server.sendBuffer);
+                                                }
+                                                response.setEnd(len + start - 1);
                                             } else {
-                                                len = Math.min(len - start + 1, server.sendBuffer);
+                                                response.handle_Code_416(len);
                                             }
-                                            response.setEnd(len + start - 1);
+                                        } else {
+                                            response.handle_Code_416(len);
                                         }
+                                    } else {
+                                        response.handle_Code_416(len);
                                     }
+                                } else {
+                                    response.handle_Code_416(len);
                                 }
                             }
                             response.setLen(len);
@@ -117,7 +131,7 @@ abstract class Dispatcher {
                     }
                     response.setServlet(servlet);
                     pushClient(response.handle(request.getMethod(), true),
-                            response.getCode() == HTTPStatus.CODE_304 && file != null ? null : file);
+                            response.getCode() == HTTPStatus.CODE_416 || (response.getCode() == HTTPStatus.CODE_304 && file != null) ? null : file);
                 }
             } else {
                 pushClient(response.handle(null, true), null);
