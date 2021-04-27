@@ -34,6 +34,8 @@ public final class Response {
     private long max_age;
     //response code
     private int code;
+    //response custom code description
+    private String codeDesc = HTTPStatus.CUSTOM_CODE;
 
     private Map<String, String> heads;
     //support code 206
@@ -44,6 +46,14 @@ public final class Response {
     private long start;
 
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
+
+    public String getCodeDesc() {
+        return codeDesc;
+    }
+
+    public void setCodeDesc(String codeDesc) {
+        this.codeDesc = codeDesc;
+    }
 
     public long getStart() {
         return start;
@@ -186,8 +196,11 @@ public final class Response {
             case HTTPStatus.CODE_500:
                 headInfo.append(HTTPStatus.CODE_500_DESC);
                 break;
+            case HTTPStatus.CODE_505:
+                headInfo.append(HTTPStatus.CODE_505_DESC);
+                break;
             default:
-                headInfo.append(HTTPStatus.ERROR_CODE);
+                headInfo.append(codeDesc);
         }
         headInfo.append(HTTPStatus.CRLF);
         //2.build response head
@@ -357,7 +370,11 @@ public final class Response {
         if (interceptor) {
             dispatcher.handleAfter();
         }
-        final byte[] heads = createHeadInfo(dispatcher.request.getCookies(), false, src);
+        return createBodyDatas(dispatcher.request.getCookies(), src);
+    }
+
+    private byte[] createBodyDatas(final List<Cookie> cookies, final boolean src) {
+        final byte[] heads = createHeadInfo(cookies, false, src);
         final byte[] datas = new byte[heads.length + (content != null ? content.length : 0)];
         System.arraycopy(heads, 0, datas, 0, heads.length);
         if (content != null) {
@@ -366,12 +383,12 @@ public final class Response {
         return datas;
     }
 
-    public void redirect(String path) {
+    public void redirect(final String path) {
         dispatcher.request.setRedirect(true);
         dispatcher.request.setReqUrl(path);
     }
 
-    private void handle_500_SERVER_ERROR(String errorMessage) {
+    private void handle_500_SERVER_ERROR(final String errorMessage) {
         content = (HTTPStatus.CODE_500_OUTPUT_DESC + HTTPStatus.COLON + errorMessage).getBytes(Charset.forName(charset));
         type = HTTPStatus.PLAIN;
         len = content.length;
@@ -391,6 +408,7 @@ public final class Response {
         jsonParser = dispatcher.server.jsonParser;
         len = 0;
         code = 0;
+        codeDesc = HTTPStatus.CUSTOM_CODE;
         max_age = 0;
         start = 0;
         end = 0;
@@ -402,9 +420,17 @@ public final class Response {
         type = HTTPStatus.PLAIN;
     }
 
-    void handle_Code_416(long len) {
+    void handle_Code_416(final long len) {
         setStart(0);
         setCode(HTTPStatus.CODE_416);
         setEnd(len - 1);
+    }
+
+    byte[] handle_Code_505() {
+        code = HTTPStatus.CODE_505;
+        content = HTTPStatus.CODE_505_OUTPUT_DESC.getBytes(Charset.forName(charset));
+        type = HTTPStatus.PLAIN;
+        len = content.length;
+        return createBodyDatas(null, false);
     }
 }

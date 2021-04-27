@@ -77,6 +77,17 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 response.reset();
                 reset();
             } else if (remain < 0) {
+                //HTTP Version Not Supported
+                if (remain == -2) {
+                    response.setCode(HTTPStatus.CODE_505);
+                    pushClient(response.handle_Code_505(), null);
+                    try {
+                        server.close(att, this, exceptedOne ? att.getClient().getRemoteAddress().toString() : null);
+                    } catch (IOException e) {
+                        //ignore
+                    }
+                    return;
+                }
                 if (exceptedOne) {
                     exceptedOne = att.isKeep();
                     //If the HTTP header is incomplete more than twice, we have reason to believe that the receiveBuffer of the current HTTP request is too small to receive the HTTP header completely
@@ -116,10 +127,17 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
             boolean ok = false;
             j = 0;
             for (; j < limit && data[j] != HTTPStatus.CRLF; j++) ;
-            msg = new String(data, i, j - i + subLen, charset);
-            //currently only handle HTTP/1.0 and HTTP/1.1,and it's not supported for SSL/TLS
-            if (!msg.endsWith(HTTPStatus.HTTP1_1) && !msg.endsWith(HTTPStatus.HTTP1_0)) {
+            //Not Full Request Line
+            if (j == limit) {
                 remain = -1;
+                return;
+            }
+            //add CRLF into the string ending
+            msg = new String(data, i, j - i + subLen, charset);
+            msg += HTTPStatus.CRLF;
+            //currently only handle HTTP/1.0 and HTTP/1.1,and it's not supported for SSL/TLS
+            if (!msg.endsWith(HTTPStatus.HTTP1_1 + HTTPStatus.CRLF) && !msg.endsWith(HTTPStatus.HTTP1_0 + HTTPStatus.CRLF)) {
+                remain = -2;
                 return;
             }
             String key, value, fileSeparator = null;

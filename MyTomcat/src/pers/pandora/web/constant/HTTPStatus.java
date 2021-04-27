@@ -219,6 +219,8 @@ public class HTTPStatus {
 
     public static final int CODE_500 = 500;
 
+    public static final int CODE_505 = 505;
+
     public static final int CODE_304 = 304;
 
     public static final int CODE_206 = 206;
@@ -235,9 +237,11 @@ public class HTTPStatus {
 
     public static final String CODE_500_DESC = "Server Error";
 
+    public static final String CODE_505_DESC = "HTTP Version Not Supported";
+
     public static final String CODE_302_DESC = "Found";
 
-    public static final String ERROR_CODE = "Error Code";
+    public static final String CUSTOM_CODE = "Custom Code";
 
     public static final String SERVER_DESC = "Pandora Server/1.0.1";
 
@@ -246,6 +250,8 @@ public class HTTPStatus {
     public static final String CODE_500_OUTPUT_DESC = "Server Inner Some Errors";
 
     public static final String CODE_404_OUTPUT_DESC = "Page Not Found";
+
+    public static final String CODE_505_OUTPUT_DESC = "HTTP Version Not Supported,Only Use HTTP/1.0 or HTTP/1.1";
 
     public static final String CODE_405_DESC = "method not allowed";
 

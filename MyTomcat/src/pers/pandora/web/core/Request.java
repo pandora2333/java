@@ -57,6 +57,8 @@ public final class Request {
     private Session session;
 
     private String fileDesc;
+    //HTTP Version
+    private String version;
 
     private boolean json;
 
@@ -67,6 +69,14 @@ public final class Request {
     private boolean allowAccess;
 
     private Map<String, Map<Integer, Map<String, String>>> listTypeParams;
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
     public boolean isAllowAccess() {
         return allowAccess;
@@ -276,7 +286,7 @@ public final class Request {
             msg = URLDecoder.decode(msg, charset);
         } catch (UnsupportedEncodingException e) {
             logger.error("decode URL" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e);
-            dispatcher.response.setCode(HTTPStatus.CODE_404);
+            dispatcher.response.setCode(HTTPStatus.CODE_400);
             return null;
         }
         if (msg.startsWith(HTTPStatus.OPTIONS)) {
@@ -285,8 +295,15 @@ public final class Request {
         }
         int i = msg.indexOf(HTTPStatus.SLASH), j = msg.indexOf(HTTPStatus.HTTP);
         if (i > j) {
+            dispatcher.response.setCode(HTTPStatus.CODE_400);
             return null;
         }
+        int k = msg.indexOf(HTTPStatus.CRLF);
+        if (k < j) {
+            dispatcher.response.setCode(HTTPStatus.CODE_400);
+            return null;
+        }
+        version = msg.substring(j, k);
         final String reqToken = msg.substring(i, j).trim();
         json = Objects.equals(heads.get(HTTPStatus.CONTENTTYPE), HTTPStatus.JSON_TYPE);
         int index = reqToken.indexOf(HTTPStatus.GET_PARAMTER_MARK);
@@ -304,9 +321,8 @@ public final class Request {
         }
         if (msg.startsWith(HTTPStatus.POST)) {
             method = HTTPStatus.POST;
-            index = msg.indexOf(HTTPStatus.CRLF);
-            if (index > 0) {
-                String param = msg.substring(index).trim();
+            if (k > 0) {
+                String param = msg.substring(k).trim();
                 if (json) {
                     addJSON(param);
                 } else if (!isMultipart) {
@@ -615,6 +631,6 @@ public final class Request {
 
     public void dispatcher(final String path) {
         allowAccess = true;
-        dispatcher.dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + path + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
+        dispatcher.dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + path + HTTPStatus.BLANK + version + HTTPStatus.CRLF);
     }
 }

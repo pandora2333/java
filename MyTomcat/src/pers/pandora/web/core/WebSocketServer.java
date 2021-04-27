@@ -501,7 +501,6 @@ public class WebSocketServer extends Server {
                     }
                     clients.forEach((ip, ws) -> {
                         if (!ws.isUsed() && now.compareTo(ws.getKeepTime().plusMillis(tcpKeepAlive)) >= 0) {
-                            System.out.println(now.toEpochMilli() + ":" + ws.getKeepTime().toEpochMilli());
                             ws.setOutPutType(WS.TYPE_CLOSE);
                             writeMsg(buildSendMsg(ws), ws);
                             ws.setCloseSignal(true);

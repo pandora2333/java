@@ -69,7 +69,7 @@ abstract class Dispatcher {
                             pushClient(response.handle(HTTPStatus.GET, false), null);
                         } else {
                             request.setAllowAccess(true);
-                            dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + HTTPStatus.HTTP1_1);
+                            dispatcher(HTTPStatus.GET + HTTPStatus.BLANK + mv.getPage() + HTTPStatus.BLANK + request.getVersion() + HTTPStatus.CRLF);
                         }
                     } else {
                         //not found, in MVC-uri paths
