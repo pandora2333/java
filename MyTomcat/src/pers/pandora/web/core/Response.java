@@ -298,7 +298,9 @@ public final class Response {
                     content = obj.toString().getBytes(Charset.forName(charset));
                     len = content.length;
                 }
-                code = HTTPStatus.CODE_200;
+                if(code <= 0){
+                    code = HTTPStatus.CODE_200;
+                }
             } else if (StringUtils.isNotEmpty(servlet)) {
                 final Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
