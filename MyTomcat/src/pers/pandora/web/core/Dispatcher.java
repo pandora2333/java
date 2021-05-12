@@ -130,8 +130,7 @@ abstract class Dispatcher {
                         }
                     }
                     response.setServlet(servlet);
-                    pushClient(response.handle(request.getMethod(), true),
-                            response.getCode() == HTTPStatus.CODE_416 || (response.getCode() == HTTPStatus.CODE_304 && file != null) ? null : file);
+                    pushClient(response.handle(request.getMethod(), true), response.isOutPutStaticFile() ? file : null);
                 }
             } else {
                 pushClient(response.handle(null, true), null);

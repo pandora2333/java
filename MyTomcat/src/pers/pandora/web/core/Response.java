@@ -47,6 +47,16 @@ public final class Response {
 
     public static final String PLAIN = "MODELANDVIEW_REQUEST_FORWARD_PLAIN";
 
+    private boolean outPutStaticFile;
+
+    public boolean isOutPutStaticFile() {
+        return outPutStaticFile;
+    }
+
+    public void setOutPutStaticFile(boolean outPutStaticFile) {
+        this.outPutStaticFile = outPutStaticFile;
+    }
+
     public String getCodeDesc() {
         return codeDesc;
     }
@@ -92,6 +102,7 @@ public final class Response {
     }
 
     public Response(final Dispatcher dispatcher) {
+        outPutStaticFile = true;
         heads = new HashMap<>();
         this.dispatcher = dispatcher;
     }
@@ -222,14 +233,18 @@ public final class Response {
             headInfo.append(HTTPStatus.LASTMODIFIED).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(time).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.ETAG).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(etag).append(HTTPStatus.CRLF);
         }
-
+        headInfo.append(HTTPStatus.ACCEPTRANGES).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.CRLF);
         if (code == HTTPStatus.CODE_206 || code == HTTPStatus.CODE_416) {
-            headInfo.append(HTTPStatus.ACCEPTRANGES).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.CRLF);
             headInfo.append(HTTPStatus.CONTENTRANGE).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(HTTPStatus.BYTES).append(HTTPStatus.BLANK).append(start)
                     .append(HTTPStatus.MUPART_DESC_LINE.charAt(0)).append(String.valueOf(end)).append(HTTPStatus.SLASH).append(String.valueOf(total)).append(HTTPStatus.CRLF);
         }
+        if (code == HTTPStatus.CODE_416 || code == HTTPStatus.CODE_304) {
+            outPutStaticFile = false;
+        }
         //The browser decides to accept the data length according to the content length. If the length is not specified, all resource requests will be pending until the timeout except for the non resource request status such as HTTP 304
-        headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
+        if (outPutStaticFile) {
+            headInfo.append(HTTPStatus.CONTENTLENGTH).append(HTTPStatus.COLON).append(HTTPStatus.BLANK).append(len).append(HTTPStatus.CRLF);
+        }
         heads.forEach((k, v) -> headInfo.append(k).append(HTTPStatus.COLON).append(v).append(HTTPStatus.CRLF));
         //build cookies
         if (CollectionUtil.isNotEmptry(cookies)) {
@@ -298,7 +313,7 @@ public final class Response {
                     content = obj.toString().getBytes(Charset.forName(charset));
                     len = content.length;
                 }
-                if(code <= 0){
+                if (code <= 0) {
                     code = HTTPStatus.CODE_200;
                 }
             } else if (StringUtils.isNotEmpty(servlet)) {
@@ -415,6 +430,7 @@ public final class Response {
         start = 0;
         end = 0;
         total = 0;
+        outPutStaticFile = true;
         if (CollectionUtil.isNotEmptry(heads)) {
             heads.clear();
         }
