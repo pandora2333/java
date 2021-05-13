@@ -1,4 +1,5 @@
 package pers.pandora.web.core;
+
 import pers.pandora.common.utils.StringUtils;
 
 import java.io.Serializable;
@@ -47,7 +48,7 @@ public final class Session implements Serializable {
     //if session should invalid,please exec the method and exec Request#addInvalidSession as the same time
     //it set max_age > 0,it will be invalid
     public void setMax_age(int max_age) {
-        assert  sessionCookie != null;
+        assert sessionCookie != null;
         if (max_age > 0) {
             this.max_age = Instant.now();
             this.max_age = this.max_age.plusSeconds(max_age);
@@ -63,7 +64,7 @@ public final class Session implements Serializable {
         if (max_age == null) {
             return null;
         }
-        if(!StringUtils.isNotEmpty(format)){
+        if (!StringUtils.isNotEmpty(format)) {
             format = DEFAULTFORMAT;
         }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);

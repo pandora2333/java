@@ -168,6 +168,8 @@ public final class Response {
     public void setServlet(final String servlet) {
         if (StringUtils.isNotEmpty(servlet) && !servlet.contains(String.valueOf(HTTPStatus.COLON))) {
             this.servlet = servlet;
+        } else {
+            this.servlet = null;
         }
     }
 
