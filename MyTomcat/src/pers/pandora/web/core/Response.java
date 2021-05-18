@@ -318,7 +318,7 @@ public final class Response {
                 if (code <= 0) {
                     code = HTTPStatus.CODE_200;
                 }
-            } else if (StringUtils.isNotEmpty(servlet)) {
+            } else if (StringUtils.isNotEmpty(method) && StringUtils.isNotEmpty(servlet)) {
                 final Map<String, List<Object>> params = dispatcher.request.getParams();
                 //init object instance just support basic data type and string type
                 final Servlet handler = ClassUtils.getClass(servlet, dispatcher.request.getDispatcher().server.getRequestMappingHandler().getBeanPool(), false);
@@ -349,7 +349,7 @@ public final class Response {
                 } else {
                     handle_404_NOT_FOUND();
                 }
-            } else if (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206 || code == HTTPStatus.CODE_416) {
+            } else if (StringUtils.isNotEmpty(method) && (code == HTTPStatus.CODE_200 || code == HTTPStatus.CODE_206 || code == HTTPStatus.CODE_416)) {
                 src = true;
                 if (code == HTTPStatus.CODE_200) {
                     code = HTTPStatus.CODE_304;

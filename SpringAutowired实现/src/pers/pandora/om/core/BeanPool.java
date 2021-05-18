@@ -319,7 +319,7 @@ public final class BeanPool {
         try {
             obj = method.invoke(config, params);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            logger.error("createBean" + LOG.LOG_POS, LOG.EXCEPTION_DESC, e.getCause());
+            logger.error("createBean" + LOG.LOG_PRE + LOG.LOG_POS, method.getName(), LOG.EXCEPTION_DESC, e.getCause());
             return;
         }
         initBean(obj, nameTemp);

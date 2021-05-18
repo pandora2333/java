@@ -3,10 +3,15 @@ package pers.pandora.common.utils;
 import pers.pandora.common.constant.LOG;
 import pers.pandora.om.core.BeanPool;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLStreamHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,8 +23,30 @@ public final class ClassUtils {
 
     private static final String VALUEOF = "valueOf";
 
-    public static <T> T getClass(final String name, final BeanPool beanPool, final boolean cache) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-        return (T) getClass(Class.forName(name), beanPool, cache);
+    private static final String FILE = "file";
+
+    public static final String USERDIR = "user.dir";
+
+    private static final String JSPPATH = System.getProperty(USERDIR) + java.io.File.separator;
+
+    private static ClassLoader loader;
+
+    static {
+        try {
+            loader = new URLClassLoader(new URL[]{new URL(null, new URL(FILE, null, JSPPATH).toString())});
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static <T> T getClass(final String name, final BeanPool beanPool, final boolean cache) throws IllegalAccessException, InstantiationException, MalformedURLException, ClassNotFoundException {
+        Class<?> tClass;
+        try {
+            tClass = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            tClass = loader.loadClass(name);
+        }
+        return (T) getClass(tClass, beanPool, cache);
     }
 
     public static <T> void initWithParams(final T t, final Map params) {

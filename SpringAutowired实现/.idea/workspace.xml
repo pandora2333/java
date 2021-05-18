@@ -10,120 +10,34 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="983d9920-a842-4d4a-b022-30ee45334aef" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../MyTomcat/src/META-INF/MANIFEST.MF" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pers/pandora/common/utils/CollectionUtil.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/pers/pandora/common/vo/Pair.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/PandoraORM.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/PandoraORM.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/artifacts/PandoraORM_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/artifacts/PandoraORM_jar.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/META-INF/MANIFEST.MF" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/META-INF/MANIFEST.MF" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/Enum/Propagation.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/Enum/Propagation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Column.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/annotation/Column.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Id.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/annotation/Id.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/annotation/Table.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Transaction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/orm/Transaction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/annotation/Transactional.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/orm/Transactional.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/ENTITY.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/constant/ENTITY.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/LOG.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/constant/LOG.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/SQL.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/constant/SQL.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/constant/XML.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/constant/XML.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/AOPProxyFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/aop/AOPProxyFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/CacheFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/CacheFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/Configuration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/DBPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/orm/DBPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/DataBaseCoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/orm/DataBaseCoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/DynamicSql.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/DynamicSql.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/MapperProxyHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/MapperProxyHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/PBEDataBaseCoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/PBEDataBaseCoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/POG.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/POG.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/PoolConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/orm/PoolConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/SimpleMapCacheFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/SimpleMapCacheFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/SqlSession.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/SqlSession.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/core/SqlSessionFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/core/SqlSessionFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/pog/ColumnInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/pog/ColumnInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/pog/JavaGetSetter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/pog/JavaGetSetter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/pog/TableInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/pog/TableInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/test/dd/TestTransaction.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/test/dd/TestTransaction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/test/dd/TestTransactionImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/test/dd/TestTransactionImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/test/testMyBatisX.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/test/testMyBatisX.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/ClassUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/utils/ClassUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/Dom4JUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/utils/Dom4JUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/IgnoreDTDEntityResolver.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/utils/IgnoreDTDEntityResolver.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/StringUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/utils/StringUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/utils/TypeConverter.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/orm/utils/TypeConverter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/vo/Tuple.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/vo/Tuple.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl$WorkThread.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/out/production/MyThreadPool/pers/pandora/impl/MyThreadPoolImpl.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyThreadPool/src/pers/pandora/impl/MyThreadPoolImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyThreadPool/src/pers/pandora/impl/MyThreadPoolImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/.idea/artifacts/PandoraWeb_jar.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/WebRoot/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/WebRoot/WEB-INF/web.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/annotation/Controller.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/annotation/RequestBody.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/annotation/RequestMapping.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/annotation/RequestParam.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/annotation/ResponseBody.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/controller/TestController.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/mvc/ModelAndView.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/mvc/RequestMappingHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/servlet/LoginServlet.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/servlet/Servlet.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/servlet/TestServlet.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/utils/JspParser$StringJavaObject.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/utils/JspParser.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/utils/XMLFactory$XMLHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/utils/XMLFactory.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/Pandora_test_1.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/Pandora_test_1.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/Pandora_test_ws_1.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/Pandora_test_ws_1.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/Order.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/PathVariable.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/RequestBody.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/RequestMapping.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/RequestParam.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/ResponseBody.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/annotation/WebSocketMethod.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/constant/HTTPStatus.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/constant/JSP.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/constant/WS.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/controller/TestController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/controller/WSTestController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/AIOServer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/AIOServerlDispatcher.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Attachment.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Cookie.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Dispatcher.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/JSONParser.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Request.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Response.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/SerializeSessionSupport.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/SerializeSessionSupportSimpler.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Server.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/Session.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/SimpleJSONParser.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/StartUper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/WebSocketServer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/core/WebSocketSession.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/exception/OverMaxUpBitsException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/interceptor/Interceptor.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/interceptor/TestInterceptor_1.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/interceptor/TestInterceptor_2.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/mvc/ModelAndView.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/mvc/RequestMappingHandler.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/servlet/LoginServlet.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/servlet/Servlet.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/servlet/TestServlet.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/test/AopConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/test/Client.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/test/TestClientConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/CodeUtils.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/FileUtil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/IdWorker.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/JspParser.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/utils/XMLFactory.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/vo/BinaryWSData.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/vo/MapContent.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/vo/TextWSData.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/vo/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/vo/WSData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/PandoraWeb.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/PandoraWeb.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/META-INF/MANIFEST.MF" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/META-INF/MANIFEST.MF" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/Pandora_test_ws_1.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/Pandora_test_ws_1.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/constant/HTTPStatus.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/constant/HTTPStatus.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/AIOServerlDispatcher.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/AIOServerlDispatcher.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Dispatcher.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Dispatcher.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Request.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Request.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Response.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Response.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Session.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/Session.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer$1$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer$1$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/core/WebSocketServer.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/test/Client.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/test/Client.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/utils/JspParser$StringJavaObject.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/utils/JspParser$StringJavaObject.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/utils/JspParser.class" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/bin/pers/pandora/web/utils/JspParser.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/classes/artifacts/PandoraWeb_jar/PandoraWeb.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/classes/artifacts/PandoraWeb_jar/PandoraWeb.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/web/core/Response.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/web/core/Response.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/web/utils/JspParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyTomcat/src/pers/pandora/web/utils/JspParser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/META-INF/SerialAndFullCopy.kotlin_module" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.class" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/out/production/SerialAndFullCopy/per/pandora/fullCopy/core/ObjectDeepCopyStrategyFactory.class" afterDir="false" />
@@ -135,48 +49,8 @@
       <change beforePath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/pojo/A.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SerialAndFullCopy/src/per/pandora/test/pojo/A.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/Bean.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/PropertySource.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/annotation/Value.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/bean/TaskBean.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/bean/User.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/config/SpringConfig.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/pers/pandora/test/TestBean.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/Enum/Propagation.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/Enum/Propagation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/After.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/After.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Aspect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Aspect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Autowired.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Autowired.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Bean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Bean.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Before.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Before.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Configuration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Configuration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/web/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/PropertySource.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/PropertySource.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Service.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/web/Service.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Throw.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Throw.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Transaction.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/orm/Transaction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Transactional.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/orm/Transactional.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/Value.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/annotation/Value.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/annotation/WebSocket.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/web/WebSocket.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/bean/B.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/bean/B.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/bean/TaskBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/bean/TaskBean.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/bean/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/bean/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/config/SpringConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/config/SpringConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/constant/LOG.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/constant/LOG.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/AOPProxyFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/aop/AOPProxyFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/BeanPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/DBPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/orm/DBPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/DataBaseCoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/orm/DataBaseCoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/JavassistAOPProxyFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/core/JavassistAOPProxyFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/JoinPoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/core/JoinPoint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/core/PoolConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/orm/PoolConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/test/TestAOP_1.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/test/TestAOP_1.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/test/TestAOP_2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/test/TestAOP_2.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/test/TestBean.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/test/TestBean.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/ClassUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/CollectionUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/utils/CollectionUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/utils/StringUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/utils/StringUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/vo/Pair.java" beforeDir="false" afterPath="$PROJECT_DIR$/../MyBatisX/src/pers/pandora/common/vo/Pair.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pers/pandora/vo/Tuple.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/vo/Tuple.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -299,22 +173,22 @@
     <session id="-1270714229">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="84" />
-          <entry key="project.open.time.0" value="48" />
-          <entry key="project.open.time.1" value="29" />
+          <entry key="project.closed" value="98" />
+          <entry key="project.open.time.0" value="51" />
+          <entry key="project.open.time.1" value="39" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.2" value="4" />
           <entry key="project.open.time.32" value="1" />
           <entry key="project.open.time.33" value="1" />
           <entry key="project.open.time.34" value="1" />
           <entry key="project.open.time.36" value="1" />
-          <entry key="project.opened" value="86" />
+          <entry key="project.opened" value="99" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="class" value="2" />
-          <entry key="java" value="347" />
+          <entry key="java" value="356" />
           <entry key="properties" value="8" />
           <entry key="xml" value="1" />
           <entry key="开发日志" value="5" />
@@ -323,7 +197,7 @@
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="CLASS" value="2" />
-          <entry key="JAVA" value="347" />
+          <entry key="JAVA" value="356" />
           <entry key="PLAIN_TEXT" value="5" />
           <entry key="Properties" value="8" />
           <entry key="XML" value="1" />
@@ -332,14 +206,14 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="8" />
-          <entry key="java" value="19581" />
+          <entry key="java" value="20620" />
           <entry key="txt" value="265" />
           <entry key="开发日志" value="146" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="JAVA" value="19581" />
+          <entry key="JAVA" value="20620" />
           <entry key="PLAIN_TEXT" value="419" />
         </counts>
       </usages-collector>
@@ -347,14 +221,32 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/core/JavassistAOPProxyFactory.java">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="160">
-              <caret line="87" column="45" selection-start-line="87" selection-start-column="45" selection-end-line="87" selection-end-column="45" />
+            <state relative-caret-position="4224">
+              <caret line="315" column="77" selection-start-line="315" selection-start-column="77" selection-end-line="315" selection-end-column="77" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="96">
+              <caret line="19" column="50" selection-start-line="19" selection-start-column="50" selection-end-line="19" selection-end-column="50" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/test/TestBean.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="128">
+              <caret line="12" column="39" lean-forward="true" selection-start-line="12" selection-start-column="39" selection-end-line="12" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -379,6 +271,7 @@
       <find>Array</find>
       <find>ArrayList</find>
       <find>List</find>
+      <find>src</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -426,10 +319,14 @@
         <option value="$PROJECT_DIR$/src/pers/pandora/utils/ClassUtils.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/core/BeanPool.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/config/SpringConfig.java" />
-        <option value="$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/om/bean/TaskBean.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/common/orm/DBPool.java" />
         <option value="$PROJECT_DIR$/src/pers/pandora/om/core/JavassistAOPProxyFactory.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/om/core/PandoraClassLoader.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/om/test/TestBean.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/common/utils/PandoraClassLoader.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java" />
+        <option value="$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java" />
       </list>
     </option>
   </component>
@@ -491,6 +388,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -530,6 +428,46 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="pandora" type="462c0819:PsiDirectoryNode" />
               <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="constant" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="Enum" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="orm" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="utils" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="vo" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
               <item name="web" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -553,14 +491,33 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="pandora" type="462c0819:PsiDirectoryNode" />
               <item name="om" type="462c0819:PsiDirectoryNode" />
+              <item name="bean" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="om" type="462c0819:PsiDirectoryNode" />
+              <item name="config" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="SpringAutowired实现" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="pandora" type="462c0819:PsiDirectoryNode" />
+              <item name="om" type="462c0819:PsiDirectoryNode" />
               <item name="core" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="SpringAutowired实现" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
       <pane id="Scope" />
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -570,21 +527,21 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1544233764227" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../MyBatisX" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="File.Encoding" />
   </component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="pers.pandora.om.core" />
       <recent name="pers.pandora.core" />
       <recent name="pers.pandora.Enum" />
       <recent name="pers.pandora.annotation" />
       <recent name="pers.pandora.vo" />
-      <recent name="pers.pandora.utils" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\pandora3\java\SpringAutowired实现\src\pers\pandora\core" />
@@ -798,7 +755,20 @@
       <workItem from="1615015496394" duration="235000" />
       <workItem from="1618805110776" duration="11329000" />
       <workItem from="1618882505768" duration="664000" />
-      <workItem from="1618999593873" duration="4035000" />
+      <workItem from="1618999593873" duration="4460000" />
+      <workItem from="1619248874461" duration="37000" />
+      <workItem from="1619249080770" duration="35000" />
+      <workItem from="1619249410431" duration="10000" />
+      <workItem from="1621048101398" duration="11000" />
+      <workItem from="1621162952135" duration="105000" />
+      <workItem from="1621163308550" duration="431000" />
+      <workItem from="1621164102600" duration="2226000" />
+      <workItem from="1621240691810" duration="3457000" />
+      <workItem from="1621248289881" duration="8377000" />
+      <workItem from="1621314528070" duration="444000" />
+      <workItem from="1621315229853" duration="52000" />
+      <workItem from="1621315289714" duration="50000" />
+      <workItem from="1621315377583" duration="165000" />
     </task>
     <task id="LOCAL-00001" summary="delete some ...">
       <created>1544228665395</created>
@@ -920,7 +890,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="149264000" />
+    <option name="totallyTimeSpent" value="165089000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -933,8 +903,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="878" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.1816354" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.21581769" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -1068,27 +1039,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/annotation/Aspect.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="96">
-          <caret line="6" column="18" selection-start-line="6" selection-start-column="18" selection-end-line="6" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Properties.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="39">
-          <caret line="352" column="46" lean-forward="true" selection-start-line="352" selection-start-column="46" selection-end-line="352" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Vector.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1441">
-          <caret line="82" column="13" selection-start-line="82" selection-start-column="13" selection-end-line="82" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/Map.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="231">
@@ -1124,20 +1074,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://E:/bli bli/source/jarsrc/jboss-javassist/javassist.jar!/javassist/util/proxy/ProxyFactory.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="167" column="20" selection-start-line="167" selection-start-column="20" selection-end-line="167" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/test/TestBean.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="23" column="67" lean-forward="true" selection-start-line="23" selection-start-column="67" selection-end-line="23" selection-end-column="67" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar://E:/bli bli/source/jarsrc/jboss-javassist/javassist.jar!/javassist/util/proxy/ProxyFactory.class" />
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/util/ArrayDeque.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="239">
@@ -1206,13 +1143,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/lang/Class.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="402">
-          <caret line="1780" column="18" selection-start-line="1780" selection-start-column="18" selection-end-line="1780" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/bean/B.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -1234,51 +1164,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="14" column="39" selection-start-line="14" selection-start-column="39" selection-end-line="14" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/pers/pandora/T.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32">
-          <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/T.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32">
-          <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/pers/pandora/T.java" />
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/T.java" />
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/bean/TaskBean.java">
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret column="29" selection-start-column="29" selection-end-column="29" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="496">
-          <caret line="233" column="24" selection-start-line="233" selection-start-column="24" selection-end-line="233" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/web.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="32">
-          <caret line="2" column="16" selection-start-line="2" selection-start-column="16" selection-end-line="2" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/web.java" />
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/web/Controller.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="96">
@@ -1351,11 +1246,60 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/core/JavassistAOPProxyFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="87" column="45" selection-start-line="87" selection-start-column="45" selection-end-line="87" selection-end-column="45" />
+        <state relative-caret-position="664">
+          <caret line="120" column="17" selection-start-line="120" selection-start-column="17" selection-end-line="120" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/lang/Class.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="402">
+          <caret line="329" column="27" selection-start-line="329" selection-start-column="27" selection-end-line="329" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/nio/file/Paths.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="239">
+          <caret line="82" column="23" selection-start-line="82" selection-start-column="23" selection-end-line="82" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_162/src.zip!/java/lang/ClassLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="756" column="29" selection-start-line="756" selection-start-column="29" selection-end-line="756" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/utils/PandoraClassLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="64">
+          <caret line="19" column="11" selection-start-line="19" selection-start-column="11" selection-end-line="19" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/core/BeanPool.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4224">
+          <caret line="315" column="77" selection-start-line="315" selection-start-column="77" selection-end-line="315" selection-end-column="77" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/om/test/TestBean.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="12" column="39" lean-forward="true" selection-start-line="12" selection-start-column="39" selection-end-line="12" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/pandora/common/utils/ClassUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="19" column="50" selection-start-line="19" selection-start-column="50" selection-end-line="19" selection-end-column="50" />
         </state>
       </provider>
     </entry>

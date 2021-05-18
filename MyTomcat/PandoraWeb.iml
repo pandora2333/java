@@ -8,28 +8,10 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/fastjson-1.2.75.jar!/" />
+          <root url="jar://E:/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -38,7 +20,25 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/jboss-javassist/javassist.jar!/" />
+          <root url="jar://E:/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://E:/jarsrc/fastjson-1.2.75.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://E:/jarsrc/jboss-javassist/javassist.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

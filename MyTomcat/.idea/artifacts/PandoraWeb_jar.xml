@@ -3,9 +3,16 @@
     <output-path>$PROJECT_DIR$/classes/artifacts/PandoraWeb_jar</output-path>
     <root id="archive" name="PandoraWeb.jar">
       <element id="module-output" name="PandoraWeb" />
-      <element id="extracted-dir" path="E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="E:/bli bli/source/jarsrc/jboss-javassist/javassist.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="E:/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="E:/jarsrc/jboss-javassist/javassist.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="E:/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="E:/jarsrc/fastjson-1.2.75.jar" path-in-jar="/" />
+      <element id="file-copy" path="E:/jarsrc/fastjson-1.2.75.jar" />
+      <element id="file-copy" path="E:/jarsrc/jboss-javassist/javassist.jar" />
+      <element id="file-copy" path="E:/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar" />
+      <element id="file-copy" path="E:/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar" />
+      <element id="file-copy" path="$PROJECT_DIR$/../SpringAutowired实现/classes/artifacts/PandoraOM_jar/PandoraOM.jar" />
     </root>
   </artifact>
 </component>

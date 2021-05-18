@@ -19,7 +19,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/dom4j-2.1.0.jar!/" />
+          <root url="jar://E:/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -28,7 +28,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-api-2.14.0.jar!/" />
+          <root url="jar://E:/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -37,7 +37,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://E:/bli bli/source/jarsrc/apache-log4j-2.14.0-bin/log4j-core-2.14.0.jar!/" />
+          <root url="jar://E:/jarsrc/dom4j-2.1.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

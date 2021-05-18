@@ -4,6 +4,7 @@ import javassist.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pers.pandora.common.constant.LOG;
+import pers.pandora.common.utils.ClassUtils;
 import pers.pandora.common.utils.StringUtils;
 import pers.pandora.common.vo.Tuple;
 import pers.pandora.web.constant.HTTPStatus;
@@ -12,6 +13,7 @@ import pers.pandora.web.constant.JSP;
 import javax.tools.*;
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -33,7 +35,16 @@ public final class JspParser {
 
     private static final char PACKAGE_SPLITER = '.';
 
-    private static final String CLASSDIR = Objects.requireNonNull(JspParser.class.getClassLoader().getResource(String.valueOf(PACKAGE_SPLITER))).getPath();
+    private static String CLASSDIR;
+
+    static {
+        URL url = JspParser.class.getClassLoader().getResource(String.valueOf(PACKAGE_SPLITER));
+        if (url != null) {
+            CLASSDIR = url.getPath();
+        } else {
+            CLASSDIR = System.getProperty(ClassUtils.USERDIR) + java.io.File.separator;
+        }
+    }
 
     private static final String SALT = "PANDORA_SERVER_SECRET_KEY";
 

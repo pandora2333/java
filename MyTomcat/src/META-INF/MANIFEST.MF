@@ -1,3 +1,2 @@
 Manifest-Version: 1.0
 Main-Class: pers.pandora.web.test.Client
-
