@@ -354,17 +354,16 @@ public final class AIOServerlDispatcher extends Dispatcher implements Completion
                 } catch (IOException e) {
                     //ignore
                     //ClosedChannelException,it comes from browser's input stream was closed or tcp-gc collection
-                } finally {
-                    if (fin != null && (!part || response.getEnd() == response.getTotal() - 1)) {
-                        try {
-                            //implCloseChannel -> it can close FD
-                            fin.close();
-                            if (part) {
-                                ins.remove(file);
-                            }
-                        } catch (IOException e) {
-                            //ignore
+                }
+                if (fin != null && (!part || response.getEnd() == response.getTotal() - 1)) {
+                    try {
+                        //implCloseChannel -> it can close FD
+                        fin.close();
+                        if (part) {
+                            ins.remove(file);
                         }
+                    } catch (IOException e) {
+                        //ignore
                     }
                 }
             }
